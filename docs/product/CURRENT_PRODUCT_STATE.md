@@ -1,7 +1,7 @@
 # SceneSift — Current Product State
 
-Date: 2026-07-19
-Status: M2 CLOSED. M3 planning in progress.
+Date: 2026-07-20
+Status: M3 CLOSED. M4 planning pending.
 
 ---
 
@@ -97,16 +97,27 @@ SceneSift is an Electron desktop app with a working shell, navigation, project C
 | Migration `0000_initial.sql` | ✅ Complete | Creates `projects`, `app_settings`, `render_jobs` |
 | Migration `0001_media_inspection.sql` | ✅ Complete | Adds 9 media metadata columns to `projects` |
 | Migration `0002_subtitle_parsing.sql` | ✅ Complete | Adds 5 subtitle columns to `projects` + `subtitle_documents` table |
+| Migration `0003_sync_check.sql` | ✅ Complete | Adds 4 sync columns to `projects` (sync_status, sync_checked_at, sync_warnings_json, sync_analysis_version) |
 | Parameterized queries only | ✅ Complete | No string interpolation |
+
+### Subtitle synchronization check (M3)
+
+| Feature | Status | Notes |
+|---|---|---|
+| SynchronizationAnalyzer | ✅ Complete | Pure timing analysis, 5 warning codes, no IO |
+| SynchronizationService | ✅ Complete | Orchestration: DB reads + analyze + persist |
+| sync:checkForProject IPC channel | ✅ Complete | UUID-validated input, structured output |
+| SyncPanel renderer | ✅ Complete | 6-state display, relative timestamps, warning list |
+| Stale detection | ✅ Complete | Computed from syncCheckedAt vs inspectedAt/subtitleParsedAt |
 
 ### Governance and QA
 
 | Component | Status | Notes |
 |---|---|---|
 | `pnpm validate` (full composite) | ✅ Green | governance + typecheck + lint + test + build |
-| 223 unit tests | ✅ Pass | 20 test files |
-| 13 visual regression tests | ✅ Pass | Light + dark |
-| 29 E2E (Playwright browser QA) | ✅ Pass | |
+| 299 unit tests | ✅ Pass | 23 test files |
+| 19 visual regression tests | ✅ Pass | Light + dark |
+| 37 E2E (Playwright browser QA) | ✅ Pass | |
 | Architecture boundary enforcement | ✅ Active | `pnpm architecture:validate` |
 | Dependency policy enforcement | ✅ Active | `pnpm dependencies:validate` |
 | CI SHA pinning | ✅ Active | All 4 workflows pinned |
@@ -114,14 +125,6 @@ SceneSift is an Electron desktop app with a working shell, navigation, project C
 ---
 
 ## What is NOT implemented
-
-### Subtitle synchronization check (gap — target of M3)
-
-| Missing Feature | Impact |
-|---|---|
-| Structural timing analysis vs. video metadata | Cannot detect cues outside video range, large span mismatch |
-| Synchronization state machine | No sync status persisted |
-| Optional global offset | No way to correct timing without editing source |
 
 ### Clip selection (gap — target of M4+)
 

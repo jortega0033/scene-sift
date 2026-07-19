@@ -1,19 +1,32 @@
 # SceneSift Loop State
 
-lastUpdated: 2026-07-19
+lastUpdated: 2026-07-20
 loopPaused: false
 defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-m3-integrate
+- milestone: M3 Subtitle Synchronization Check — Integration into overnight branch
+- branch: overnight/m3-plus-2026-07-20
+- risk_level: 0 (merge docs + product state only — no new code)
+- status: in_progress
+- started: 2026-07-20
+- governance_decision: GD-005
+
+## Previous active run (complete — M3 ACCEPTED)
+
 - run_id: 2026-07-20T-m3-acceptance-audit
 - milestone: M3 Subtitle Synchronization Check — Acceptance Audit
 - branch: feature/m3-subtitle-synchronization → overnight/m3-plus-2026-07-20
 - risk_level: 0 (audit only)
-- status: in_progress
-- scope: 3 independent auditors verifying all 30 ACs in M3_ACCEPTANCE_CRITERIA.md
-- started: 2026-07-20
-- governance_decision: GD-005 — manual approval gate waived; independent audit required
+- status: complete — M3 ACCEPTED
+- verdict: ALL 30 ACs PASS — 3 independent auditors (AC-M3-001+002, AC-M3-003+004+005, AC-M3-006), 2 targeted re-audits for AC-M3-001.3 and AC-M3-004.5 after fixes
+- fixes_applied: AC-M3-001.3 (computeDisplaySyncStatus prerequisitesMet param), AC-M3-004.5 (relative time formatter), AC-M3-006.2 (exception-handling test)
+- commits: b915a78 (implementation), cb46e2a (fixture fix + visuals + GD-006), 4c4d586 (audit fixes)
+- tests: 299/299 unit, 37/37 E2E, 19/19 visual, governance:validate PASS, architecture:validate PASS
+- governance_decision: GD-005, GD-006
+- completed: 2026-07-20
 
 ## Previous active run (complete — implementation + E2E + visual clean)
 
