@@ -80,16 +80,38 @@ describe('formatSyncWarning', () => {
 // ─── formatSyncCheckedAt ─────────────────────────────────────────────────────
 
 describe('formatSyncCheckedAt', () => {
+  const NOW = 1_000_000_000_000;
+
   it('returns em-dash for null', () => {
-    expect(formatSyncCheckedAt(null)).toBe('—');
+    expect(formatSyncCheckedAt(null, NOW)).toBe('—');
   });
 
-  it('returns non-empty string for valid timestamp', () => {
-    const ts = Date.now();
-    const result = formatSyncCheckedAt(ts);
-    expect(typeof result).toBe('string');
-    expect(result.length).toBeGreaterThan(0);
-    expect(result).not.toBe('—');
+  it('returns "just now" when less than 60 seconds ago', () => {
+    expect(formatSyncCheckedAt(NOW - 30_000, NOW)).toBe('just now');
+  });
+
+  it('returns "1 minute ago" when exactly 1 minute ago', () => {
+    expect(formatSyncCheckedAt(NOW - 60_000, NOW)).toBe('1 minute ago');
+  });
+
+  it('returns "5 minutes ago" for 5 minute diff', () => {
+    expect(formatSyncCheckedAt(NOW - 5 * 60_000, NOW)).toBe('5 minutes ago');
+  });
+
+  it('returns "1 hour ago" when exactly 1 hour ago', () => {
+    expect(formatSyncCheckedAt(NOW - 3_600_000, NOW)).toBe('1 hour ago');
+  });
+
+  it('returns "2 hours ago" for 2 hour diff', () => {
+    expect(formatSyncCheckedAt(NOW - 2 * 3_600_000, NOW)).toBe('2 hours ago');
+  });
+
+  it('returns "1 day ago" when exactly 1 day ago', () => {
+    expect(formatSyncCheckedAt(NOW - 86_400_000, NOW)).toBe('1 day ago');
+  });
+
+  it('returns "3 days ago" for 3 day diff', () => {
+    expect(formatSyncCheckedAt(NOW - 3 * 86_400_000, NOW)).toBe('3 days ago');
   });
 });
 
@@ -98,15 +120,27 @@ describe('formatSyncCheckedAt', () => {
 describe('computeDisplaySyncStatus', () => {
   const T = 1_000_000;
 
-  it('returns not_available when syncStatus is null', () => {
+  it('returns not_available when syncStatus is null and prerequisites not met', () => {
+    expect(computeDisplaySyncStatus(null, null, null, null, false)).toBe('not_available');
+  });
+
+  it('returns not_available when syncStatus is null and prerequisitesMet omitted (default)', () => {
     expect(computeDisplaySyncStatus(null, null, null, null)).toBe('not_available');
   });
 
-  it('returns not_available when syncStatus is not_available', () => {
-    expect(computeDisplaySyncStatus('not_available', null, null, null)).toBe('not_available');
+  it('returns ready_to_check when syncStatus is null and prerequisites met', () => {
+    expect(computeDisplaySyncStatus(null, null, null, null, true)).toBe('ready_to_check');
   });
 
-  it('returns ready_to_check unchanged (no stale check)', () => {
+  it('returns not_available when syncStatus is not_available and prerequisites not met', () => {
+    expect(computeDisplaySyncStatus('not_available', null, null, null, false)).toBe('not_available');
+  });
+
+  it('returns ready_to_check when syncStatus is not_available and prerequisites met', () => {
+    expect(computeDisplaySyncStatus('not_available', null, null, null, true)).toBe('ready_to_check');
+  });
+
+  it('returns ready_to_check when DB has ready_to_check (no stale check)', () => {
     expect(computeDisplaySyncStatus('ready_to_check', null, T + 1000, T + 1000)).toBe(
       'ready_to_check',
     );

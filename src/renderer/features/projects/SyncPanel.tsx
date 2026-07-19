@@ -45,18 +45,20 @@ export const SyncPanel = ({ project }: SyncPanelProps) => {
   const [localError, setLocalError] = useState<string | null>(null);
 
   const inspectedAt = project.mediaMetadata?.inspectedAt ?? null;
+
+  const canCheck =
+    project.status === 'ready' &&
+    (project.subtitleStatus === 'ready' || project.subtitleStatus === 'ready_with_warnings');
+
   const displayStatus = computeDisplaySyncStatus(
     project.syncStatus,
     project.syncCheckedAt,
     inspectedAt,
     project.subtitleParsedAt,
+    canCheck,
   );
 
   const syncWarnings = parseSyncWarnings(project.syncWarningsJson);
-
-  const canCheck =
-    project.status === 'ready' &&
-    (project.subtitleStatus === 'ready' || project.subtitleStatus === 'ready_with_warnings');
 
   const handleCheckSync = async () => {
     setIsChecking(true);

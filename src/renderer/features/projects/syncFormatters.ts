@@ -44,31 +44,38 @@ export function formatSyncWarning(warning: SyncWarning): string {
   }
 }
 
-export function formatSyncCheckedAt(syncCheckedAt: number | null): string {
+export function formatSyncCheckedAt(syncCheckedAt: number | null, now = Date.now()): string {
   if (syncCheckedAt === null) return '—';
-  return new Date(syncCheckedAt).toLocaleString();
+  const diffMs = Math.max(0, now - syncCheckedAt);
+  if (diffMs < 60_000) return 'just now';
+  const minutes = Math.floor(diffMs / 60_000);
+  if (diffMs < 3_600_000) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  const hours = Math.floor(diffMs / 3_600_000);
+  if (diffMs < 86_400_000) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  const days = Math.floor(diffMs / 86_400_000);
+  return `${days} day${days !== 1 ? 's' : ''} ago`;
 }
 
 /**
  * Compute the display sync status, incorporating the stale check.
  *
- * stale = sync has been run (timing_ok or needs_review) but video was re-inspected
- * or subtitle was re-parsed since the last sync check.
- *
- * The 'stale' value is NEVER written to the DB — it is computed here at display time.
+ * ready_to_check and stale are display-only states — NEVER written to DB.
+ * - ready_to_check = syncStatus is null AND prerequisites are met
+ * - stale = sync has been run but video/subtitle updated since last check
  */
 export function computeDisplaySyncStatus(
   syncStatus: string | null,
   syncCheckedAt: number | null,
   inspectedAt: number | null,
   subtitleParsedAt: number | null,
+  prerequisitesMet = false,
 ): string {
-  if (
-    !syncStatus ||
-    syncStatus === SyncStatus.NOT_AVAILABLE ||
-    syncStatus === SyncStatus.READY_TO_CHECK
-  ) {
-    return syncStatus ?? SyncStatus.NOT_AVAILABLE;
+  if (!syncStatus || syncStatus === SyncStatus.NOT_AVAILABLE) {
+    return prerequisitesMet ? SyncStatus.READY_TO_CHECK : SyncStatus.NOT_AVAILABLE;
+  }
+
+  if (syncStatus === SyncStatus.READY_TO_CHECK) {
+    return SyncStatus.READY_TO_CHECK;
   }
 
   // For terminal states (timing_ok, needs_review, check_failed), check staleness

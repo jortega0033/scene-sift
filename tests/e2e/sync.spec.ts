@@ -22,13 +22,14 @@ test.describe('sync panel states', () => {
     }
   });
 
-  test('ready_to_check — check button enabled', async ({ page }) => {
+  test('ready_to_check — check button enabled and status message shown', async ({ page }) => {
     await page.goto(fixtureUrl(FIXTURES.syncReadyToCheck));
     await page.getByTestId('project-row').first().click();
 
     await expect(page.getByTestId('sync-panel')).toBeVisible();
     await expect(page.getByTestId('sync-check-button')).toBeVisible();
     await expect(page.getByTestId('sync-check-button')).toBeEnabled();
+    await expect(page.getByTestId('sync-status')).toContainText('Ready to check');
   });
 
   test('timing_ok — shows ok status', async ({ page }) => {

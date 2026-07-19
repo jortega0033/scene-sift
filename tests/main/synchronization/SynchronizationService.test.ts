@@ -2,7 +2,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseService } from '@main/services/database/databaseService';
 import { SynchronizationService } from '@main/services/synchronization/SynchronizationService';
 import type { InspectionOutcome } from '@main/services/ffmpeg/ffmpegService';
@@ -229,6 +229,22 @@ describe('SynchronizationService', () => {
     expect(reloaded?.syncAnalysisVersion).toBe(1);
 
     db2.close();
+  });
+
+  // ─── TC-ERR-01: Unexpected exception during analysis → check_failed ──────
+
+  it('returns check_failed when db.getProject throws an unexpected error', async () => {
+    const spy = vi.spyOn(db, 'getProject').mockImplementation(() => {
+      throw new Error('Unexpected DB error');
+    });
+
+    const result = await service.checkForProject('00000000-0000-4000-8000-000000000001');
+    expect(result.syncStatus).toBe('check_failed');
+    expect(result.syncWarnings).toHaveLength(0);
+    expect(result.syncCheckedAt).toBeNull();
+    expect(result.syncAnalysisVersion).toBeNull();
+
+    spy.mockRestore();
   });
 
   // ─── TC-PREREQ-04: Always re-checks prerequisites regardless of stored sync_status
