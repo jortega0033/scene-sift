@@ -1,5 +1,5 @@
 import type { SceneSiftApi } from '@shared/api/sceneSiftApi';
-import type { CreateProjectInput } from '@shared/schemas/project';
+import type { CreateProjectInput, ProjectRecord } from '@shared/schemas/project';
 import type { AppSettings } from '@shared/schemas/settings';
 import { fixtureMap, resolveFixtureName } from './fixtures';
 
@@ -53,7 +53,7 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
           throw new Error('A project with this name already exists.');
         }
         const now = Date.now();
-        const created = {
+        const created: ProjectRecord = {
           id: crypto.randomUUID(),
           name: input.name,
           videoPath: input.video.path,
@@ -62,7 +62,9 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
           status: 'draft',
           createdAt: now,
           updatedAt: now,
-        } as const;
+          mediaMetadata: null,
+          inspectionError: null,
+        };
         projects = [created, ...projects];
         return created;
       },
@@ -80,6 +82,28 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
         projects = projects.filter((project) => project.id !== projectId);
         queue = queue.filter((item) => item.projectId !== projectId);
         return { deleted: before !== projects.length };
+      },
+      inspect: async (projectId) => {
+        await delay(200);
+        const project = findProject(projectId);
+        if (!project) throw new Error('Project not found.');
+        const now = Date.now();
+        const mediaMetadata = {
+          durationSeconds: 2847.6,
+          width: 1920,
+          height: 1080,
+          videoCodec: 'h264',
+          fps: 23.976,
+          bitRateBps: 8_500_000,
+          fileSizeBytes: 3_021_000_000,
+          inspectedAt: now,
+        };
+        projects = projects.map((p) =>
+          p.id === projectId
+            ? { ...p, status: 'ready' as const, mediaMetadata, inspectionError: null }
+            : p,
+        );
+        return { projectId, status: 'ready' as const, mediaMetadata, inspectionError: null };
       },
     },
     queue: {

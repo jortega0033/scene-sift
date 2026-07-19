@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { z } from 'zod';
 import { evaluateChangeSet, loadGateConfig } from './gate';
+import { validateCIPinning } from './validate-ci-pinning.js';
 
 const REQUIRED_FILES = [
   '.github/copilot-instructions.md',
@@ -299,6 +300,14 @@ function main() {
         `prompt-registry.json invalid: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
       );
     }
+  }
+
+  // CI action SHA pinning check
+  const ciViolations = validateCIPinning(repoRoot);
+  for (const v of ciViolations) {
+    failures.push(
+      `CI action not SHA-pinned in ${path.relative(repoRoot, v.file)}:${v.line} — ${v.action} (${v.pinType})`,
+    );
   }
 
   if (failures.length > 0) {

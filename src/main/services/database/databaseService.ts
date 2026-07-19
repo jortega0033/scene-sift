@@ -6,11 +6,12 @@ import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { desc, eq } from 'drizzle-orm';
 import type { AppSettings } from '@shared/schemas/settings';
-import type { ProjectRecord } from '@shared/schemas/project';
+import type { ProjectRecord, MediaMetadata } from '@shared/schemas/project';
 import type { CreateProjectInput } from '@shared/schemas/project';
 import { appSettingsTable, projectsTable, renderJobsTable } from '@database/schema';
 import { AppError } from '@main/utils/errors';
 import type { QueueStatus } from '@shared/types/common';
+import type { InspectionOutcome } from '@main/services/ffmpeg/ffmpegService';
 
 const SETTINGS_ID = 'default';
 
@@ -73,16 +74,7 @@ export class DatabaseService {
       .from(projectsTable)
       .orderBy(desc(projectsTable.updatedAt))
       .all()
-      .map((project) => ({
-        id: project.id,
-        name: project.name,
-        videoPath: project.videoPath,
-        subtitlePath: project.subtitlePath ?? null,
-        outputDirectory: project.outputDirectory ?? null,
-        status: project.status as ProjectRecord['status'],
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
-      }));
+      .map((row) => this.mapProject(row));
   }
 
   public createProject(input: CreateProjectInput): ProjectRecord {
@@ -109,16 +101,7 @@ export class DatabaseService {
       throw new AppError('PROJECT_CREATE_FAILED', 'Project was not persisted.');
     }
 
-    return {
-      id: project.id,
-      name: project.name,
-      videoPath: project.videoPath,
-      subtitlePath: project.subtitlePath ?? null,
-      outputDirectory: project.outputDirectory ?? null,
-      status: project.status as ProjectRecord['status'],
-      createdAt: project.createdAt,
-      updatedAt: project.updatedAt,
-    };
+    return this.mapProject(project);
   }
 
   public getProject(projectId: string): ProjectRecord | null {
@@ -128,16 +111,38 @@ export class DatabaseService {
       return null;
     }
 
-    return {
-      id: project.id,
-      name: project.name,
-      videoPath: project.videoPath,
-      subtitlePath: project.subtitlePath ?? null,
-      outputDirectory: project.outputDirectory ?? null,
-      status: project.status as ProjectRecord['status'],
-      createdAt: project.createdAt,
-      updatedAt: project.updatedAt,
-    };
+    return this.mapProject(project);
+  }
+
+  public updateProjectInspection(projectId: string, outcome: InspectionOutcome): ProjectRecord {
+    const orm = this.ensureOrm();
+    const now = Date.now();
+    const meta = outcome.mediaMetadata;
+
+    orm
+      .update(projectsTable)
+      .set({
+        status: outcome.status,
+        durationSeconds: meta?.durationSeconds ?? null,
+        width: meta?.width ?? null,
+        height: meta?.height ?? null,
+        videoCodec: meta?.videoCodec ?? null,
+        fps: meta?.fps ?? null,
+        bitRateBps: meta?.bitRateBps ?? null,
+        fileSizeBytes: meta?.fileSizeBytes ?? null,
+        inspectedAt: meta?.inspectedAt ?? null,
+        inspectionError: outcome.inspectionError,
+        updatedAt: now,
+      })
+      .where(eq(projectsTable.id, projectId))
+      .run();
+
+    const project = orm.select().from(projectsTable).where(eq(projectsTable.id, projectId)).get();
+    if (!project) {
+      throw new AppError('PROJECT_NOT_FOUND', 'Project not found after inspection update.');
+    }
+
+    return this.mapProject(project);
   }
 
   public deleteProject(projectId: string): boolean {
@@ -251,6 +256,35 @@ export class DatabaseService {
       .run();
 
     return this.getSettings();
+  }
+
+  private mapProject(row: typeof projectsTable.$inferSelect): ProjectRecord {
+    const mediaMetadata: MediaMetadata | null =
+      row.inspectedAt != null
+        ? {
+            durationSeconds: row.durationSeconds ?? null,
+            width: row.width ?? null,
+            height: row.height ?? null,
+            videoCodec: row.videoCodec ?? null,
+            fps: row.fps ?? null,
+            bitRateBps: row.bitRateBps ?? null,
+            fileSizeBytes: row.fileSizeBytes ?? null,
+            inspectedAt: row.inspectedAt,
+          }
+        : null;
+
+    return {
+      id: row.id,
+      name: row.name,
+      videoPath: row.videoPath,
+      subtitlePath: row.subtitlePath ?? null,
+      outputDirectory: row.outputDirectory ?? null,
+      status: row.status as ProjectRecord['status'],
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      mediaMetadata,
+      inspectionError: row.inspectionError ?? null,
+    };
   }
 
   private ensureOrm(): BetterSQLite3Database {

@@ -7,7 +7,16 @@ export type CommandResult = {
   error?: string;
 };
 
-export const runCommand = async (binaryPath: string, args: string[]): Promise<CommandResult> =>
+export type RunCommandOptions = {
+  timeoutMs?: number;
+  maxOutputBytes?: number;
+};
+
+export const runCommand = async (
+  binaryPath: string,
+  args: string[],
+  options?: RunCommandOptions,
+): Promise<CommandResult> =>
   new Promise((resolve) => {
     const child = spawn(binaryPath, args, {
       shell: false,
@@ -16,29 +25,48 @@ export const runCommand = async (binaryPath: string, args: string[]): Promise<Co
 
     let stdout = '';
     let stderr = '';
+    let timedOut = false;
+    let outputExceeded = false;
+    let totalOutputBytes = 0;
 
-    child.stdout.on('data', (chunk: Buffer) => {
-      stdout += chunk.toString();
-    });
+    const timer =
+      options?.timeoutMs != null
+        ? setTimeout(() => {
+            timedOut = true;
+            child.kill();
+          }, options.timeoutMs)
+        : null;
 
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString();
-    });
+    const onData = (chunk: Buffer, append: (s: string) => void): void => {
+      if (options?.maxOutputBytes != null) {
+        totalOutputBytes += chunk.length;
+        if (!outputExceeded && totalOutputBytes > options.maxOutputBytes) {
+          outputExceeded = true;
+          child.kill();
+        }
+      }
+      if (!outputExceeded) append(chunk.toString());
+    };
+
+    child.stdout.on('data', (chunk: Buffer) => onData(chunk, (s) => { stdout += s; }));
+    child.stderr.on('data', (chunk: Buffer) => onData(chunk, (s) => { stderr += s; }));
 
     child.on('error', (error: Error) => {
-      resolve({
-        stdout,
-        stderr,
-        exitCode: null,
-        error: error.message,
-      });
+      if (timer != null) clearTimeout(timer);
+      resolve({ stdout, stderr, exitCode: null, error: error.message });
     });
 
     child.on('close', (exitCode) => {
-      resolve({
-        stdout,
-        stderr,
-        exitCode,
-      });
+      if (timer != null) clearTimeout(timer);
+      if (outputExceeded) {
+        resolve({ stdout, stderr, exitCode: null, error: 'PROCESS_OUTPUT_LIMIT_EXCEEDED' });
+      } else {
+        resolve({
+          stdout,
+          stderr,
+          exitCode: timedOut ? null : exitCode,
+          ...(timedOut ? { error: 'PROCESS_TIMEOUT' } : {}),
+        });
+      }
     });
   });

@@ -6,7 +6,7 @@ import {
   selectedSubtitleSchema,
   selectedVideoSchema,
 } from '@shared/schemas/project';
-import { useCreateProject } from '@renderer/hooks/useProjects';
+import { useCreateProject, useInspectProject } from '@renderer/hooks/useProjects';
 
 const formSchema = z.object({
   name: z.string().trim().min(1, 'Project name is required.'),
@@ -24,6 +24,7 @@ type CreateProjectFormProps = {
 
 export const CreateProjectForm = ({ onCreated, onCancel }: CreateProjectFormProps) => {
   const createProject = useCreateProject();
+  const inspectProject = useInspectProject();
   const {
     register,
     setValue,
@@ -41,12 +42,13 @@ export const CreateProjectForm = ({ onCreated, onCancel }: CreateProjectFormProp
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    await createProject.mutateAsync({
+    const project = await createProject.mutateAsync({
       name: values.name.trim(),
       video: values.video,
       subtitle: values.subtitle,
       outputDirectory: values.outputDirectory,
     });
+    await inspectProject.mutateAsync(project.id);
     onCreated?.();
   });
 
@@ -77,6 +79,13 @@ export const CreateProjectForm = ({ onCreated, onCancel }: CreateProjectFormProp
   const watchedVideo = watch('video');
   const watchedSubtitle = watch('subtitle');
   const watchedOutputDirectory = watch('outputDirectory');
+
+  const isPending = createProject.isPending || inspectProject.isPending;
+  const submitLabel = createProject.isPending
+    ? 'Saving…'
+    : inspectProject.isPending
+      ? 'Inspecting…'
+      : 'Save project';
 
   return (
     <form
@@ -168,9 +177,9 @@ export const CreateProjectForm = ({ onCreated, onCancel }: CreateProjectFormProp
         <button
           type="submit"
           className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-foreground bg-foreground px-3 text-sm font-medium text-background disabled:opacity-50"
-          disabled={createProject.isPending}
+          disabled={isPending}
         >
-          {createProject.isPending ? 'Saving…' : 'Save project'}
+          {submitLabel}
         </button>
         <button
           type="button"
@@ -180,11 +189,11 @@ export const CreateProjectForm = ({ onCreated, onCancel }: CreateProjectFormProp
           Cancel
         </button>
       </div>
-      {createProject.error && (
+      {(createProject.error ?? inspectProject.error) && (
         <p role="alert" className="text-xs text-foreground">
-          {createProject.error instanceof Error
-            ? createProject.error.message
-            : 'Unable to create project. Check selected files and try again.'}
+          {(createProject.error ?? inspectProject.error) instanceof Error
+            ? ((createProject.error ?? inspectProject.error) as Error).message
+            : 'Unable to complete project setup. Check selected files and try again.'}
         </p>
       )}
     </form>

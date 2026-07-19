@@ -11,6 +11,7 @@ export const IPC_CHANNELS = {
   PROJECT_LIST: 'project:list',
   PROJECT_GET: 'project:get',
   PROJECT_DELETE: 'project:delete',
+  PROJECT_INSPECT: 'project:inspect',
   SETTINGS_GET: 'settings:get',
   SETTINGS_UPDATE: 'settings:update',
   SETTINGS_SELECT_FFMPEG_PATH: 'settings:selectFfmpegPath',
