@@ -6,13 +6,22 @@ defaultMode: L2
 
 ## Active run
 
-- run_id: 2026-07-20T-m3-integrate
-- milestone: M3 Subtitle Synchronization Check — Integration into overnight branch
+- run_id: 2026-07-20T-m4-planning
+- milestone: M4 Video Preview Workspace — Planning and Specification
 - branch: overnight/m3-plus-2026-07-20
-- risk_level: 0 (merge docs + product state only — no new code)
+- risk_level: 0 (docs only — no product code)
 - status: in_progress
 - started: 2026-07-20
 - governance_decision: GD-005
+
+## Previous active run (complete — M3 integrated)
+
+- run_id: 2026-07-20T-m3-integrate
+- milestone: M3 Subtitle Synchronization Check — Integration into overnight branch
+- risk_level: 0
+- status: complete
+- commits: merge commit (40 files, 1993 insertions), 6eee478 (docs update)
+- completed: 2026-07-20
 
 ## Previous active run (complete — M3 ACCEPTED)
 

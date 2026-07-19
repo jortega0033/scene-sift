@@ -5,8 +5,8 @@ Source: GPT AI as PO/PM, provided by user 2026-07-19 for future reference.
 **Rule**: One milestone at a time. Every milestone follows:
 Plan/spec → implement on feature branch → targeted specialist review → full validation → acceptance audit → human merge.
 
-**Current status**: M1 CLOSED. M2 CLOSED (merged to main 2026-07-19 via owner override). M3 PLANNING in progress.
-**Next**: M3 planning complete → implementation-readiness verdict → governed implementation on feature branch.
+**Current status**: M1 CLOSED. M2 CLOSED. M3 CLOSED (overnight branch 2026-07-20).
+**Next**: M4 planning → implementation-readiness verdict → governed implementation on feature branch.
 
 ---
 
@@ -40,7 +40,7 @@ Load a video source file into a project and verify it is a valid video using FFp
 
 **Goal**: Detect structural subtitle timing problems against the project video and present truthful, actionable synchronization warnings without building a subtitle editor.
 
-**Status: PLANNING COMPLETE** — specification complete 2026-07-20. See `docs/product/M3_HANDOFF.md` for implementation handoff.
+**Status: CLOSED** — implemented + audited + merged to overnight branch 2026-07-20. All 30 ACs pass. See `docs/product/M3_ACCEPTANCE_CRITERIA.md`.
 
 **Confirmed scope:**
 - Analysis of persisted subtitle cue timeline vs. persisted video metadata

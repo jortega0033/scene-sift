@@ -1023,6 +1023,44 @@ Append one JSON line per material run.
   ],
   "manual_electron_testing": "SKIPPED BY REPOSITORY OWNER (GD-005)",
   "started": "2026-07-20",
+  "outcome": "pass",
+  "verdict": "M3 ACCEPTED — ALL 30 ACs PASS",
+  "audit_results": {
+    "AC-M3-001 (state machine)": "14/15 pass on first pass; AC-M3-001.3 FAIL (ready_to_check unreachable). Fix applied: computeDisplaySyncStatus prerequisitesMet param + SyncPanel reorder + E2E text assertion. Re-audit: PASS",
+    "AC-M3-002 (analysis correctness)": "8/8 PASS (all 5 warning codes, 2 guard failures, timing_ok happy path)",
+    "AC-M3-003 (persistence)": "3/3 PASS (schema columns persist, timing_ok close-reopen, syncWarningsJson column present)",
+    "AC-M3-004 (UI truthfulness)": "5/6 pass on first pass; AC-M3-004.5 FAIL (toLocaleString → absolute date). Fix: relative time formatter. Re-audit: PASS",
+    "AC-M3-005 (security boundary)": "3/3 PASS (UUID validation, no cue text in warnings, no cue arrays in IPC output)",
+    "AC-M3-006 (test coverage)": "2/3 pass on first pass; AC-M3-006.2 FAIL (missing exception-handling test). Fix: vi.spyOn test added. PASS"
+  },
+  "fixes_applied": [
+    "AC-M3-001.3: computeDisplaySyncStatus accepts prerequisitesMet param (5th). SyncPanel reorders canCheck before displayStatus. E2E asserts 'Ready to check' text.",
+    "AC-M3-004.5: formatSyncCheckedAt replaced toLocaleString with relative time ('just now', 'N minutes/hours/days ago'). Injectable now param for deterministic tests.",
+    "AC-M3-006.2: Added vi.spyOn exception-handling test to SynchronizationService.test.ts"
+  ],
+  "fix_commit": "4c4d586",
+  "final_unit_tests": "299/299",
+  "final_e2e": "37/37",
+  "final_visual": "19/19",
+  "merge_commit": "overnight/m3-plus-2026-07-20 merge of feature/m3-subtitle-synchronization",
+  "governance_decisions": ["GD-005 (owner override)", "GD-006 (pre-existing IPC error taxonomy accepted)"],
+  "completed": "2026-07-20"
+}
+```
+
+---
+
+## Run: 2026-07-20T-m4-planning — M4 Video Preview Workspace Planning (in progress)
+
+```json
+{
+  "run_id": "2026-07-20T-m4-planning",
+  "task": "M4 Video Preview Workspace — Planning and Specification",
+  "risk_level": 0,
+  "status": "in_progress",
+  "branch": "overnight/m3-plus-2026-07-20",
+  "governance_decision": "GD-005 — overnight owner override",
+  "started": "2026-07-20",
   "outcome": "pending"
 }
 ```
