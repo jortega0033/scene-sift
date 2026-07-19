@@ -76,8 +76,9 @@ interface SyncAnalysisInput {
 ```typescript
 interface SyncAnalysisResult {
   syncStatus: 'timing_ok' | 'needs_review' | 'check_failed';
-  warnings: SyncWarning[];
-  analysisVersion: number;
+  syncWarnings: SyncWarning[];
+  syncErrorCode?: string;  // only when check_failed
+  syncAnalysisVersion: number;
 }
 ```
 
@@ -85,26 +86,30 @@ interface SyncAnalysisResult {
 
 ```typescript
 interface SyncWarning {
-  code: SyncWarningCode;      // enum member
-  message: string;            // human-readable description
-  severity: 'error' | 'warn';
-  context?: Record<string, number | string>;
+  code: SyncWarningCode;
+  outOfRangeCount?: number;  // CUES_OUTSIDE_VIDEO_RANGE only
+  spanRatio?: number;        // SUBTITLE_SPAN_SHORT, SUBTITLE_SPAN_LONG only
+  gapMs?: number;            // LARGE_TAIL_GAP only
+  startRatio?: number;       // LATE_SUBTITLE_START only
 }
 ```
 
 `SyncWarningCode` enum members:
 
-- `OUT_OF_RANGE` — cue timestamps outside video duration
-- `SPAN_TOO_SHORT` — subtitle span covers less than 50% of video
-- `SPAN_TOO_LONG` — last cue extends beyond 120% of video duration
+- `CUES_OUTSIDE_VIDEO_RANGE` — one or more cues extend beyond `durationMs + TAIL_TOLERANCE_MS` or start before 0 ms
+- `SUBTITLE_SPAN_SHORT` — subtitle span covers less than 50% of video
+- `SUBTITLE_SPAN_LONG` — last cue extends beyond 120% of video duration
 - `LARGE_TAIL_GAP` — gap between last cue and end of video exceeds 10 s
-- `LATE_START` — first cue starts after 15% of video duration
+- `LATE_SUBTITLE_START` — first cue starts after 15% of video duration
+
+Guard failure codes (go in `syncErrorCode`, NOT in `syncWarnings`):
+- `INVALID_VIDEO_DURATION` — `durationMs` is zero or negative
+- `NO_CUES_TO_ANALYZE` — subtitle document has zero cues
 
 Status derivation in `analyze()`:
-- If any warning has `severity: 'error'` → `needs_review`
-- If warnings is empty → `timing_ok`
-- If warnings are all `warn` → `timing_ok` (warnings surfaced but not blocking)
-- On caught exception → `check_failed` (no warnings persisted)
+- If `syncWarnings` is empty → `timing_ok`
+- If `syncWarnings` has one or more entries → `needs_review`
+- On guard failure or caught exception → `check_failed` (with `syncErrorCode`)
 
 ---
 
@@ -122,12 +127,18 @@ class SynchronizationService {
 ### `checkForProject` flow
 
 1. Call `db.getProjectForSync(projectId)` — returns `null` if not found → return `check_failed` result.
-2. Validate that `project.syncStatus !== 'not_available'` — if `not_available`, return early with that status (no analysis run, no DB write).
+2. Check actual prerequisites (ALWAYS — never early-return based on stored `sync_status` value):
+   ```
+   if (project.inspectionStatus !== 'ready' ||
+       !['ready', 'ready_with_warnings'].includes(project.subtitleStatus)) {
+     await persistSyncResult(projectId, { syncStatus: 'not_available', ... });
+     return { syncStatus: 'not_available', syncWarnings: [], syncCheckedAt: null, syncAnalysisVersion: null };
+   }
+   ```
 3. Call `db.getCuesForProject(projectId)` — returns `[]` if no subtitle document.
-4. If `cues.length === 0` and `project.inspectedDurationMs` is null → status is `not_available`; persist and return.
-5. Call `SynchronizationAnalyzer.analyze({ cues, durationMs: project.inspectedDurationMs, analysisVersion: CURRENT_ANALYSIS_VERSION })`.
-6. Call `db.persistSyncResult(projectId, { syncStatus, warnings, analysisVersion, syncCheckedAt: Date.now() })` inside a transaction.
-7. Return `SyncCheckResult`.
+4. Call `SynchronizationAnalyzer.analyze({ cues, durationMs: project.inspectedDurationMs, analysisVersion: CURRENT_ANALYSIS_VERSION })`.
+5. Call `db.persistSyncResult(projectId, { syncStatus, syncWarnings, syncAnalysisVersion, syncCheckedAt: Date.now() })` inside a transaction.
+6. Return `SyncCheckResult`.
 
 ### `getSyncDisplay`
 
@@ -148,28 +159,40 @@ The renderer calls `getSyncDisplay` by reading project fields delivered via IPC 
 
 ## 5. IPC Contract
 
-Channel constant (in `src/shared/ipc/channels.ts`):
+Channel constant (in `src/shared/ipc/channels.ts`, as a key in the existing `IPC_CHANNELS` object):
 
 ```typescript
-export const SYNC_CHECK_FOR_PROJECT = 'sync:checkForProject';
+// Add to existing IPC_CHANNELS object — NOT as a standalone export
+export const IPC_CHANNELS = {
+  // ... existing channels ...
+  SYNC_CHECK_FOR_PROJECT: 'sync:checkForProject',
+};
 ```
 
 Input schema:
 
 ```typescript
 const syncCheckForProjectInputSchema = z.object({
-  projectId: z.string().min(1),
+  projectId: z.string().uuid(),
 });
 ```
 
-Output schema:
+Output schema (success):
 
 ```typescript
 const syncCheckForProjectOutputSchema = z.object({
   syncStatus: z.enum(['not_available', 'ready_to_check', 'timing_ok', 'needs_review', 'stale', 'check_failed']),
-  syncWarnings: z.array(syncWarningSchema).nullable(),
+  syncWarnings: z.array(syncWarningSchema),
   syncCheckedAt: z.number().nullable(),
-  error: z.string().optional(),
+  syncAnalysisVersion: z.number().nullable(),
+});
+```
+
+Output schema (error):
+
+```typescript
+const syncCheckForProjectErrorSchema = z.object({
+  error: z.object({ code: z.string() }),
 });
 ```
 

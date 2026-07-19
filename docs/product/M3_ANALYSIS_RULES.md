@@ -65,7 +65,8 @@ These checks execute first, before any threshold check. A guard failure returns 
 if (durationMs <= 0) {
   return {
     syncStatus: 'check_failed',
-    syncWarnings: [{ code: 'INVALID_VIDEO_DURATION', message: '...', detail: { durationMs } }],
+    syncWarnings: [],
+    syncErrorCode: 'INVALID_VIDEO_DURATION',
     syncAnalysisVersion: analysisVersion
   };
 }
@@ -82,7 +83,8 @@ the analyzer, but a zero or negative `durationSeconds` passes that null guard an
 if (cueCount === 0) {
   return {
     syncStatus: 'check_failed',
-    syncWarnings: [{ code: 'NO_CUES_TO_ANALYZE', message: '...', detail: {} }],
+    syncWarnings: [],
+    syncErrorCode: 'NO_CUES_TO_ANALYZE',
     syncAnalysisVersion: analysisVersion
   };
 }
@@ -105,24 +107,18 @@ tolerance, or that start before the video begins.
 **Algorithm:**
 
 ```
-const outOfRange: Array<{startMs: number; endMs: number; reason: string}> = [];
+let outOfRangeCount = 0;
 
 for (const cue of cues) {
-  if (cue.endMs > durationMs + TAIL_TOLERANCE_MS) {
-    outOfRange.push({ ...cue, reason: 'end_exceeds_tail_tolerance' });
-  } else if (cue.startMs < 0) {
-    outOfRange.push({ ...cue, reason: 'negative_start' });
+  if (cue.endMs > durationMs + TAIL_TOLERANCE_MS || cue.startMs < 0) {
+    outOfRangeCount++;
   }
 }
 
-if (outOfRange.length > 0) {
+if (outOfRangeCount > 0) {
   warnings.push({
     code: 'CUES_OUTSIDE_VIDEO_RANGE',
-    message: `${outOfRange.length} cue(s) fall outside the valid video range`,
-    detail: {
-      count: outOfRange.length,
-      examples: outOfRange.slice(0, 3)   // first 3 offending cues only
-    }
+    outOfRangeCount
   });
 }
 ```
@@ -131,11 +127,11 @@ if (outOfRange.length > 0) {
 are NOT out-of-range. This accommodates subtitle authoring tools that round timestamps past the
 container end. Only cues ending beyond `durationMs + TAIL_TOLERANCE_MS` are flagged.
 
-**Negative start:** A cue with `startMs < 0` is always out-of-range regardless of tolerance.
-There is no negative tolerance.
+**Negative start:** A cue with `startMs < 0` is a sub-case of `CUES_OUTSIDE_VIDEO_RANGE` — it is
+counted in `outOfRangeCount` using the same code. There is no separate code for negative starts.
 
-**Metadata:** `detail.examples` contains at most 3 entries so the persisted JSON stays small. All
-examples are `{startMs, endMs, reason}` — no cue text is included.
+**Flat form:** The warning carries only the count (`outOfRangeCount`). No cue examples, no reason
+strings, no nested detail objects are persisted. This keeps `sync_warnings_json` small and stable.
 
 ---
 
@@ -156,12 +152,7 @@ if (cueCount >= 10) {
   if (spanRatio < SPAN_SHORT_RATIO) {
     warnings.push({
       code: 'SUBTITLE_SPAN_SHORT',
-      message: 'Subtitle span covers less than 50% of video duration',
-      detail: {
-        subtitleSpanMs,
-        durationMs,
-        ratio: spanRatio
-      }
+      spanRatio
     });
   }
 }
@@ -189,12 +180,7 @@ indicating the subtitle was produced for a longer version of the video.
 if (lastCueEndMs > durationMs * SPAN_LONG_RATIO) {
   warnings.push({
     code: 'SUBTITLE_SPAN_LONG',
-    message: 'Subtitle extends beyond 120% of video duration',
-    detail: {
-      lastCueEndMs,
-      durationMs,
-      ratio: lastCueEndMs / durationMs
-    }
+    spanRatio: lastCueEndMs / durationMs
   });
 }
 ```
@@ -231,12 +217,7 @@ if (!warnings.some(w => w.code === 'SUBTITLE_SPAN_SHORT')) {
   if (tailGapMs > LARGE_TAIL_GAP_MS) {
     warnings.push({
       code: 'LARGE_TAIL_GAP',
-      message: `Last subtitle cue ends ${tailGapMs}ms before video end`,
-      detail: {
-        gapMs: tailGapMs,
-        lastCueEndMs,
-        durationMs
-      }
+      gapMs: tailGapMs
     });
   }
 }
@@ -267,12 +248,7 @@ const lateStartThresholdMs = durationMs * LATE_START_THRESHOLD_RATIO;
 if (firstCueStartMs > lateStartThresholdMs) {
   warnings.push({
     code: 'LATE_SUBTITLE_START',
-    message: `First subtitle cue starts after ${Math.round(firstCueStartMs / 1000)}s`,
-    detail: {
-      firstCueStartMs,
-      durationMs,
-      ratio: firstCueStartMs / durationMs
-    }
+    startRatio: firstCueStartMs / durationMs
   });
 }
 ```
@@ -294,9 +270,18 @@ does not imply correction is needed.
 After all checks complete (guards passed, checks 1–5 run):
 
 ```typescript
+interface SyncWarning {
+  code: SyncWarningCode;
+  outOfRangeCount?: number;  // CUES_OUTSIDE_VIDEO_RANGE only
+  spanRatio?: number;        // SUBTITLE_SPAN_SHORT, SUBTITLE_SPAN_LONG only
+  gapMs?: number;            // LARGE_TAIL_GAP only
+  startRatio?: number;       // LATE_SUBTITLE_START only
+}
+
 interface SyncAnalysisResult {
   syncStatus: 'timing_ok' | 'needs_review' | 'check_failed';
   syncWarnings: SyncWarning[];
+  syncErrorCode?: string;  // only when check_failed (guard failures: INVALID_VIDEO_DURATION, NO_CUES_TO_ANALYZE)
   syncAnalysisVersion: number;
 }
 
@@ -339,7 +324,8 @@ try {
   });
   return {
     syncStatus: 'check_failed',
-    syncWarnings: [{ code: 'SYNC_ANALYZER_INTERNAL_ERROR', message: 'Internal analysis error' }],
+    syncWarnings: [],
+    syncErrorCode: 'SYNC_ANALYZER_INTERNAL_ERROR',
     syncAnalysisVersion: analysisVersion
   };
 }

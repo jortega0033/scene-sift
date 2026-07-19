@@ -4,6 +4,9 @@
 **Spec date:** 2026-07-19
 **Prerequisite:** M2 merged (subtitle parsing complete)
 
+> **Note (2026-07-20):** State machine names in this document were updated during M3 spec reconciliation. Canonical names are:
+> `ready_to_check` (was `not_checked`), `timing_ok` (was `check_passed`), `needs_review` (replaces both `check_passed_with_warnings` and is the only non-OK result state), `stale` (was `needs_recheck`). `check_passed_with_warnings` does not exist in the canonical model. `POSSIBLE_OFFSET` is out of scope for M3.
+
 ---
 
 ## Primary objective
@@ -19,18 +22,20 @@ No file reads occur at analysis time. No audio processing occurs. No offset is a
 ```
 User opens project with video inspected and subtitle parsed
 → user triggers "Check synchronization" action
-→ IPC: sync:analyzeForProject(projectId)
+→ IPC: sync:checkForProject(projectId)
 → main: look up project row from DB
 → main: look up subtitle document from subtitle_documents table
 → main: validate prerequisites:
         durationSeconds not null
         subtitle_status in ['ready', 'ready_with_warnings']
-→ main: if prerequisites absent → persist not_available → return
+→ main: if prerequisites absent → write sync_status='not_available' to DB → return {syncStatus:'not_available'}
 → main: SynchronizationAnalyzer.analyze(durationSeconds, subtitleDocument)
         — pure function, no IO, no file reads, no Date.now()
-→ main: sync_analyzed_at = Date.now() — once, in SynchronizationService
+→ main: sync_checked_at = Date.now() — once, in SynchronizationService
 → main: persist sync result to DB (sync_status, sync_analysis_version,
-        sync_analyzed_at, sync_warnings_json)
+        sync_checked_at, sync_warnings_json)
+        (service writes only: not_available, ready_to_check, timing_ok, needs_review, check_failed;
+         stale is NEVER written — it is computed from timestamps at display time)
 → IPC: return updated ProjectRecord to renderer
 → renderer: invalidate project query (TanStack Query)
 → renderer: display sync summary panel with state and sync warnings
@@ -48,15 +53,14 @@ User opens project with video inspected and subtitle parsed
 - Detection of subtitle span extending beyond 120% of video duration (SPAN_LONG)
 - Detection of first cue starting after 15% of video duration (LATE_START)
 - Detection of last cue followed by more than 10 seconds of empty video (LARGE_TAIL_GAP)
-- Detection of a consistent cross-cue shift pattern (POSSIBLE_OFFSET — informational warning only)
 - Synchronization state machine with 6 states (see below)
 - Sync summary panel in project detail — always rendered when project has video inspected
-- Restart persistence of sync analysis result: sync status, analysis version, sync warnings, analyzed_at
+- Restart persistence of sync analysis result: sync status, analysis version, sync warnings, sync_checked_at
 - `analysisVersion` integer on persisted result to support future threshold-triggered re-analysis
-- DB migration (`0003_sync_analysis.sql`) adding sync columns to `projects` table
+- DB migration (`0003_sync_check.sql`) adding sync columns to `projects` table
 - Browser QA fixtures for all 6 sync states
-- Mock `sync.analyzeForProject()` transition in-memory fixture state
-- IPC contract tests for `SYNC_ANALYZE_FOR_PROJECT` channel
+- Mock `sync.checkForProject()` transition in-memory fixture state
+- IPC contract tests for `SYNC_CHECK_FOR_PROJECT` channel
 - Unit tests for `SynchronizationAnalyzer` — pure function, exhaustively testable against threshold boundaries
 - Unit tests for `SynchronizationService` — orchestration and persistence
 - Unit tests for `syncFormatters.ts` — human-readable state and warning display
@@ -69,16 +73,16 @@ User opens project with video inspected and subtitle parsed
 
 | State | `sync_status` value | Meaning |
 |---|---|---|
-| `not_available` | `'not_available'` | Prerequisites not met: `durationSeconds` is null, or `subtitle_status` is not `ready`/`ready_with_warnings` |
-| `not_checked` | `'not_checked'` | Prerequisites met but user has not triggered analysis yet |
-| `check_passed` | `'check_passed'` | Analysis ran and found no structural timing issues |
-| `check_passed_with_warnings` | `'check_passed_with_warnings'` | Analysis ran; timing is structurally within bounds but soft warnings exist |
-| `check_failed` | `'check_failed'` | Analysis ran; one or more hard structural problems detected |
-| `needs_recheck` | `'needs_recheck'` | A previously completed check is stale: subtitle was re-parsed, or video re-inspected, since the last sync check |
+| `not_available` | `'not_available'` | Prerequisites not met: `durationSeconds` is null, or `subtitle_status` is not `ready`/`ready_with_warnings`. Written to DB. |
+| `ready_to_check` | `'ready_to_check'` | Prerequisites met but user has not triggered analysis yet. Written to DB. |
+| `timing_ok` | `'timing_ok'` | Analysis ran and found no structural timing issues. Written to DB. |
+| `needs_review` | `'needs_review'` | Analysis ran; one or more warnings detected. Written to DB. |
+| `check_failed` | `'check_failed'` | Analysis ran; a guard condition failed (invalid video duration, no cues) or an unexpected error occurred. Written to DB. |
+| `stale` | (display only — **never written to DB**) | A previously completed check is outdated: subtitle was re-parsed, or video re-inspected, since the last sync check. Derived by comparing `sync_checked_at` against `inspected_at` / `subtitle_parsed_at`. |
 
 `analyzing` is NOT a persisted state — same pattern as M2 `parsing`. If the app closes during IPC, the state remains at whatever it was before the IPC call began.
 
-**`not_checked` vs `null`:** On project load after M3 migration, `sync_status` for existing projects will be `null`. The application treats `null` identically to `not_checked` for display purposes, then persists `not_checked` on first display load or on next trigger attempt. An explicit `not_checked` value is persisted after the first prerequisite check that confirms prerequisites are met.
+**`ready_to_check` vs `null`:** On project load after M3 migration, `sync_status` for existing projects will be `null`. The application treats `null` as `ready_to_check` (if prerequisites met) or `not_available` (if prerequisites absent) for display purposes. The service writes the resolved state to DB on first invocation.
 
 ---
 
@@ -92,15 +96,24 @@ If either prerequisite is absent, the sync action button is disabled. The sync p
 
 ---
 
-## Stale check semantics (`needs_recheck`)
+## Stale check semantics (`stale`)
 
-When the user re-parses the subtitle or re-inspects the video after a sync check has been completed, the sync status transitions to `needs_recheck`. This signals that the previous analysis result was computed from data that may have changed.
+`stale` is a **display-only, computed state** — it is NEVER written to the `sync_status` DB column. When the renderer loads a project, it compares `sync_checked_at` against `inspected_at` and `subtitle_parsed_at` to determine if the last sync check predates a data change.
 
-`needs_recheck` is set by the service responsible for the triggering action:
-- `SubtitleService.parseSubtitleForProject()` sets `sync_status = 'needs_recheck'` if the project's existing `sync_status` was `check_passed`, `check_passed_with_warnings`, or `check_failed`.
-- `InspectionService.inspectForProject()` (M1 service) similarly sets `needs_recheck` when reinspecting a project with an existing sync result.
+Staleness logic (evaluated at render time, not written to DB):
 
-`needs_recheck` is never set automatically on every project load — only when a parse or inspection event follows a completed sync check in the same session or across sessions.
+```
+isStale =
+  (syncStatus === 'timing_ok' || syncStatus === 'needs_review')
+  AND (
+    syncCheckedAt < project.inspectedAt
+    OR (project.subtitleParsedAt !== null AND syncCheckedAt < project.subtitleParsedAt)
+  )
+```
+
+When `isStale` is true, the renderer displays the `stale` state with a "Re-run Check" prompt. The `sync_status` column in the DB continues to hold the last computed result (`timing_ok` or `needs_review`). No service writes `stale` to the DB — it is always derived.
+
+Stale detection is performed lazily on project load or sync panel render, never eagerly at startup for all projects.
 
 ---
 
@@ -146,14 +159,14 @@ M3 is complete when:
 2. Check runs in the main process using only persisted DB data — no new file reads at analysis time.
 3. `SynchronizationAnalyzer` is a pure function with no IO dependencies and no `Date.now()` call.
 4. All prerequisite-state guards prevent analysis when `durationSeconds` or parsed subtitle is absent.
-5. All six sync states are defined, persisted correctly, and displayed in the sync panel.
-6. `needs_recheck` is set when subtitle or video data is updated after a completed sync check.
+5. All six sync states are defined and displayed in the sync panel. The five DB-persisted states (`not_available`, `ready_to_check`, `timing_ok`, `needs_review`, `check_failed`) are written correctly; `stale` is computed from timestamps and never persisted.
+6. `stale` display state is shown when subtitle or video data is updated after a completed sync check (derived from timestamp comparison, not written to DB).
 7. Sync result (state, analysis version, sync warnings, analyzed_at) survives app restart.
 8. Sync summary panel always renders — with a contextual placeholder when sync has not been run.
 9. All sync warning types display human-readable messages; no raw `SyncWarningCode` values visible.
 10. `analysisVersion` is persisted on every result; stale version on load produces `needs_recheck`.
 11. Browser QA fixtures and mock handlers reflect all 6 sync states.
-12. IPC contract tests cover the `SYNC_ANALYZE_FOR_PROJECT` channel.
+12. IPC contract tests cover the `SYNC_CHECK_FOR_PROJECT` channel.
 13. `SynchronizationAnalyzer` unit tests cover all threshold boundary conditions (at, above, below).
 14. `SynchronizationService` unit tests cover orchestration including prerequisite-absent and stale paths.
 15. E2E test covers the full sync check workflow in browser QA mode.

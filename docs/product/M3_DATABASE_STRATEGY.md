@@ -17,13 +17,14 @@ sync_warnings_json text,       -- JSON array of SyncWarning objects; NULL if unc
 sync_analysis_version integer  -- algorithm version that produced the result; NULL if unchecked
 ```
 
-**Allowed `sync_status` values**:
+**Allowed `sync_status` values (persisted to DB)**:
 - `not_available` — project lacks the data needed to run a check (no video duration or no subtitle document)
 - `ready_to_check` — data is present; check has not yet been run
 - `timing_ok` — check ran; no blocking timing issues found
 - `needs_review` — check ran; one or more error-severity warnings found
-- `stale` — display-only state (never persisted; computed by renderer from timestamps)
 - `check_failed` — check ran but threw an unexpected error
+
+**`stale` is a computed display state — never written to the `sync_status` column.** The renderer derives stale by comparing `sync_checked_at` against `inspected_at` / `subtitle_parsed_at` (and checking `sync_analysis_version`). The five values above are the only values ever persisted.
 
 **Default on migration**: all four columns default to NULL for existing rows. No backfill is needed. The state machine derives `ready_to_check` or `not_available` on first load based on whether `inspected_duration_ms` and a subtitle document are present.
 
@@ -39,8 +40,11 @@ Path: `src/database/migrations/0003_sync_check.sql`
 -- Reversible: see rollback note below.
 
 ALTER TABLE projects ADD COLUMN sync_status text;
+--> statement-breakpoint
 ALTER TABLE projects ADD COLUMN sync_checked_at integer;
+--> statement-breakpoint
 ALTER TABLE projects ADD COLUMN sync_warnings_json text;
+--> statement-breakpoint
 ALTER TABLE projects ADD COLUMN sync_analysis_version integer;
 ```
 
@@ -91,8 +95,6 @@ async getCuesForProject(id: string): Promise<SubtitleCue[]> {
       SELECT cues_json
       FROM subtitle_documents
       WHERE project_id = ?
-      ORDER BY created_at DESC
-      LIMIT 1
     `)
     .get(id) as { cues_json: string } | undefined;
 
@@ -244,16 +246,17 @@ Use when: video and subtitle are both present but check has never run.
 ```
 Use when: analyzer returned no warnings.
 
-### State: `timing_ok` with warnings (warn-only, non-blocking)
+### State: `needs_review` with `LATE_SUBTITLE_START` warning
 ```json
 {
   "id": "proj-004",
-  "sync_status": "timing_ok",
+  "sync_status": "needs_review",
   "sync_checked_at": 1753027200000,
-  "sync_warnings_json": "[{\"code\":\"LATE_START\",\"message\":\"First cue starts at 18% of video duration\",\"severity\":\"warn\",\"context\":{\"firstCueMs\":1800,\"durationMs\":10000,\"ratioPercent\":18}}]",
+  "sync_warnings_json": "[{\"code\":\"LATE_SUBTITLE_START\",\"startRatio\":0.18}]",
   "sync_analysis_version": 1
 }
 ```
+Use when: analyzer returned one or more warnings (any warning → `needs_review`).
 
 ### State: `needs_review`
 ```json
@@ -261,7 +264,7 @@ Use when: analyzer returned no warnings.
   "id": "proj-005",
   "sync_status": "needs_review",
   "sync_checked_at": 1753027200000,
-  "sync_warnings_json": "[{\"code\":\"OUT_OF_RANGE\",\"message\":\"3 cues have timestamps beyond video duration\",\"severity\":\"error\",\"context\":{\"cueCount\":3,\"durationMs\":10000}}]",
+  "sync_warnings_json": "[{\"code\":\"CUES_OUTSIDE_VIDEO_RANGE\",\"outOfRangeCount\":3}]",
   "sync_analysis_version": 1
 }
 ```

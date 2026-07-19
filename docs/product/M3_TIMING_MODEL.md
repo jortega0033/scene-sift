@@ -86,14 +86,9 @@ M3 does not attempt VFR handling. Container duration (from FFprobe `duration_sec
 
 **Not defined in M3.** Offset detection and persistence are deferred to M4 or later.
 
-M3 may detect a pattern consistent with a global offset (e.g., most cues fall before or after an expected range in the same direction) and report this as the informational `POSSIBLE_OFFSET` sync warning. However:
+**`POSSIBLE_OFFSET` is OUT OF SCOPE for M3.** M3 does not detect global offset patterns and does not emit this code. It was considered in early planning but was removed during M3 spec reconciliation (2026-07-20).
 
-- M3 does not compute a specific offset value for correction purposes
-- M3 does not persist an offset value
-- M3 does not define whether a positive offset means "subtitle is early" or "subtitle is late"
-- The `detail.offsetMs` field on `POSSIBLE_OFFSET` is an approximate descriptive statistic only, not a correction value
-
-The offset sign convention must be defined and documented in M4's timing model spec before any offset is stored, displayed as actionable, or used in any computation. Do not anticipate the M4 convention in M3 code or comments.
+The offset sign convention must be defined and documented in M4's timing model spec before any offset is stored, displayed as actionable, or used in any computation. Do not implement any offset detection, `POSSIBLE_OFFSET` emission, or offset sign convention in M3 code or comments.
 
 ---
 
@@ -118,6 +113,8 @@ All thresholds are named constants exported from `src/main/services/sync/synchro
 
 ### Classification of warnings as soft vs hard
 
+> **Note (2026-07-20):** The hard/soft classification in this table is superseded. In M3, ALL check results with any warning produce `needs_review`. There is no `check_failed` from analysis warnings — `check_failed` only occurs from guard failures (invalid video duration, no cues). The hard/soft column below is retained for historical reference only and must not be used for implementation.
+
 | Code | Classification | Result state |
 |---|---|---|
 | `CUES_OUTSIDE_VIDEO_RANGE` | Hard | `check_failed` |
@@ -128,9 +125,7 @@ All thresholds are named constants exported from `src/main/services/sync/synchro
 | `LARGE_TAIL_GAP` | Soft | `check_passed_with_warnings` |
 | `POSSIBLE_OFFSET` | Informational | `check_passed_with_warnings` |
 
-If any hard warning is present, the result is `check_failed` regardless of soft warnings.
-If only soft or informational warnings are present, the result is `check_passed_with_warnings`.
-If no warnings of any kind are present, the result is `check_passed`.
+**Superseded model:** These result state names (`check_failed` for warnings, `check_passed_with_warnings`) and the hard/soft distinction were replaced in M3 spec reconciliation. The canonical model uses: any non-empty `syncWarnings` array → `needs_review`; empty array → `timing_ok`; guard failure → `check_failed` with `syncErrorCode`.
 
 ### Why thresholds are adjustable
 

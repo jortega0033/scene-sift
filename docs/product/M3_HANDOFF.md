@@ -87,7 +87,10 @@ export interface SyncAnalysisInput {
 }
 
 export interface SyncAnalysisResult {
-  warnings: SyncWarning[];
+  syncStatus: 'timing_ok' | 'needs_review' | 'check_failed';
+  syncWarnings: SyncWarning[];
+  syncErrorCode?: string;      // only when check_failed (INVALID_VIDEO_DURATION, NO_CUES_TO_ANALYZE, SYNC_ANALYZER_INTERNAL_ERROR)
+  syncAnalysisVersion: number; // always M3_ANALYSIS_VERSION
 }
 
 export interface SyncCheckResult {
@@ -175,9 +178,10 @@ Ten risks tracked (RISK-M3-01 through RISK-M3-10). The highest-severity risk is 
 
 ## 11. Owner Override
 
-The project owner has waived manual human approval gates for individual phases of M3. This override means:
+The project owner has waived manual human approval gates for individual phases of M3. This override is recorded as **GD-005** in `docs/governance/GOVERNANCE_DECISIONS.md`. This override means:
 
 - Phase transitions do NOT require a human to click "approve" before proceeding.
 - Automated validation is NOT waived. Every phase's required checks must pass with observed output.
 - Independent verifier requirements for Risk 2 and Risk 3 phases are NOT waived. A different agent/role must verify those phases.
 - If any phase exceeds 3 attempts without passing, escalation to the project owner is required — the override does not apply to stuck phases.
+- This waiver applies to M3+ on the overnight/m3-plus-2026-07-20 branch only, not to main.

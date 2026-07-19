@@ -22,9 +22,17 @@ Minimum required: 20 test cases.
 
 ### Test Cases
 
-**TC-ANA-01: Zero cues — returns timing_ok, no warnings**
+**TC-ANA-01: Zero cues — Guard B fires, returns check_failed with NO_CUES_TO_ANALYZE**
 Input: `{ durationMs: 120000, cues: [] }`
-Expected: `{ warnings: [] }` — no check produces a warning for empty cue list.
+Expected: `{ syncStatus: 'check_failed', syncErrorCode: 'NO_CUES_TO_ANALYZE', syncWarnings: [] }` — Guard B fires before any check loop; zero cues is a guard failure, not an empty-OK result.
+
+**TC-ANA-Guard-A-1: Zero video duration — Guard A fires, returns check_failed with INVALID_VIDEO_DURATION**
+Input: `{ durationMs: 0, cues: [{ startMs: 0, endMs: 5000 }] }`
+Expected: `{ syncStatus: 'check_failed', syncErrorCode: 'INVALID_VIDEO_DURATION', syncWarnings: [] }`.
+
+**TC-ANA-Guard-A-2: Negative video duration — Guard A fires, returns check_failed with INVALID_VIDEO_DURATION**
+Input: `{ durationMs: -1, cues: [{ startMs: 0, endMs: 5000 }] }`
+Expected: `{ syncStatus: 'check_failed', syncErrorCode: 'INVALID_VIDEO_DURATION', syncWarnings: [] }` — negative `durationMs` is incoherent; Guard A must catch it explicitly.
 
 **TC-ANA-02: Exactly 1 cue within range — no warnings**
 Input: `{ durationMs: 120000, cues: [{ startMs: 1000, endMs: 5000 }] }`
@@ -70,9 +78,9 @@ Expected: `{ warnings: [] }` — exactly 10s is NOT a large gap (threshold is st
 Input: `{ durationMs: 60000, lastCueEndMs: 49999 }`, 10 cues. Gap = 10001ms.
 Expected: `{ warnings: [{ code: 'LARGE_TAIL_GAP', gapMs: 10001 }] }`.
 
-**TC-ANA-13: LARGE_TAIL_GAP — gap > 10s but only 9 cues (no warning — sparse guard)**
-Input: `{ durationMs: 60000, lastCueEndMs: 45000 }`, 9 cues. Gap = 15000ms.
-Expected: `{ warnings: [] }` — sparse file guard suppresses large tail gap check.
+**TC-ANA-13: LARGE_TAIL_GAP — gap > 10s with only 9 cues (warning fires — no sparse guard on Check 4)**
+Input: `{ durationMs: 60000, cues: [9 cues with lastCueEndMs: 45000] }`. Gap = 15000ms.
+Expected: `{ syncWarnings: [{ code: 'LARGE_TAIL_GAP', gapMs: 15000 }] }` — LARGE_TAIL_GAP has no cue-count sparse guard. The skip condition is only when SUBTITLE_SPAN_SHORT was already emitted. Since SUBTITLE_SPAN_SHORT is skipped for 9 cues (sparse guard) but not emitted, Check 4 still runs and fires for this 15000ms gap.
 
 **TC-ANA-14: LATE_SUBTITLE_START — firstCueStartMs exactly 15% of durationMs (no warning)**
 Input: `{ durationMs: 100000, firstCueStartMs: 15000 }`.
@@ -183,8 +191,10 @@ Input: `{ code: 'LARGE_TAIL_GAP', gapMs: 15000 }`
 Expected: Output string contains "15" and "second" in some form.
 
 **TC-FMT-11: formatSyncTimestamp — recent timestamp renders as relative**
-Input: Unix ms for "2 hours ago" relative to test execution time.
-Expected: Output contains "2 hours ago" or "about 2 hours ago" (allow ±1 hour tolerance in assertion).
+Setup: `vi.useFakeTimers(); vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));`
+Cleanup: `afterEach(() => { vi.useRealTimers(); })`
+Input: Unix ms for exactly 2 hours before the mocked "now": `new Date('2024-01-15T10:00:00.000Z').getTime()`
+Expected: Output contains "2 hours ago" or "about 2 hours ago". Test must not rely on wall-clock time — deterministic via fake timer.
 
 **TC-FMT-12: formatSyncTimestamp — does not return raw ms value**
 Input: Any valid Unix ms timestamp.
@@ -301,6 +311,21 @@ Assert: Row is inserted without error and can be read back with correct values.
 **TC-MIG-03: DB schema matches expected columns after migration**
 Setup: Run migration 0003.
 Assert: `PRAGMA table_info(projects)` output includes all four new columns with correct types (`TEXT`, `INTEGER`, `TEXT`, `INTEGER`).
+
+---
+
+## 8. Persistence Test
+
+File: `tests/database/sync-persistence.test.ts`
+
+**TC-PER-01: Sync result survives DB close and reopen**
+Steps:
+1. Initialize a real `DatabaseService` instance. Create a project with `inspectionStatus: 'ready'` and `subtitleStatus: 'ready'`.
+2. Call `SynchronizationService.checkForProject(projectId)`. Verify returned result has `syncStatus: 'needs_review'` and at least one warning.
+3. Close (dispose) the `DatabaseService` instance.
+4. Create a new `DatabaseService` instance and call `initialize()`.
+5. Load the project with `getProject(projectId)`.
+6. Assert: `syncStatus`, `syncWarningsJson`, `syncCheckedAt`, and `syncAnalysisVersion` all match the values from step 2.
 
 ---
 

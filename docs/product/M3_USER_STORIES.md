@@ -97,8 +97,8 @@ These stories cover the complete set of user-facing behaviors for M3 structural 
 **so that** I can identify whether an offset was accidentally applied to the subtitle file.
 
 **Acceptance criteria**:
-1. When `firstCueStart / durationSeconds` exceeds 10%, a `LATE_SUBTITLE_START` warning is shown with the offset expressed as an integer percentage of video duration.
-2. The warning does not appear when the first cue starts within the first 10% of video duration.
+1. When `firstCueStart / durationSeconds` exceeds 15%, a `LATE_SUBTITLE_START` warning is shown with the offset expressed as an integer percentage of video duration.
+2. The warning does not appear when the first cue starts within the first 15% of video duration.
 
 ---
 

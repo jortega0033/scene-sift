@@ -40,16 +40,15 @@ Load a video source file into a project and verify it is a valid video using FFp
 
 **Goal**: Detect structural subtitle timing problems against the project video and present truthful, actionable synchronization warnings without building a subtitle editor.
 
-**Status: PLANNING** — specification in progress 2026-07-19. See `docs/product/M3_HANDOFF.md` when complete.
+**Status: PLANNING COMPLETE** — specification complete 2026-07-20. See `docs/product/M3_HANDOFF.md` for implementation handoff.
 
-**Proposed scope (to be confirmed by planning)**:
+**Confirmed scope:**
 - Analysis of persisted subtitle cue timeline vs. persisted video metadata
-- Structural timing checks (cues outside duration, large tail, span mismatch, etc.)
-- Synchronization state machine with restart persistence
-- Optional: bounded global offset (to be confirmed)
-- No per-cue editing, no video preview, no AI, no audio analysis
+- Structural timing checks (cues outside duration, large tail, span mismatch, late start)
+- Synchronization state machine with 6 states and restart persistence
+- No global offset detection, no per-cue editing, no video preview, no AI, no audio analysis
 
-**Exit criteria**: TBD by M3 planning — will be in `docs/product/M3_ACCEPTANCE_CRITERIA.md`.
+**Exit criteria**: `docs/product/M3_ACCEPTANCE_CRITERIA.md` (AC-M3-001 through AC-M3-006).
 
 ---
 
