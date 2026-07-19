@@ -802,3 +802,71 @@ Append one JSON line per material run.
   "next_step": "HUMAN MERGE REVIEW required before merge to main. No autonomous merge permitted."
 }
 ```
+
+---
+
+## Run: 2026-07-19T-m2-merge-closure — M2 Owner-Override Merge and Post-Merge Closure
+
+```json
+{
+  "run_id": "2026-07-19T-m2-merge-closure",
+  "task": "M2 Subtitle Parsing and Validation — Owner-Override Merge, Post-Merge Validation, and Closure",
+  "parent_run_id": "2026-07-19T-m2-acceptance-audit",
+  "risk_level": 0,
+  "status": "complete",
+  "branch": "feature/m2-subtitle-parsing-validation → main",
+  "merge_commit": "2443a73",
+  "feature_commit": "2f0653c",
+  "owner_override": {
+    "decision": "OWNER OVERRIDE — M2 MERGED WITHOUT MANUAL DIFF OR RUNTIME REVIEW",
+    "manual_diff_review": "SKIPPED BY REPOSITORY OWNER",
+    "manual_electron_runtime": "SKIPPED BY REPOSITORY OWNER",
+    "manual_real_subtitle_smoke": "SKIPPED BY REPOSITORY OWNER",
+    "automated_acceptance_audit": "PASSED",
+    "independent_specialist_verification": "PASSED",
+    "residual_risk": "ACCEPTED BY REPOSITORY OWNER",
+    "merge_authorization": "EXPLICITLY GRANTED BY REPOSITORY OWNER"
+  },
+  "pre_merge_gate": {
+    "pnpm_typecheck": "exit 0",
+    "pnpm_lint": "exit 0 (max-warnings=0)",
+    "pnpm_test": "223 tests / 20 files / exit 0",
+    "pnpm_governance_validate": "exit 0",
+    "pnpm_architecture_validate": "exit 0",
+    "pnpm_design_validate": "exit 0",
+    "pnpm_dependencies_validate": "exit 0",
+    "pnpm_build": "exit 0",
+    "pnpm_test_e2e": "29 passed / exit 0",
+    "pnpm_test_visual": "13 passed / exit 0",
+    "pnpm_test_electron": "FAIL — same pre-existing environment error ('Process failed to launch!') as accepted audit; confirmed matches; not M2-introduced"
+  },
+  "merge_strategy": "no-ff merge to main via git merge --no-ff",
+  "push": "git push origin main — exit 0",
+  "post_merge_validation": {
+    "pnpm_typecheck": "exit 0",
+    "pnpm_lint": "exit 0",
+    "pnpm_test": "223 tests / 20 files / exit 0",
+    "pnpm_test_e2e": "29 passed / exit 0",
+    "pnpm_test_visual": "13 passed / exit 0",
+    "pnpm_build": "exit 0",
+    "pnpm_governance_validate": "exit 0",
+    "pnpm_architecture_validate": "exit 0",
+    "post_merge_manual_electron_smoke": "SKIPPED BY OWNER OVERRIDE",
+    "post_merge_manual_subtitle_smoke": "SKIPPED BY OWNER OVERRIDE"
+  },
+  "m2_closure": {
+    "status": "CLOSED",
+    "implementation": "COMPLETE",
+    "independent_verification": "PASSED",
+    "acceptance_audit": "PASSED",
+    "merge_method": "OWNER OVERRIDE",
+    "manual_diff_review": "SKIPPED",
+    "manual_runtime_testing": "SKIPPED",
+    "automated_post_merge_validation": "PASSED",
+    "residual_manual_test_risk": "ACCEPTED BY OWNER"
+  },
+  "outcome": "pass",
+  "verdict": "M2 CLOSED — merged to main via owner override; post-merge automated validation green",
+  "next_step": "M3 Subtitle Synchronization Check planning begins"
+}
+```

@@ -5,8 +5,8 @@ Source: GPT AI as PO/PM, provided by user 2026-07-19 for future reference.
 **Rule**: One milestone at a time. Every milestone follows:
 Plan/spec → implement on feature branch → targeted specialist review → full validation → acceptance audit → human merge.
 
-**Current status**: M1 CLOSED (merged to main 2026-07-19 via owner override). M2 PLANNING (spec complete 2026-07-19, awaiting governed implementation).
-**Next**: M2 independent planning review → implementation authorized → feature branch → implement per M2_IMPLEMENTATION_PLAN.md.
+**Current status**: M1 CLOSED. M2 CLOSED (merged to main 2026-07-19 via owner override). M3 PLANNING in progress.
+**Next**: M3 planning complete → implementation-readiness verdict → governed implementation on feature branch.
 
 ---
 
@@ -24,7 +24,7 @@ Load a video source file into a project and verify it is a valid video using FFp
 
 **Goal**: Parse SRT/WebVTT subtitle files and attach them to projects.
 
-**Status: PLANNING** — implementation-ready spec complete 2026-07-19. See `docs/product/M2_HANDOFF.md`.
+**Status: CLOSED** — merged to main 2026-07-19 via owner override. See `docs/product/M2_ACCEPTANCE_AUDIT.md` for merge record.
 
 **Scope (M2 only)**:
 - In-process SRT + WebVTT parser (ASS deferred)
@@ -32,28 +32,24 @@ Load a video source file into a project and verify it is a valid video using FFp
 - Subtitle summary panel in ProjectsPage renderer
 - No sync check (M3), no preview (M4), no AI (M6+)
 
-**Key features**:
-- Subtitle file selection (stores path, does not auto-parse)
-- Explicit user-triggered parse action
-- Display: cue count, last cue end time, source format, parse warnings
-- Parse failure: human-readable error + retry button
-- Persists full cue document + summary across app restart
-
-**Exit criteria**: Select subtitle → parse succeeds → cue count + duration displayed → persists across restart. All 7 subtitle states render correctly. Parse failure shows human-readable error. 36 acceptance criteria pass.
+**Exit criteria met**: Select subtitle → parse succeeds → cue count + duration displayed → persists across restart. All 7 subtitle states render correctly. Parse failure shows human-readable error. 223 unit / 29 E2E / 13 visual tests pass.
 
 ---
 
-## M3 — Subtitle Sync Check
+## M3 — Subtitle Synchronization Check
 
-**Goal**: Detect whether subtitle timing is synchronized with video duration.
+**Goal**: Detect structural subtitle timing problems against the project video and present truthful, actionable synchronization warnings without building a subtitle editor.
 
-**Key features**:
-- Compare subtitle last-cue end time to video duration
-- Flag sync mismatch if delta exceeds configurable threshold
-- Display sync status badge (in-sync / out-of-sync / unknown)
-- Store sync result in project record
+**Status: PLANNING** — specification in progress 2026-07-19. See `docs/product/M3_HANDOFF.md` when complete.
 
-**Exit criteria**: Attach subtitle to ready project → sync check runs automatically → result displayed.
+**Proposed scope (to be confirmed by planning)**:
+- Analysis of persisted subtitle cue timeline vs. persisted video metadata
+- Structural timing checks (cues outside duration, large tail, span mismatch, etc.)
+- Synchronization state machine with restart persistence
+- Optional: bounded global offset (to be confirmed)
+- No per-cue editing, no video preview, no AI, no audio analysis
+
+**Exit criteria**: TBD by M3 planning — will be in `docs/product/M3_ACCEPTANCE_CRITERIA.md`.
 
 ---
 

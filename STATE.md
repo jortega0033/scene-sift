@@ -6,34 +6,39 @@ defaultMode: L2
 
 ## Active run
 
-- run_id: 2026-07-19T-m2-acceptance-audit
-- milestone: M2 Subtitle Parsing and Validation — Acceptance Audit
-- branch: feature/m2-subtitle-parsing-validation
-- risk_level: 0 (audit + targeted fixes)
-- status: pending_human_merge_review
-- scope: Independent post-implementation acceptance audit; remediate all confirmed findings; issue merge-gate verdict
-- audit_verdict: M2 ACCEPTED — READY FOR OWNER-OVERRIDE MERGE
-- findings_resolved: 9 (VTT header dead code, clearSubtitleDocument private, SRT+VTT cue limit tests, SRT zero-duration test, stale-doc-after-failure test, restart project-row test, reader security coverage, MAX_TOTAL_TEXT reconciliation)
-- findings_deferred: 3 LOW (spec doc enforcement-point column, migration spec discrepancy, formatSubtitleError fallback code leak) — none affect correctness or security
-- verification_results:
-  - parser-correctness-auditor: FAIL → PASS (after fixes)
-  - reader-security-auditor: PASS
-  - database-auditor: FAIL → PASS (after clearSubtitleDocument private + test restructure)
-  - ipc-ui-scope-auditor: PASS
-  - final-electron-security-reviewer: PASS (post-remediation)
-  - final-database-scope-reviewer: PASS (post-remediation)
-- test_summary: 223 unit tests pass (20 files), 29 E2E pass, 13 visual pass; pnpm test:electron pre-existing failure (environment limitation, not M2-introduced)
-- validation_summary: typecheck exit 0, lint exit 0, build exit 0, governance:validate exit 0, architecture:validate exit 0, design:validate exit 0, dependencies:validate exit 0
-- owner_override: manual phase gates skipped per owner authorization; manual runtime testing skipped; independent specialist verification completed
-- next_step: HUMAN MERGE REVIEW required before merge to main
+- run_id: 2026-07-19T-m3-planning
+- milestone: M3 Subtitle Synchronization Check — Planning
+- branch: main
+- risk_level: 0 (planning and documentation only — no product code)
+- status: in_progress
+- scope: Define synchronization problem, timing model, state machine, architecture, UX, tests, acceptance criteria; independent review; implementation-readiness verdict
 
-## Previous active run (complete — audit complete, pending merge)
+## Previous active run (complete — MERGED)
+
+- run_id: 2026-07-19T-m2-acceptance-audit
+- milestone: M2 Subtitle Parsing and Validation — Acceptance Audit + Merge
+- branch: feature/m2-subtitle-parsing-validation → main
+- risk_level: 0 (audit + targeted fixes)
+- status: complete — MERGED via owner override
+- merge_commit: 2443a73
+- audit_verdict: M2 ACCEPTED — READY FOR OWNER-OVERRIDE MERGE
+- merge_method: OWNER OVERRIDE — manual diff/runtime review skipped per owner authorization
+- manual_diff_review: SKIPPED BY REPOSITORY OWNER
+- manual_electron_runtime: SKIPPED BY REPOSITORY OWNER
+- manual_subtitle_smoke: SKIPPED BY REPOSITORY OWNER
+- automated_acceptance_audit: PASSED
+- independent_specialist_verification: PASSED (6 specialists)
+- post_merge_validation: typecheck exit 0, lint exit 0, 223/223 unit, 29/29 E2E, 13/13 visual, build exit 0, governance:validate exit 0
+- residual_risk: ACCEPTED BY REPOSITORY OWNER
+- completed: 2026-07-19
+
+## Previous run (complete — audit complete, merged)
 
 - run_id: 2026-07-19T-m2-implementation
 - milestone: M2 Subtitle Parsing and Validation — Stage B Governed Implementation
 - branch: feature/m2-subtitle-parsing-validation
 - risk_level: 3 (multiple phases)
-- status: complete — pending acceptance audit
+- status: complete — MERGED
 - phases_complete: 1–11 (all implementation + independent verification complete)
 
 ## Previous run (complete)

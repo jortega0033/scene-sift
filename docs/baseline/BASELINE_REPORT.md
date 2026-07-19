@@ -1,7 +1,7 @@
 # SceneSift Baseline Report
 
 > Machine-readable baseline: `docs/baseline/baseline.json`
-> Last updated: 2026-07-19 (M1 acceptance audit)
+> Last updated: 2026-07-19 (M2 merged — post-merge validation)
 
 ## Starting-state facts
 
@@ -16,45 +16,49 @@ This report is paired with `baseline.json` and updated as part of governance har
 
 ---
 
-## Test counts (as of 2026-07-19 M1 audit)
+## Test counts (as of 2026-07-19 M2 post-merge)
 
 | Suite | Count | Command | Status |
 |---|---|---|---|
-| Unit tests (Vitest) | 100 | `pnpm test` | 100/100 passed |
-| E2E tests (Playwright, browser QA mode) | 19 | `pnpm test:e2e` | 19/19 passed |
-| Visual regression tests (Playwright) | 9 | `pnpm test:visual` | 6/9 passed (3 sub-2% pixel drift failures — see limitations) |
+| Unit tests (Vitest) | 223 | `pnpm test` | 223/223 passed |
+| E2E tests (Playwright, browser QA mode) | 29 | `pnpm test:e2e` | 29/29 passed |
+| Visual regression tests (Playwright) | 13 | `pnpm test:visual` | 13/13 passed |
 | Adversarial governance tests | 34 | `pnpm claude:test:adversarial` | 34/34 passed |
-| Electron smoke tests | 1 | `pnpm test:electron` | 0/1 passed (environment limitation — see below) |
+| Electron smoke tests | 1 | `pnpm test:electron` | 0/1 passed (pre-existing environment limitation — see below) |
 
-Prior unit test count (governance baseline): 89. Increase of 11 reflects M1 media-inspection additions:
-- `tests/main/ffmpegService.inspect.test.ts` — 9 new tests
-- `tests/main/ipc-contracts.test.ts` — expanded for `project:inspect` channel
-- `tests/governance/adversarial-scenarios.test.ts` — minor additions
+M1 unit test count: 134. M2 added 89 new tests (+89):
+- `tests/main/subtitle/SrtParser.test.ts` — 15 tests
+- `tests/main/subtitle/VttParser.test.ts` — 17 tests
+- `tests/main/subtitle/SubtitleNormalizer.test.ts` — 9 tests
+- `tests/main/subtitle/subtitle-security.test.ts` — 9 tests
+- `tests/main/database-service.test.ts` — expanded +7 for subtitle
+- `tests/main/ipc-contracts.test.ts` — expanded for subtitle channels
+- `tests/renderer/subtitleFormatters.test.ts` — 14 tests
 
-Prior E2E test count (governance baseline): 12. Increase of 7 reflects M1 E2E additions:
-- `tests/e2e/media-inspection.e2e.spec.ts` — 4 new tests
-- Expansion of existing E2E suites
+M2 E2E additions: 10 new tests in `tests/e2e/subtitle.spec.ts`.
+M2 visual additions: 4 new tests + snapshots in `tests/visual/subtitle.visual.spec.ts`.
+
+Prior unit test count (M1 post-merge): 134. Prior E2E: 19. Prior visual: 9.
 
 ---
 
-## Validation suite status (2026-07-19 M1 audit)
+## Validation suite status (2026-07-19 M2 post-merge)
 
 | Command | Exit code | Result |
 |---|---|---|
 | `pnpm typecheck` | 0 | PASS |
 | `pnpm lint` | 0 | PASS (max-warnings=0) |
-| `pnpm test` | 0 | PASS — 100/100 |
+| `pnpm test` | 0 | PASS — 223/223 |
 | `pnpm governance:validate` | 0 | PASS |
 | `pnpm architecture:validate` | 0 | PASS |
 | `pnpm design:validate` | 0 | PASS |
 | `pnpm dependencies:validate` | 0 | PASS |
 | `pnpm claude:validate` | 0 | PASS |
 | `pnpm claude:test:adversarial` | 0 | PASS — 34/34 |
-| `pnpm build` | 0 | PASS — renderer 387KB (116KB gzip) |
-| `pnpm package:dir` | 0 | PASS — signed, notarization skipped |
-| `pnpm test:e2e` | 0 | PASS — 19/19 (browser QA mode) |
-| `pnpm test:visual` | 1 | PARTIAL — 6/9 (3 sub-2% pixel drift failures) |
-| `pnpm test:electron` | 1 | FAIL — environment limitation (no display server) |
+| `pnpm build` | 0 | PASS |
+| `pnpm test:e2e` | 0 | PASS — 29/29 (browser QA mode) |
+| `pnpm test:visual` | 0 | PASS — 13/13 |
+| `pnpm test:electron` | 1 | FAIL — pre-existing environment limitation (no display server); confirmed at M1 HEAD; not M2-introduced |
 | `pnpm validate` | 0 | PASS (composite: governance + arch + design + deps + typecheck + lint + test + build) |
 
 ---
