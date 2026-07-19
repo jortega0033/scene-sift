@@ -19,6 +19,13 @@ export const qaFixtureNames = [
   'settings-save-failure',
   'dark-multiple-projects',
   'inspection-failed-project',
+  'subtitle-not-selected',
+  'subtitle-selected',
+  'subtitle-ready',
+  'subtitle-ready-with-warnings',
+  'subtitle-parse-failed',
+  'subtitle-missing',
+  'subtitle-unsupported',
 ] as const;
 
 export type QaFixtureName = (typeof qaFixtureNames)[number];
@@ -56,6 +63,11 @@ const projectA: ProjectRecord = {
   updatedAt: now - 20_000,
   mediaMetadata: projectAMediaMetadata,
   inspectionError: null,
+  subtitleStatus: null,
+  subtitleCueCount: null,
+  subtitleLastCueEndMs: null,
+  subtitleParseError: null,
+  subtitleParsedAt: null,
 };
 
 const projectB: ProjectRecord = {
@@ -70,6 +82,11 @@ const projectB: ProjectRecord = {
   updatedAt: now - 30_000,
   mediaMetadata: null,
   inspectionError: null,
+  subtitleStatus: null,
+  subtitleCueCount: null,
+  subtitleLastCueEndMs: null,
+  subtitleParseError: null,
+  subtitleParsedAt: null,
 };
 
 const projectC: ProjectRecord = {
@@ -83,6 +100,11 @@ const projectC: ProjectRecord = {
   updatedAt: now - 40_000,
   mediaMetadata: null,
   inspectionError: null,
+  subtitleStatus: null,
+  subtitleCueCount: null,
+  subtitleLastCueEndMs: null,
+  subtitleParseError: null,
+  subtitleParsedAt: null,
 };
 
 const projectD: ProjectRecord = {
@@ -96,6 +118,11 @@ const projectD: ProjectRecord = {
   updatedAt: now - 10_000,
   mediaMetadata: null,
   inspectionError: 'FFPROBE_ERROR',
+  subtitleStatus: null,
+  subtitleCueCount: null,
+  subtitleLastCueEndMs: null,
+  subtitleParseError: null,
+  subtitleParsedAt: null,
 };
 
 const baseSettings: AppSettings = {
@@ -323,6 +350,148 @@ export const fixtureMap: Record<QaFixtureName, QaFixtureState> = {
     settings: baseSettings,
     capabilities: baseCapabilities,
     subtitleSelection: null,
+  },
+  'subtitle-not-selected': {
+    name: 'subtitle-not-selected',
+    projects: [
+      {
+        ...projectA,
+        subtitlePath: null,
+        subtitleStatus: 'not_selected',
+        subtitleCueCount: null,
+        subtitleLastCueEndMs: null,
+        subtitleParseError: null,
+        subtitleParsedAt: null,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: {
+      extension: '.srt',
+      name: 'sample-subtitles.srt',
+      path: '/fixtures/sample-subtitles.srt',
+    },
+  },
+  'subtitle-selected': {
+    name: 'subtitle-selected',
+    projects: [
+      {
+        ...projectA,
+        subtitlePath: '/fixtures/sample-subtitles.srt',
+        subtitleStatus: 'selected',
+        subtitleCueCount: null,
+        subtitleLastCueEndMs: null,
+        subtitleParseError: null,
+        subtitleParsedAt: null,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'subtitle-ready': {
+    name: 'subtitle-ready',
+    projects: [
+      {
+        ...projectA,
+        subtitlePath: '/fixtures/sample-subtitles.srt',
+        subtitleStatus: 'ready',
+        subtitleCueCount: 842,
+        subtitleLastCueEndMs: 2_844_100,
+        subtitleParseError: null,
+        subtitleParsedAt: now - 5_000,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'subtitle-ready-with-warnings': {
+    name: 'subtitle-ready-with-warnings',
+    projects: [
+      {
+        ...projectA,
+        subtitlePath: '/fixtures/sample-subtitles.srt',
+        subtitleStatus: 'ready_with_warnings',
+        subtitleCueCount: 317,
+        subtitleLastCueEndMs: 1_620_000,
+        subtitleParseError: null,
+        subtitleParsedAt: now - 8_000,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'subtitle-parse-failed': {
+    name: 'subtitle-parse-failed',
+    projects: [
+      {
+        ...projectA,
+        subtitlePath: '/fixtures/corrupted-subtitles.srt',
+        subtitleStatus: 'parse_failed',
+        subtitleCueCount: null,
+        subtitleLastCueEndMs: null,
+        subtitleParseError: 'SUBTITLE_PARSE_ERROR',
+        subtitleParsedAt: now - 3_000,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: {
+      extension: '.srt',
+      name: 'sample-subtitles.srt',
+      path: '/fixtures/sample-subtitles.srt',
+    },
+  },
+  'subtitle-missing': {
+    name: 'subtitle-missing',
+    projects: [
+      {
+        ...projectA,
+        subtitlePath: '/fixtures/deleted-subtitles.srt',
+        subtitleStatus: 'missing',
+        subtitleCueCount: null,
+        subtitleLastCueEndMs: null,
+        subtitleParseError: 'SUBTITLE_FILE_NOT_FOUND',
+        subtitleParsedAt: now - 6_000,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: {
+      extension: '.srt',
+      name: 'sample-subtitles.srt',
+      path: '/fixtures/sample-subtitles.srt',
+    },
+  },
+  'subtitle-unsupported': {
+    name: 'subtitle-unsupported',
+    projects: [
+      {
+        ...projectA,
+        subtitlePath: '/fixtures/complex-subtitles.ass',
+        subtitleStatus: 'unsupported',
+        subtitleCueCount: null,
+        subtitleLastCueEndMs: null,
+        subtitleParseError: 'SUBTITLE_UNSUPPORTED_FORMAT',
+        subtitleParsedAt: now - 2_000,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: {
+      extension: '.srt',
+      name: 'sample-subtitles.srt',
+      path: '/fixtures/sample-subtitles.srt',
+    },
   },
 };
 

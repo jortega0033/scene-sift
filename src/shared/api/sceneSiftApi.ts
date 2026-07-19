@@ -68,6 +68,11 @@ export type SceneSiftApi = {
     selectFfmpegPath: () => Promise<string | null>;
     selectFfprobePath: () => Promise<string | null>;
   };
+  subtitle: {
+    selectForProject: (projectId: string) => Promise<ProjectRecord | null>;
+    parseForProject: (projectId: string) => Promise<ProjectRecord>;
+    clearForProject: (projectId: string) => Promise<ProjectRecord>;
+  };
 };
 
 export type SerializedIpcError = SafeError;

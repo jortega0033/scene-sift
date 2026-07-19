@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_IPC_CHANNELS } from '@shared/ipc/channels';
 import { createProjectInputSchema, inspectProjectInputSchema } from '@shared/schemas/project';
+import {
+  subtitleSelectInputSchema,
+  subtitleParseInputSchema,
+  subtitleClearInputSchema,
+} from '@shared/schemas/subtitle';
 
 describe('ipc contracts', () => {
   it('registers explicit channels only', () => {
@@ -31,5 +36,58 @@ describe('ipc contracts', () => {
       projectId: '11111111-1111-4111-8111-111111111111',
     });
     expect(valid.success).toBe(true);
+  });
+});
+
+describe('subtitle ipc contracts', () => {
+  it('registers subtitle:selectForProject channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('subtitle:selectForProject');
+  });
+
+  it('registers subtitle:parseForProject channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('subtitle:parseForProject');
+  });
+
+  it('registers subtitle:clearForProject channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('subtitle:clearForProject');
+  });
+
+  it('rejects non-uuid projectId in subtitleSelectInputSchema', () => {
+    expect(subtitleSelectInputSchema.safeParse({ projectId: 'not-a-uuid' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in subtitleSelectInputSchema', () => {
+    expect(
+      subtitleSelectInputSchema.safeParse({ projectId: '11111111-1111-4111-8111-111111111111' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects non-uuid projectId in subtitleParseInputSchema', () => {
+    expect(subtitleParseInputSchema.safeParse({ projectId: 'bad' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in subtitleParseInputSchema', () => {
+    expect(
+      subtitleParseInputSchema.safeParse({ projectId: '11111111-1111-4111-8111-111111111111' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects non-uuid projectId in subtitleClearInputSchema', () => {
+    expect(subtitleClearInputSchema.safeParse({ projectId: 'bad' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in subtitleClearInputSchema', () => {
+    expect(
+      subtitleClearInputSchema.safeParse({ projectId: '11111111-1111-4111-8111-111111111111' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('subtitle channels are unique (no duplicates)', () => {
+    const subtitleChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('subtitle:'));
+    expect(new Set(subtitleChannels).size).toBe(subtitleChannels.length);
+    expect(subtitleChannels.length).toBe(3);
   });
 });

@@ -1,5 +1,12 @@
 import { useMemo, useRef, useState } from 'react';
-import { useDeleteProject, useInspectProject, useProjects } from '@renderer/hooks/useProjects';
+import {
+  useDeleteProject,
+  useInspectProject,
+  useProjects,
+  useSelectSubtitleForProject,
+  useParseSubtitleForProject,
+  useClearSubtitleForProject,
+} from '@renderer/hooks/useProjects';
 import { useUiStore } from '@renderer/stores/uiStore';
 import { useFocusTrap } from '@renderer/hooks/useFocusTrap';
 import { CreateProjectForm } from './CreateProjectForm';
@@ -10,6 +17,11 @@ import {
   formatFileSize,
   formatInspectionError,
 } from './mediaFormatters';
+import {
+  formatSubtitleError,
+  formatCueCount,
+  formatSubtitleDuration,
+} from './subtitleFormatters';
 
 const statusPillVariant = (
   status: string,
@@ -30,6 +42,9 @@ export const ProjectsPage = () => {
   const projects = useProjects();
   const deleteProject = useDeleteProject();
   const inspectProject = useInspectProject();
+  const selectSubtitle = useSelectSubtitleForProject();
+  const parseSubtitle = useParseSubtitleForProject();
+  const clearSubtitle = useClearSubtitleForProject();
 
   const selectedProject = useMemo(
     () => projects.data?.find((item) => item.id === selectedProjectId) ?? null,
@@ -168,7 +183,7 @@ export const ProjectsPage = () => {
                     Subtitle file
                   </dt>
                   <dd className="mt-1 break-all font-mono text-mono-path">
-                    {selectedProject.subtitlePath ?? 'Missing (optional for now)'}
+                    {selectedProject.subtitlePath ?? '—'}
                   </dd>
                 </div>
                 <div>
@@ -237,6 +252,103 @@ export const ProjectsPage = () => {
                   <dd className="mt-1 font-mono text-mono-path">
                     {formatFileSize(selectedProject.mediaMetadata?.fileSizeBytes ?? null)}
                   </dd>
+                </div>
+              </dl>
+
+              <dl
+                data-testid="subtitle-panel"
+                className="space-y-3 border-t border-border pt-3"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-label font-semibold uppercase tracking-label text-muted-foreground">
+                    Subtitle
+                  </h4>
+                  {selectedProject.subtitleStatus === 'ready_with_warnings' && (
+                    <span
+                      data-testid="subtitle-warning-badge"
+                      className="rounded border border-border px-2 py-0.5 text-label text-muted-foreground"
+                    >
+                      warnings
+                    </span>
+                  )}
+                </div>
+
+                {(!selectedProject.subtitleStatus || selectedProject.subtitleStatus === 'not_selected') && (
+                  <div data-testid="subtitle-not-selected" className="text-muted-foreground">
+                    No subtitle selected.
+                  </div>
+                )}
+
+                {selectedProject.subtitleStatus === 'selected' && (
+                  <div data-testid="subtitle-selected" className="text-muted-foreground">
+                    Subtitle file selected. Run parse to extract cue data.
+                  </div>
+                )}
+
+                {(selectedProject.subtitleStatus === 'ready' || selectedProject.subtitleStatus === 'ready_with_warnings') && (
+                  <>
+                    <div>
+                      <dt className="text-label uppercase tracking-label text-muted-foreground">
+                        Cues
+                      </dt>
+                      <dd className="mt-1 font-mono text-mono-path">
+                        {formatCueCount(selectedProject.subtitleCueCount)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-label uppercase tracking-label text-muted-foreground">
+                        Duration
+                      </dt>
+                      <dd className="mt-1 font-mono text-mono-path">
+                        {formatSubtitleDuration(selectedProject.subtitleLastCueEndMs)}
+                      </dd>
+                    </div>
+                  </>
+                )}
+
+                {(selectedProject.subtitleStatus === 'parse_failed' ||
+                  selectedProject.subtitleStatus === 'missing' ||
+                  selectedProject.subtitleStatus === 'unsupported') && (
+                  <p
+                    data-testid="subtitle-error"
+                    className="rounded border border-border px-3 py-2 text-xs text-muted-foreground"
+                  >
+                    {formatSubtitleError(selectedProject.subtitleParseError)}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    data-testid="subtitle-select-button"
+                    className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-foreground px-3 text-sm hover:bg-muted disabled:opacity-50"
+                    disabled={selectSubtitle.isPending}
+                    onClick={() => void selectSubtitle.mutateAsync(selectedProject.id)}
+                  >
+                    Select subtitle
+                  </button>
+                  {selectedProject.subtitleStatus && selectedProject.subtitleStatus !== 'not_selected' && (
+                    <>
+                      <button
+                        type="button"
+                        data-testid="subtitle-parse-button"
+                        className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-foreground px-3 text-sm hover:bg-muted disabled:opacity-50"
+                        disabled={parseSubtitle.isPending}
+                        onClick={() => void parseSubtitle.mutateAsync(selectedProject.id)}
+                      >
+                        {parseSubtitle.isPending ? 'Parsing…' : 'Parse subtitle'}
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="subtitle-clear-button"
+                        className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-foreground px-3 text-sm hover:bg-muted disabled:opacity-50"
+                        disabled={clearSubtitle.isPending}
+                        onClick={() => void clearSubtitle.mutateAsync(selectedProject.id)}
+                      >
+                        Clear subtitle
+                      </button>
+                    </>
+                  )}
                 </div>
               </dl>
 

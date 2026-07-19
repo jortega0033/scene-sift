@@ -15,4 +15,11 @@ export const FIXTURES = {
   settingsSaveFailure: 'settings-save-failure',
   darkMultipleProjects: 'dark-multiple-projects',
   inspectionFailedProject: 'inspection-failed-project',
+  subtitleNotSelected: 'subtitle-not-selected',
+  subtitleSelected: 'subtitle-selected',
+  subtitleReady: 'subtitle-ready',
+  subtitleReadyWithWarnings: 'subtitle-ready-with-warnings',
+  subtitleParseFailed: 'subtitle-parse-failed',
+  subtitleMissing: 'subtitle-missing',
+  subtitleUnsupported: 'subtitle-unsupported',
 } as const;

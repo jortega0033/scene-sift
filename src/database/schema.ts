@@ -16,6 +16,11 @@ export const projectsTable = sqliteTable('projects', {
   fileSizeBytes: integer('file_size_bytes'),
   inspectedAt: integer('inspected_at', { mode: 'number' }),
   inspectionError: text('inspection_error'),
+  subtitleStatus: text('subtitle_status'),
+  subtitleCueCount: integer('subtitle_cue_count'),
+  subtitleLastCueEndMs: integer('subtitle_last_cue_end_ms'),
+  subtitleParseError: text('subtitle_parse_error'),
+  subtitleParsedAt: integer('subtitle_parsed_at', { mode: 'number' }),
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 });
@@ -31,6 +36,16 @@ export const appSettingsTable = sqliteTable('app_settings', {
     .default(false),
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
+});
+
+export const subtitleDocumentsTable = sqliteTable('subtitle_documents', {
+  projectId: text('project_id').primaryKey(),
+  schemaVersion: integer('schema_version').notNull().default(1),
+  sourceFormat: text('source_format').notNull(),
+  sourceEncoding: text('source_encoding').notNull(),
+  cuesJson: text('cues_json').notNull(),
+  warningsJson: text('warnings_json').notNull(),
+  parsedAt: integer('parsed_at', { mode: 'number' }).notNull(),
 });
 
 export const renderJobsTable = sqliteTable('render_jobs', {
