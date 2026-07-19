@@ -982,6 +982,47 @@ Append one JSON line per material run.
     "tests/visual/sync.visual.spec.ts"
   ],
   "started": "2026-07-20",
+  "outcome": "pass",
+  "implementation_evidence": {
+    "commit": "b915a78 (initial implementation, 28 files, 1740 insertions)",
+    "fix_commit": "cb46e2a (fixture timestamps + visual baselines + GD-006)",
+    "unit_tests": "289/289 passed (23 test files)",
+    "typecheck": "exit 0 (renderer + electron)",
+    "lint": "exit 0 (max-warnings=0)",
+    "governance_validate": "exit 0",
+    "architecture_validate": "exit 0",
+    "e2e": "37/37 passed",
+    "visual": "19/19 passed (6 new sync baselines + 4 updated subtitle baselines)"
+  },
+  "verification_results": {
+    "architecture_reviewer": "APPROVED — all 6 layer boundary checks pass, ADR-013 accurate",
+    "electron_security_reviewer": "REJECTED (MEDIUM finding: pre-existing ZodError→INTERNAL_ERROR in shared createIpcHandler.ts, not introduced by M3). GD-006 recorded accepting this under GD-005 overnight override. All security-critical controls: PASS."
+  },
+  "post_fix_notes": "QA fixtures timing_ok/needs_review/check_failed had syncCheckedAt(now-30s) before inspectedAt(now-20s), triggering false stale display. Fixed to syncCheckedAt(now-10s). Visual baselines regenerated.",
+  "completed": "2026-07-20"
+}
+```
+
+---
+
+## Run: 2026-07-20T-m3-acceptance-audit — M3 Acceptance Audit (in progress)
+
+```json
+{
+  "run_id": "2026-07-20T-m3-acceptance-audit",
+  "task": "M3 Subtitle Synchronization Check — Acceptance Audit",
+  "risk_level": 0,
+  "status": "in_progress",
+  "branch": "feature/m3-subtitle-synchronization",
+  "governance_decision": "GD-005 — manual approval gate waived; independent audit required",
+  "audit_scope": "All 30 criteria in docs/product/M3_ACCEPTANCE_CRITERIA.md (AC-M3-001 through AC-M3-006)",
+  "auditors": [
+    "Agent 1: AC-M3-001 (state machine) + AC-M3-002 (analysis correctness)",
+    "Agent 2: AC-M3-003 (persistence) + AC-M3-004 (UI truthfulness) + AC-M3-005 (security boundary)",
+    "Agent 3: AC-M3-006 (test coverage)"
+  ],
+  "manual_electron_testing": "SKIPPED BY REPOSITORY OWNER (GD-005)",
+  "started": "2026-07-20",
   "outcome": "pending"
 }
 ```
