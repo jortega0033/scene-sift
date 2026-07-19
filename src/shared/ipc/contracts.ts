@@ -13,6 +13,11 @@ import {
 } from '@shared/schemas/project';
 import { ffmpegCapabilitiesSchema } from '@shared/schemas/ffmpeg';
 import { createDemoJobInputSchema, renderJobSchema } from '@shared/schemas/queue';
+import {
+  subtitleSelectInputSchema,
+  subtitleParseInputSchema,
+  subtitleClearInputSchema,
+} from '@shared/schemas/subtitle';
 
 export const databaseHealthSchema = z.object({
   ok: z.boolean(),
@@ -117,6 +122,20 @@ export const ipcContracts = {
     createDemoJob: {
       input: createDemoJobInputSchema,
       output: renderJobSchema,
+    },
+  },
+  subtitle: {
+    selectForProject: {
+      input: subtitleSelectInputSchema,
+      output: projectSchema.nullable(),
+    },
+    parseForProject: {
+      input: subtitleParseInputSchema,
+      output: projectSchema,
+    },
+    clearForProject: {
+      input: subtitleClearInputSchema,
+      output: projectSchema,
     },
   },
 };

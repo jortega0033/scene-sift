@@ -5,8 +5,8 @@ Source: GPT AI as PO/PM, provided by user 2026-07-19 for future reference.
 **Rule**: One milestone at a time. Every milestone follows:
 Plan/spec → implement on feature branch → targeted specialist review → full validation → acceptance audit → human merge.
 
-**Current status**: M1 in remediation (pending human merge review as of 2026-07-19).
-**After M1**: M1 accepted → human merge → post-merge smoke test → start M2 planning.
+**Current status**: M1 CLOSED (merged to main 2026-07-19 via owner override). M2 PLANNING (spec complete 2026-07-19, awaiting governed implementation).
+**Next**: M2 independent planning review → implementation authorized → feature branch → implement per M2_IMPLEMENTATION_PLAN.md.
 
 ---
 
@@ -14,24 +14,32 @@ Plan/spec → implement on feature branch → targeted specialist review → ful
 
 Load a video source file into a project and verify it is a valid video using FFprobe metadata.
 
-**Status**: Implemented, acceptance remediation complete, awaiting human merge review.
+**Status: CLOSED** — merged to main 2026-07-19 via owner override. See `docs/product/M1_ACCEPTANCE_AUDIT.md` Section 11 for merge record.
 
-**Exit criteria**: Create project → auto-inspect → display codec/resolution/duration/fps/bitrate/filesize → status=ready. Inspection failure shows human-readable error. Metadata persists across app restart.
+**Exit criteria met**: Create project → auto-inspect → display codec/resolution/duration/fps/bitrate/filesize → status=ready. Inspection failure shows human-readable error. Metadata persists across app restart.
 
 ---
 
 ## M2 — Subtitle Parsing and Attachment
 
-**Goal**: Parse SRT/ASS/VTT subtitle files and attach them to projects.
+**Goal**: Parse SRT/WebVTT subtitle files and attach them to projects.
+
+**Status: PLANNING** — implementation-ready spec complete 2026-07-19. See `docs/product/M2_HANDOFF.md`.
+
+**Scope (M2 only)**:
+- In-process SRT + WebVTT parser (ASS deferred)
+- 7-state subtitle state machine persisted to SQLite
+- Subtitle summary panel in ProjectsPage renderer
+- No sync check (M3), no preview (M4), no AI (M6+)
 
 **Key features**:
-- Subtitle file selection dialog (filters for .srt, .ass, .vtt)
-- Parse subtitle file into structured cue list (start, end, text)
-- Validate encoding and cue count
-- Attach subtitle record to project; persist subtitle path and parsed cue count
-- UI: subtitle status in project detail panel
+- Subtitle file selection (stores path, does not auto-parse)
+- Explicit user-triggered parse action
+- Display: cue count, last cue end time, source format, parse warnings
+- Parse failure: human-readable error + retry button
+- Persists full cue document + summary across app restart
 
-**Exit criteria**: Select subtitle → parse succeeds → cue count displayed → persists across restart.
+**Exit criteria**: Select subtitle → parse succeeds → cue count + duration displayed → persists across restart. All 7 subtitle states render correctly. Parse failure shows human-readable error. 36 acceptance criteria pass.
 
 ---
 

@@ -39,6 +39,14 @@ const sceneSiftApi: SceneSiftApi = {
     selectFfmpegPath: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SELECT_FFMPEG_PATH),
     selectFfprobePath: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SELECT_FFPROBE_PATH),
   },
+  subtitle: {
+    selectForProject: (projectId: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.SUBTITLE_SELECT_FOR_PROJECT, { projectId }),
+    parseForProject: (projectId: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.SUBTITLE_PARSE_FOR_PROJECT, { projectId }),
+    clearForProject: (projectId: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.SUBTITLE_CLEAR_FOR_PROJECT, { projectId }),
+  },
 };
 
 contextBridge.exposeInMainWorld('sceneSift', sceneSiftApi);

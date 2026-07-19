@@ -8,10 +8,11 @@ import { desc, eq } from 'drizzle-orm';
 import type { AppSettings } from '@shared/schemas/settings';
 import type { ProjectRecord, MediaMetadata } from '@shared/schemas/project';
 import type { CreateProjectInput } from '@shared/schemas/project';
-import { appSettingsTable, projectsTable, renderJobsTable } from '@database/schema';
+import { appSettingsTable, projectsTable, renderJobsTable, subtitleDocumentsTable } from '@database/schema';
 import { AppError } from '@main/utils/errors';
 import type { QueueStatus } from '@shared/types/common';
 import type { InspectionOutcome } from '@main/services/ffmpeg/ffmpegService';
+import type { SubtitleDocument, SubtitlePersistOutcome } from '@shared/schemas/subtitle';
 
 const SETTINGS_ID = 'default';
 
@@ -82,15 +83,17 @@ export class DatabaseService {
     const now = Date.now();
     const id = randomUUID();
 
+    const subtitlePath = input.subtitle?.path ?? null;
     orm
       .insert(projectsTable)
       .values({
         id,
         name: input.name,
         videoPath: input.video.path,
-        subtitlePath: input.subtitle?.path ?? null,
+        subtitlePath,
         outputDirectory: input.outputDirectory?.path ?? null,
         status: 'draft',
+        subtitleStatus: subtitlePath ? 'selected' : null,
         createdAt: now,
         updatedAt: now,
       })
@@ -146,10 +149,16 @@ export class DatabaseService {
   }
 
   public deleteProject(projectId: string): boolean {
+    const db = this.ensureDb();
     const orm = this.ensureOrm();
-    orm.delete(renderJobsTable).where(eq(renderJobsTable.projectId, projectId)).run();
-    const result = orm.delete(projectsTable).where(eq(projectsTable.id, projectId)).run();
-    return result.changes > 0;
+    let changes = 0;
+    db.transaction(() => {
+      this.clearSubtitleDocument(projectId);
+      orm.delete(renderJobsTable).where(eq(renderJobsTable.projectId, projectId)).run();
+      const result = orm.delete(projectsTable).where(eq(projectsTable.id, projectId)).run();
+      changes = result.changes;
+    })();
+    return changes > 0;
   }
 
   public listQueue(): RenderJobRecord[] {
@@ -284,7 +293,175 @@ export class DatabaseService {
       updatedAt: row.updatedAt,
       mediaMetadata,
       inspectionError: row.inspectionError ?? null,
+      subtitleStatus: (row.subtitleStatus ?? null) as ProjectRecord['subtitleStatus'],
+      subtitleCueCount: row.subtitleCueCount ?? null,
+      subtitleLastCueEndMs: row.subtitleLastCueEndMs ?? null,
+      subtitleParseError: row.subtitleParseError ?? null,
+      subtitleParsedAt: row.subtitleParsedAt ?? null,
     };
+  }
+
+  public setProjectSubtitlePath(projectId: string, subtitlePath: string | null): ProjectRecord {
+    const db = this.ensureDb();
+    const orm = this.ensureOrm();
+    const now = Date.now();
+
+    db.transaction(() => {
+      this.clearSubtitleDocument(projectId);
+      orm
+        .update(projectsTable)
+        .set({
+          subtitlePath,
+          subtitleStatus: subtitlePath ? 'selected' : 'not_selected',
+          subtitleCueCount: null,
+          subtitleLastCueEndMs: null,
+          subtitleParseError: null,
+          subtitleParsedAt: null,
+          updatedAt: now,
+        })
+        .where(eq(projectsTable.id, projectId))
+        .run();
+    })();
+
+    const project = orm.select().from(projectsTable).where(eq(projectsTable.id, projectId)).get();
+    if (!project) {
+      throw new AppError('PROJECT_NOT_FOUND', 'Project not found after subtitle path update.');
+    }
+    return this.mapProject(project);
+  }
+
+  public updateProjectSubtitleState(projectId: string, outcome: SubtitlePersistOutcome): void {
+    const orm = this.ensureOrm();
+    const now = Date.now();
+    orm
+      .update(projectsTable)
+      .set({
+        subtitleStatus: outcome.subtitleStatus,
+        subtitleCueCount: outcome.cueCount,
+        subtitleLastCueEndMs: outcome.lastCueEndMs,
+        subtitleParseError: outcome.parseError,
+        subtitleParsedAt: outcome.parsedAt,
+        updatedAt: now,
+      })
+      .where(eq(projectsTable.id, projectId))
+      .run();
+  }
+
+  public persistSubtitleResult(
+    projectId: string,
+    parsedSubtitlePath: string,
+    outcome: SubtitlePersistOutcome,
+    doc: SubtitleDocument | null,
+  ): ProjectRecord {
+    const db = this.ensureDb();
+    const orm = this.ensureOrm();
+
+    const txn = db.transaction(() => {
+      const current = orm
+        .select({ subtitlePath: projectsTable.subtitlePath })
+        .from(projectsTable)
+        .where(eq(projectsTable.id, projectId))
+        .get();
+
+      if (!current || current.subtitlePath !== parsedSubtitlePath) {
+        // clearForProject ran concurrently — discard stale parse result.
+        const row = orm.select().from(projectsTable).where(eq(projectsTable.id, projectId)).get();
+        return row ? this.mapProject(row) : null;
+      }
+
+      this.updateProjectSubtitleState(projectId, outcome);
+
+      if (doc !== null) {
+        this.upsertSubtitleDocument(projectId, doc);
+      } else {
+        this.clearSubtitleDocument(projectId);
+      }
+
+      const updated = orm
+        .select()
+        .from(projectsTable)
+        .where(eq(projectsTable.id, projectId))
+        .get();
+      return updated ? this.mapProject(updated) : null;
+    });
+
+    const result = txn();
+    if (!result) {
+      throw new AppError('PROJECT_NOT_FOUND', 'Project not found during subtitle result persist.');
+    }
+    return result;
+  }
+
+  public getSubtitleDocument(projectId: string): SubtitleDocument | null {
+    const orm = this.ensureOrm();
+    const row = orm
+      .select()
+      .from(subtitleDocumentsTable)
+      .where(eq(subtitleDocumentsTable.projectId, projectId))
+      .get();
+
+    if (!row) return null;
+
+    const cues = JSON.parse(row.cuesJson) as SubtitleDocument['cues'];
+    const warnings = JSON.parse(row.warningsJson) as SubtitleDocument['warnings'];
+
+    const summary: SubtitleDocument['summary'] = {
+      cueCount: cues.length,
+      firstCueStartMs: cues[0]?.startMs ?? null,
+      lastCueEndMs: cues[cues.length - 1]?.endMs ?? null,
+      totalTextLength: cues.reduce((sum, c) => sum + c.text.length, 0),
+      warningCount: warnings.length,
+    };
+
+    return {
+      schemaVersion: row.schemaVersion as 1,
+      sourceFormat: row.sourceFormat as 'srt' | 'vtt',
+      sourceEncoding: row.sourceEncoding,
+      cues,
+      warnings,
+      summary,
+      parsedAt: row.parsedAt,
+    };
+  }
+
+  // Internal helper: removes only the subtitle_documents row. Project-row state is managed by the
+  // calling transaction (setProjectSubtitlePath, deleteProject, persistSubtitleResult).
+  private clearSubtitleDocument(projectId: string): void {
+    const orm = this.ensureOrm();
+    orm.delete(subtitleDocumentsTable).where(eq(subtitleDocumentsTable.projectId, projectId)).run();
+  }
+
+  private upsertSubtitleDocument(projectId: string, doc: SubtitleDocument): void {
+    const db = this.ensureDb();
+    // Drizzle ORM does not support INSERT OR REPLACE / ON CONFLICT DO UPDATE; raw prepare used.
+    db.prepare(
+      `INSERT INTO subtitle_documents
+        (project_id, schema_version, source_format, source_encoding, cues_json, warnings_json, parsed_at)
+       VALUES
+        (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(project_id) DO UPDATE SET
+        schema_version = excluded.schema_version,
+        source_format  = excluded.source_format,
+        source_encoding = excluded.source_encoding,
+        cues_json      = excluded.cues_json,
+        warnings_json  = excluded.warnings_json,
+        parsed_at      = excluded.parsed_at`,
+    ).run(
+      projectId,
+      doc.schemaVersion,
+      doc.sourceFormat,
+      doc.sourceEncoding,
+      JSON.stringify(doc.cues),
+      JSON.stringify(doc.warnings),
+      doc.parsedAt,
+    );
+  }
+
+  private ensureDb(): Database.Database {
+    if (!this.db) {
+      throw new AppError('DATABASE_NOT_INITIALIZED', 'Database service is not initialized.');
+    }
+    return this.db;
   }
 
   private ensureOrm(): BetterSQLite3Database {

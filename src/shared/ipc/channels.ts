@@ -18,6 +18,9 @@ export const IPC_CHANNELS = {
   SETTINGS_SELECT_FFPROBE_PATH: 'settings:selectFfprobePath',
   QUEUE_LIST: 'queue:list',
   QUEUE_CREATE_DEMO_JOB: 'queue:createDemoJob',
+  SUBTITLE_SELECT_FOR_PROJECT: 'subtitle:selectForProject',
+  SUBTITLE_PARSE_FOR_PROJECT: 'subtitle:parseForProject',
+  SUBTITLE_CLEAR_FOR_PROJECT: 'subtitle:clearForProject',
 } as const;
 
 export const ALL_IPC_CHANNELS = Object.values(IPC_CHANNELS);

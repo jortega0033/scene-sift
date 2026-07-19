@@ -6,16 +6,60 @@ defaultMode: L2
 
 ## Active run
 
-- run_id: 2026-07-19T-m1-owner-override-merge
-- milestone: M1 Owner Override Merge and M2 Planning
-- branch: main (post-merge)
-- risk_level: 3
-- status: in_progress
+- run_id: 2026-07-19T-m2-acceptance-audit
+- milestone: M2 Subtitle Parsing and Validation — Acceptance Audit
+- branch: feature/m2-subtitle-parsing-validation
+- risk_level: 0 (audit + targeted fixes)
+- status: pending_human_merge_review
+- scope: Independent post-implementation acceptance audit; remediate all confirmed findings; issue merge-gate verdict
+- audit_verdict: M2 ACCEPTED — READY FOR OWNER-OVERRIDE MERGE
+- findings_resolved: 9 (VTT header dead code, clearSubtitleDocument private, SRT+VTT cue limit tests, SRT zero-duration test, stale-doc-after-failure test, restart project-row test, reader security coverage, MAX_TOTAL_TEXT reconciliation)
+- findings_deferred: 3 LOW (spec doc enforcement-point column, migration spec discrepancy, formatSubtitleError fallback code leak) — none affect correctness or security
+- verification_results:
+  - parser-correctness-auditor: FAIL → PASS (after fixes)
+  - reader-security-auditor: PASS
+  - database-auditor: FAIL → PASS (after clearSubtitleDocument private + test restructure)
+  - ipc-ui-scope-auditor: PASS
+  - final-electron-security-reviewer: PASS (post-remediation)
+  - final-database-scope-reviewer: PASS (post-remediation)
+- test_summary: 223 unit tests pass (20 files), 29 E2E pass, 13 visual pass; pnpm test:electron pre-existing failure (environment limitation, not M2-introduced)
+- validation_summary: typecheck exit 0, lint exit 0, build exit 0, governance:validate exit 0, architecture:validate exit 0, design:validate exit 0, dependencies:validate exit 0
+- owner_override: manual phase gates skipped per owner authorization; manual runtime testing skipped; independent specialist verification completed
+- next_step: HUMAN MERGE REVIEW required before merge to main
+
+## Previous active run (complete — audit complete, pending merge)
+
+- run_id: 2026-07-19T-m2-implementation
+- milestone: M2 Subtitle Parsing and Validation — Stage B Governed Implementation
+- branch: feature/m2-subtitle-parsing-validation
+- risk_level: 3 (multiple phases)
+- status: complete — pending acceptance audit
+- phases_complete: 1–11 (all implementation + independent verification complete)
+
+## Previous run (complete)
+
+- run_id: 2026-07-19T-m2-spec-reconciliation
+- milestone: M2 Subtitle Parsing and Validation — Stage A Specification Reconciliation
+- branch: main (docs only — no product code)
+- risk_level: 0
+- status: complete
 - started: 2026-07-19
-- scope: Owner-override merge of accepted M1 implementation; M2 Subtitle Parsing planning
-- automated_gate: PASSED — 134 tests, 19 E2E, 9 visual, validate exit 0
-- owner_override: GRANTED — manual diff and runtime review skipped per owner authorization
-- pending: M2 planning and specification
+- completed: 2026-07-19
+- verdict: M2 SPECIFICATION RECONCILED — READY TO IMPLEMENT. All 10 contradictions (A1–A10) resolved. All 4 independent reviewer conditions closed. Validation: 134/134 tests pass.
+- docs_updated: M2_ARCHITECTURE.md, M2_IMPLEMENTATION_PLAN.md, M2_HANDOFF.md, M2_SECURITY_AND_LIMITS.md, M2_ACCEPTANCE_CRITERIA.md, M2_TEST_PLAN.md, ROADMAP.md
+
+## Prior previous run (complete)
+
+- run_id: 2026-07-19T-m2-subtitle-planning
+- milestone: M2 Subtitle Parsing and Validation — Planning
+- branch: main
+- risk_level: 0 (planning and documentation only — no product code)
+- status: complete
+- started: 2026-07-19
+- completed: 2026-07-19
+- verdict: M2 CONDITIONALLY READY — all critical findings resolved; 14 planning docs complete; independent review passed after doc amendments; ready for governed implementation on feature branch with human approval at risk-2/3 phases
+- independent_reviewers: product-scope (CONDITIONALLY READY → resolved), electron-security (CONDITIONALLY APPROVED → resolved), database (CONDITIONALLY APPROVED → resolved), test-plan (CONDITIONALLY APPROVED → resolved), skeptical (REJECT → resolved)
+- governance_checks: governance:validate PASS, architecture:validate PASS
 
 ## Previous run (complete — merged via owner override)
 

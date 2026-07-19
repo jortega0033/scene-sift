@@ -37,3 +37,33 @@ export const useDeleteProject = () => {
     },
   });
 };
+
+export const useSelectSubtitleForProject = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (projectId: string) => window.sceneSift.subtitle.selectForProject(projectId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+};
+
+export const useParseSubtitleForProject = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (projectId: string) => window.sceneSift.subtitle.parseForProject(projectId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+};
+
+export const useClearSubtitleForProject = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (projectId: string) => window.sceneSift.subtitle.clearForProject(projectId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+};

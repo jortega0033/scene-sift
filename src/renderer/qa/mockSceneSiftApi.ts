@@ -64,6 +64,11 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
           updatedAt: now,
           mediaMetadata: null,
           inspectionError: null,
+          subtitleStatus: input.subtitle?.path ? 'selected' : null,
+          subtitleCueCount: null,
+          subtitleLastCueEndMs: null,
+          subtitleParseError: null,
+          subtitleParsedAt: null,
         };
         projects = [created, ...projects];
         return created;
@@ -149,6 +154,56 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
       },
       selectFfmpegPath: async () => '/fixtures/bin/ffmpeg',
       selectFfprobePath: async () => '/fixtures/bin/ffprobe',
+    },
+    subtitle: {
+      selectForProject: async (projectId) => {
+        await delay();
+        const project = findProject(projectId);
+        if (!project) return null;
+        const updated = {
+          ...project,
+          subtitlePath: '/fixtures/sample.srt',
+          subtitleStatus: 'selected' as const,
+          subtitleCueCount: null,
+          subtitleLastCueEndMs: null,
+          subtitleParseError: null,
+          subtitleParsedAt: null,
+        };
+        projects = projects.map((p) => (p.id === projectId ? updated : p));
+        return updated;
+      },
+      parseForProject: async (projectId) => {
+        await delay(200);
+        const project = findProject(projectId);
+        if (!project) throw new Error('Project not found.');
+        const now = Date.now();
+        const updated = {
+          ...project,
+          subtitleStatus: 'ready' as const,
+          subtitleCueCount: 42,
+          subtitleLastCueEndMs: 300_000,
+          subtitleParseError: null,
+          subtitleParsedAt: now,
+        };
+        projects = projects.map((p) => (p.id === projectId ? updated : p));
+        return updated;
+      },
+      clearForProject: async (projectId) => {
+        await delay();
+        const project = findProject(projectId);
+        if (!project) throw new Error('Project not found.');
+        const updated = {
+          ...project,
+          subtitlePath: null,
+          subtitleStatus: 'not_selected' as const,
+          subtitleCueCount: null,
+          subtitleLastCueEndMs: null,
+          subtitleParseError: null,
+          subtitleParsedAt: null,
+        };
+        projects = projects.map((p) => (p.id === projectId ? updated : p));
+        return updated;
+      },
     },
   };
 };

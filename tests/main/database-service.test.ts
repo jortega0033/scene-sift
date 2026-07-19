@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { DatabaseService } from '@main/services/database/databaseService';
 import type { InspectionOutcome } from '@main/services/ffmpeg/ffmpegService';
+import type { SubtitleDocument, SubtitlePersistOutcome } from '@shared/schemas/subtitle';
 
 const createDbPath = () => {
   const dir = mkdtempSync(join(tmpdir(), 'scenesift-db-'));
@@ -217,4 +218,296 @@ it('persists all inspection fields across close and reopen', () => {
 
   service2.close();
   rmSync(dir, { recursive: true, force: true });
+});
+
+const makeProject = (service: DatabaseService) =>
+  service.createProject({
+    name: 'Test Project',
+    video: { path: '/tmp/v.mp4', name: 'v.mp4', extension: '.mp4' },
+    subtitle: undefined,
+    outputDirectory: undefined,
+  });
+
+const readyOutcome: SubtitlePersistOutcome = {
+  subtitleStatus: 'ready',
+  cueCount: 42,
+  lastCueEndMs: 300_000,
+  parseError: null,
+  parsedAt: 1_700_000_000_000,
+};
+
+const sampleDoc: SubtitleDocument = {
+  schemaVersion: 1,
+  sourceFormat: 'srt',
+  sourceEncoding: 'utf-8',
+  cues: [
+    { index: 1, startMs: 0, endMs: 1000, text: 'Hello', lines: ['Hello'] },
+    { index: 2, startMs: 2000, endMs: 3000, text: 'World', lines: ['World'] },
+  ],
+  warnings: [],
+  summary: {
+    cueCount: 2,
+    firstCueStartMs: 0,
+    lastCueEndMs: 3000,
+    totalTextLength: 10,
+    warningCount: 0,
+  },
+  parsedAt: 1_700_000_000_000,
+};
+
+describe('setProjectSubtitlePath', () => {
+  it('sets subtitlePath and transitions to selected', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+
+    const result = service.setProjectSubtitlePath(created.id, '/tmp/sample.srt');
+    expect(result.subtitlePath).toBe('/tmp/sample.srt');
+    expect(result.subtitleStatus).toBe('selected');
+    expect(result.subtitleCueCount).toBeNull();
+    expect(result.subtitleParseError).toBeNull();
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('clears path and transitions to not_selected when null passed', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+    service.setProjectSubtitlePath(created.id, '/tmp/sample.srt');
+
+    const result = service.setProjectSubtitlePath(created.id, null);
+    expect(result.subtitlePath).toBeNull();
+    expect(result.subtitleStatus).toBe('not_selected');
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe('persistSubtitleResult', () => {
+  it('persists outcome and document when path matches', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+    service.setProjectSubtitlePath(created.id, '/tmp/sample.srt');
+
+    const result = service.persistSubtitleResult(
+      created.id,
+      '/tmp/sample.srt',
+      readyOutcome,
+      sampleDoc,
+    );
+
+    expect(result.subtitleStatus).toBe('ready');
+    expect(result.subtitleCueCount).toBe(42);
+    expect(result.subtitleLastCueEndMs).toBe(300_000);
+    expect(result.subtitleParseError).toBeNull();
+
+    const doc = service.getSubtitleDocument(created.id);
+    expect(doc).not.toBeNull();
+    expect(doc?.cues).toHaveLength(2);
+    expect(doc?.summary.cueCount).toBe(2);
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('aborts and returns current row when path no longer matches (TOCTOU)', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+    service.setProjectSubtitlePath(created.id, '/tmp/original.srt');
+    // Simulate clearForProject running concurrently — path changed
+    service.setProjectSubtitlePath(created.id, null);
+
+    const result = service.persistSubtitleResult(
+      created.id,
+      '/tmp/original.srt',
+      readyOutcome,
+      sampleDoc,
+    );
+
+    // Abort-on-mismatch: returns current (not_selected) state, does not apply parse result
+    expect(result.subtitleStatus).toBe('not_selected');
+    expect(result.subtitleCueCount).toBeNull();
+    expect(service.getSubtitleDocument(created.id)).toBeNull();
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('persists parse_failed outcome with null document', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+    service.setProjectSubtitlePath(created.id, '/tmp/bad.srt');
+
+    const failOutcome: SubtitlePersistOutcome = {
+      subtitleStatus: 'parse_failed',
+      cueCount: null,
+      lastCueEndMs: null,
+      parseError: 'SUBTITLE_PARSE_ERROR',
+      parsedAt: 1_700_000_000_000,
+    };
+
+    const result = service.persistSubtitleResult(created.id, '/tmp/bad.srt', failOutcome, null);
+
+    expect(result.subtitleStatus).toBe('parse_failed');
+    expect(result.subtitleParseError).toBe('SUBTITLE_PARSE_ERROR');
+    expect(service.getSubtitleDocument(created.id)).toBeNull();
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('deletes stale subtitle document when reparse fails', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+    service.setProjectSubtitlePath(created.id, '/tmp/sample.srt');
+    service.persistSubtitleResult(created.id, '/tmp/sample.srt', readyOutcome, sampleDoc);
+
+    // Confirm document exists after successful parse
+    expect(service.getSubtitleDocument(created.id)).not.toBeNull();
+
+    const failOutcome: SubtitlePersistOutcome = {
+      subtitleStatus: 'parse_failed',
+      cueCount: null,
+      lastCueEndMs: null,
+      parseError: 'SUBTITLE_PARSE_ERROR',
+      parsedAt: 1_700_000_001_000,
+    };
+    service.persistSubtitleResult(created.id, '/tmp/sample.srt', failOutcome, null);
+
+    // Old document must be gone after failed reparse
+    expect(service.getSubtitleDocument(created.id)).toBeNull();
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe('getSubtitleDocument', () => {
+  it('returns null when no document exists', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+
+    expect(service.getSubtitleDocument(created.id)).toBeNull();
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reconstructs summary from cues_json on load', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+    service.setProjectSubtitlePath(created.id, '/tmp/sample.srt');
+    service.persistSubtitleResult(created.id, '/tmp/sample.srt', readyOutcome, sampleDoc);
+
+    const doc = service.getSubtitleDocument(created.id);
+    expect(doc?.summary.cueCount).toBe(2);
+    expect(doc?.summary.firstCueStartMs).toBe(0);
+    expect(doc?.summary.lastCueEndMs).toBe(3000);
+    expect(doc?.summary.totalTextLength).toBe(10);
+    expect(doc?.summary.warningCount).toBe(0);
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('persists subtitle document across close and reopen', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+    service.setProjectSubtitlePath(created.id, '/tmp/sample.srt');
+    service.persistSubtitleResult(created.id, '/tmp/sample.srt', readyOutcome, sampleDoc);
+    service.close();
+
+    const service2 = new DatabaseService(dbPath, migrationsFolder);
+    service2.initialize();
+    const doc = service2.getSubtitleDocument(created.id);
+
+    expect(doc).not.toBeNull();
+    expect(doc?.sourceFormat).toBe('srt');
+    expect(doc?.cues).toHaveLength(2);
+    expect(doc?.cues[0].text).toBe('Hello');
+
+    service2.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('persists subtitle project-row columns across close and reopen', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+    service.setProjectSubtitlePath(created.id, '/tmp/sample.srt');
+    service.persistSubtitleResult(created.id, '/tmp/sample.srt', readyOutcome, sampleDoc);
+    service.close();
+
+    const service2 = new DatabaseService(dbPath, migrationsFolder);
+    service2.initialize();
+    const project = service2.getProject(created.id);
+
+    expect(project?.subtitleStatus).toBe('ready');
+    expect(project?.subtitleCueCount).toBe(42);
+    expect(project?.subtitleLastCueEndMs).toBe(300_000);
+    expect(project?.subtitleParseError).toBeNull();
+    expect(project?.subtitleParsedAt).toBe(1_700_000_000_000);
+
+    service2.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe('subtitle document lifecycle (via setProjectSubtitlePath)', () => {
+  it('setProjectSubtitlePath(null) atomically clears subtitle document and resets status', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+    service.setProjectSubtitlePath(created.id, '/tmp/sample.srt');
+    service.persistSubtitleResult(created.id, '/tmp/sample.srt', readyOutcome, sampleDoc);
+
+    const before = service.getProject(created.id);
+    expect(before?.subtitleStatus).toBe('ready');
+    expect(service.getSubtitleDocument(created.id)).not.toBeNull();
+
+    const result = service.setProjectSubtitlePath(created.id, null);
+
+    // Both project-row state and cue document cleared atomically
+    expect(result.subtitleStatus).toBe('not_selected');
+    expect(result.subtitlePath).toBeNull();
+    expect(result.subtitleCueCount).toBeNull();
+    expect(service.getSubtitleDocument(created.id)).toBeNull();
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('setProjectSubtitlePath(null) is idempotent when no subtitle document exists', () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    const service = new DatabaseService(dbPath, migrationsFolder);
+    service.initialize();
+    const created = makeProject(service);
+
+    expect(() => service.setProjectSubtitlePath(created.id, null)).not.toThrow();
+    expect(service.getSubtitleDocument(created.id)).toBeNull();
+
+    service.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
 });

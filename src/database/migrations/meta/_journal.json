@@ -15,6 +15,13 @@
       "when": 1752962400000,
       "tag": "0001_media_inspection",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1753048800000,
+      "tag": "0002_subtitle_parsing",
+      "breakpoints": true
     }
   ]
 }
