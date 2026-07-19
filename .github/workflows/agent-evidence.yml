@@ -1,0 +1,16 @@
+name: agent-evidence
+
+on:
+  pull_request:
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure AI disclosure and evidence sections exist
+        run: |
+          test -f .github/pull_request_template.md
+          grep -q "AI Assistance Disclosure" .github/pull_request_template.md
+          grep -q "Required Evidence" .github/pull_request_template.md
+          grep -q "Human Approval" .github/pull_request_template.md

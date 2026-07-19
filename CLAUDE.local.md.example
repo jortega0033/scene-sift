@@ -1,0 +1,29 @@
+# CLAUDE.local.md — Local Developer Overrides (Example)
+
+This file is gitignored. Copy it to `CLAUDE.local.md` and adjust for your environment.
+Do NOT commit credentials, personal paths, or required team policies to CLAUDE.local.md.
+
+## Example: personal FFmpeg path note
+
+My local FFmpeg is at /opt/homebrew/bin/ffmpeg (not needed in tests, just for dev reference).
+
+## Example: skip electron smoke in CI-like local runs
+
+When running pnpm validate locally without electron-builder app deps, pnpm test:electron may be skipped.
+Document which checks were skipped and why when providing verification evidence.
+
+## Example: model preference note
+
+I prefer claude-sonnet-5 for implementation tasks during this project.
+
+## Example: active task note
+
+Currently working on: [task name / run ID].
+
+---
+
+Do not put:
+- API keys or tokens
+- Personal absolute paths shared with team (e.g. /Users/yourname/...)
+- Required security rules (those belong in CLAUDE.md + .claude/rules/)
+- Approved-override claims (those require governance decision records)

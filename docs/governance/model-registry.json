@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-18",
+  "owner": "SceneSift AI Governance",
+  "models": [
+    {
+      "id": "strong-reasoning-default",
+      "provider": "tbd",
+      "allowedUse": ["risk-3-threat-review", "governance-architecture", "security-design-review"],
+      "forbiddenUse": ["autonomous-critical-actions", "self-approval"],
+      "riskCeiling": 4,
+      "verificationMode": "different-model-family",
+      "status": "active"
+    },
+    {
+      "id": "strong-coding-default",
+      "provider": "tbd",
+      "allowedUse": [
+        "typescript-implementation",
+        "tests-and-ci",
+        "refactoring-under-approved-architecture"
+      ],
+      "forbiddenUse": ["self-approval", "risk-4-autonomous-actions"],
+      "riskCeiling": 3,
+      "verificationMode": "different-model-family",
+      "status": "active"
+    },
+    {
+      "id": "fast-economical-default",
+      "provider": "tbd",
+      "allowedUse": ["documentation-formatting", "low-risk-scaffolding", "repetitive-maintenance"],
+      "forbiddenUse": ["risk-3-security-decisions", "runtime-ai-policy-changes"],
+      "riskCeiling": 1,
+      "verificationMode": "same-model-with-independent-agent",
+      "status": "restricted"
+    }
+  ]
+}

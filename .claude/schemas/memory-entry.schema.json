@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "memory-entry",
+  "title": "Memory Entry",
+  "description": "Schema for Claude Code memory files in .claude/projects/*/memory/",
+  "type": "object",
+  "required": ["name", "description", "type"],
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Kebab-case slug — must match filename"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "One-line summary for MEMORY.md index"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["user", "feedback", "project", "reference"],
+      "description": "Memory category"
+    }
+  },
+  "not": {
+    "anyOf": [
+      { "description": "No API keys in memory", "properties": { "body": { "pattern": "(?i)(api_key|secret|token|password|credential)" } } }
+    ]
+  }
+}

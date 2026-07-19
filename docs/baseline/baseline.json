@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-07-19T10:55:00.000Z",
+  "environment": {
+    "os": "darwin",
+    "node": "v24.13.1",
+    "pnpm": "pnpm/10.33.2 npm/? node/v24.13.1 darwin arm64"
+  },
+  "counts": {
+    "sourceFiles": 47,
+    "testFiles": 36,
+    "components": 2,
+    "pages": 3,
+    "hooks": 1,
+    "ipcChannels": 0,
+    "databaseTables": 3,
+    "dependencies": 12,
+    "devDependencies": 38,
+    "unitTests": 58,
+    "e2eTests": 15,
+    "visualTests": 7,
+    "electronSmokeTests": 1
+  },
+  "bundle": {
+    "rendererJsKb": 383.90,
+    "rendererCssKb": 11.86
+  },
+  "validationStatus": {
+    "governance": "pass",
+    "architecture": "pass",
+    "design": "pass",
+    "dependencies": "pass",
+    "typecheck": "pass",
+    "lint": "pass",
+    "unitTests": "pass",
+    "e2eTests": "pass",
+    "visualTests": "pass",
+    "build": "pass"
+  },
+  "milestoneChanges": [
+    "Added design tokens: --font-size-mono-path, --font-size-dot, --tracking-label, --tracking-heading, --tracking-brand",
+    "Replaced all arbitrary Tailwind text-[*] and tracking-[*] values with token utilities",
+    "Extracted useFocusTrap hook from duplicate inline useEffect focus-trap logic in ProjectsPage",
+    "Fixed networkGuard.ts inverted requestfailed handler logic",
+    "Fixed SettingsPage.tsx duplicate StatusPill import appended at EOF by prior AI agent",
+    "Guarded QueuePage dev button behind import.meta.env.DEV",
+    "Replaced AI-generated placeholder text with generic example text",
+    "Removed internal milestone language from user-visible copy",
+    "design-validate.ts: added checks for arbitrary font-size and tracking Tailwind values",
+    "Updated design-validate test fixture to include new required tokens"
+  ],
+  "notes": [
+    "Generated from repository files. Git metadata unavailable in current non-git environment.",
+    "pnpm user agent may be unavailable when script is run outside pnpm lifecycle."
+  ]
+}

@@ -1,0 +1,11 @@
+# SceneSift Technical Debt Registry
+
+Status date: 2026-07-19
+
+## Debt items
+
+| ID     | Title                                                                        | Category            | Severity | Evidence                                             | Affected files                            | User impact                               | Engineering impact                  | Recommended remediation                                     | Owner role          | Status | Target milestone            | Risk if deferred |
+| ------ | ---------------------------------------------------------------------------- | ------------------- | -------- | ---------------------------------------------------- | ----------------------------------------- | ----------------------------------------- | ----------------------------------- | ----------------------------------------------------------- | ------------------- | ------ | --------------------------- | ---------------- |
+| TD-001 | Dark-theme visual baseline missing                                           | Design/Testing      | Medium   | visual suite currently light-only baseline           | `playwright.config.ts`, `tests/visual/**` | Potential unnoticed dark-mode regressions | Regressions may slip into releases  | Add dark-theme visual project + snapshots and review policy | Frontend QA         | Open   | Next QA hardening iteration | Medium           |
+| TD-002 | Electron window minimum width previously inconsistent with compact QA matrix | Design/Architecture | Resolved | compact matrix uses 800×700; minWidth updated to 800 | `src/main/windows/createMainWindow.ts`    | N/A after remediation                     | Baseline inconsistency removed      | Keep compact-window checks in e2e + smoke                   | Electron maintainer | Closed | This milestone              | Low              |
+| TD-003 | MCP runtime verification in CI not possible                                  | Governance/QA       | Low      | MCP tools require trusted editor runtime             | `.vscode/mcp.json`, docs/governance       | No CI MCP runtime guarantee               | Separate manual verification burden | Keep CLI startup checks + document status class             | QA owner            | Open   | Ongoing                     | Low              |

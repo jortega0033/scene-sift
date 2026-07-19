@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "evidence",
+  "title": "Evidence",
+  "description": "Required evidence for task completion",
+  "type": "object",
+  "required": ["filesChanged", "testsRun", "testResult"],
+  "additionalProperties": false,
+  "properties": {
+    "filesChanged": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "List of files modified"
+    },
+    "testsRun": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Commands run to test the change"
+    },
+    "testResult": {
+      "type": "string",
+      "enum": ["pass", "fail", "skipped"],
+      "description": "Overall test result"
+    },
+    "typecheckResult": {
+      "type": "string",
+      "enum": ["pass", "fail", "skipped"]
+    },
+    "lintResult": {
+      "type": "string",
+      "enum": ["pass", "fail", "skipped"]
+    },
+    "architectureValidResult": {
+      "type": "string",
+      "enum": ["pass", "fail", "skipped", "not-applicable"]
+    },
+    "attemptCount": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "notes": {
+      "type": "string",
+      "description": "Any relevant observations"
+    }
+  }
+}

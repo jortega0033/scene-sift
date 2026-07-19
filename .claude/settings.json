@@ -1,0 +1,137 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm install --frozen-lockfile)",
+      "Bash(pnpm dev*)",
+      "Bash(pnpm typecheck*)",
+      "Bash(pnpm lint*)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:watch*)",
+      "Bash(pnpm test:e2e*)",
+      "Bash(pnpm test:visual*)",
+      "Bash(pnpm test:electron*)",
+      "Bash(pnpm test:qa*)",
+      "Bash(pnpm governance:validate*)",
+      "Bash(pnpm governance:scenarios*)",
+      "Bash(pnpm architecture:validate*)",
+      "Bash(pnpm design:validate*)",
+      "Bash(pnpm dependencies:validate*)",
+      "Bash(pnpm validate*)",
+      "Bash(pnpm build*)",
+      "Bash(pnpm clean*)",
+      "Bash(pnpm format*)",
+      "Bash(pnpm baseline:generate*)",
+      "Bash(pnpm security:scan*)",
+      "Bash(pnpm package:dir*)",
+      "Bash(pnpm qa:serve*)",
+      "Bash(pnpm claude:validate*)",
+      "Bash(pnpm claude:doctor*)",
+      "Bash(pnpm claude:safe*)",
+      "Bash(pnpm claude:test*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git stash list*)",
+      "Bash(git ls-files*)",
+      "Bash(git rev-parse*)",
+      "Bash(git remote -v*)",
+      "Bash(ls*)",
+      "Bash(find . *)",
+      "Bash(cat package.json*)",
+      "Bash(node --version*)",
+      "Bash(pnpm --version*)",
+      "Bash(claude --version*)",
+      "Bash(claude doctor*)"
+    ],
+    "deny": [
+      "Bash(git push*)",
+      "Bash(git merge*)",
+      "Bash(git rebase*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git checkout -- *)",
+      "Bash(git stash drop*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh pr create*)",
+      "Bash(gh release*)",
+      "Bash(npm publish*)",
+      "Bash(pnpm publish*)",
+      "Bash(pnpm add -g*)",
+      "Bash(npm install -g*)",
+      "Bash(electron-builder --publish*)",
+      "Bash(firebase deploy*)",
+      "Bash(vercel deploy*)",
+      "Bash(rm -rf*)",
+      "Bash(sudo *)",
+      "Bash(chmod 777*)",
+      "Bash(curl*| sh*)",
+      "Bash(wget*| sh*)",
+      "Bash(cat .env*)",
+      "Bash(cat .env.*)",
+      "Bash(printenv *SECRET*)",
+      "Bash(printenv *KEY*)",
+      "Bash(printenv *TOKEN*)",
+      "Bash(echo $*SECRET*)",
+      "Bash(echo $*KEY*)",
+      "Bash(echo $*TOKEN*)",
+      "Bash(*--dangerously-skip-permissions*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/protect-file-write.mjs"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/protect-bash-command.mjs"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/validate-config-change.mjs"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/stop-validation.mjs"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/record-agent-event.mjs"
+          }
+        ]
+      }
+    ]
+  },
+  "cleanupPeriodDays": 30
+}

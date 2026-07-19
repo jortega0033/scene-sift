@@ -1,0 +1,283 @@
+import type { RenderJob, SceneSiftApi, SystemCapabilities } from '@shared/api/sceneSiftApi';
+import type { AppSettings } from '@shared/schemas/settings';
+import type { ProjectRecord } from '@shared/schemas/project';
+
+export const QA_FIXTURE_QUERY_KEY = 'fixture';
+
+export const qaFixtureNames = [
+  'no-projects',
+  'one-new-project',
+  'multiple-projects',
+  'project-video-no-subtitle',
+  'project-video-with-subtitle',
+  'empty-queue',
+  'queue-mixed',
+  'ffmpeg-unavailable',
+  'database-error',
+  'settings-defaults',
+  'settings-custom-output',
+  'settings-save-failure',
+] as const;
+
+export type QaFixtureName = (typeof qaFixtureNames)[number];
+
+export type QaFixtureState = {
+  name: QaFixtureName;
+  projects: ProjectRecord[];
+  queue: RenderJob[];
+  settings: AppSettings;
+  capabilities: SystemCapabilities;
+  subtitleSelection: Awaited<ReturnType<SceneSiftApi['dialog']['selectSubtitleFile']>>;
+};
+
+const now = Date.UTC(2026, 6, 18, 12, 0, 0);
+
+const projectA: ProjectRecord = {
+  id: '11111111-1111-4111-8111-111111111111',
+  name: 'Episode 04 — Candidate Review',
+  videoPath: '/fixtures/sample-episode.mp4',
+  subtitlePath: '/fixtures/sample-subtitles.srt',
+  outputDirectory: '/fixtures/exports',
+  status: 'active',
+  createdAt: now - 100_000,
+  updatedAt: now - 20_000,
+};
+
+const projectB: ProjectRecord = {
+  id: '22222222-2222-4222-8222-222222222222',
+  name: 'Very Long Project Name For Scan Testing In Compact Windows',
+  videoPath:
+    '/fixtures/very-long-video-filename-that-should-truncate-safely-without-breaking-layout-episode-cut-v3-master.mp4',
+  subtitlePath: null,
+  outputDirectory: '/fixtures/exports',
+  status: 'draft',
+  createdAt: now - 90_000,
+  updatedAt: now - 30_000,
+};
+
+const projectC: ProjectRecord = {
+  id: '33333333-3333-4333-8333-333333333333',
+  name: 'Unicode Subtitle Check',
+  videoPath: '/fixtures/sample-episode.mp4',
+  subtitlePath: '/fixtures/字幕_日本語.srt',
+  outputDirectory: '/fixtures/exports',
+  status: 'archived',
+  createdAt: now - 70_000,
+  updatedAt: now - 40_000,
+};
+
+const baseSettings: AppSettings = {
+  ffmpegPathOverride: null,
+  ffprobePathOverride: null,
+  defaultOutputDirectory: null,
+  preferredTheme: 'light',
+  developmentDiagnosticsEnabled: true,
+};
+
+const baseCapabilities: SystemCapabilities = {
+  app: {
+    version: '0.1.0',
+    platform: 'darwin',
+    diagnosticsEnabled: true,
+  },
+  ffmpeg: {
+    ffmpegAvailable: true,
+    ffprobeAvailable: true,
+  },
+  database: {
+    ok: true,
+    dbPath: '/fixtures/scenesift.sqlite',
+    migrationsApplied: true,
+  },
+};
+
+const queueJobs: RenderJob[] = [
+  {
+    id: '44444444-4444-4444-8444-444444444444',
+    projectId: projectA.id,
+    status: 'queued',
+    progress: 0,
+    outputPath: null,
+    errorMessage: null,
+    createdAt: now - 20_000,
+    updatedAt: now - 20_000,
+  },
+  {
+    id: '55555555-5555-4555-8555-555555555555',
+    projectId: projectA.id,
+    status: 'running',
+    progress: 54,
+    outputPath: null,
+    errorMessage: null,
+    createdAt: now - 16_000,
+    updatedAt: now - 10_000,
+  },
+  {
+    id: '66666666-6666-4666-8666-666666666666',
+    projectId: projectB.id,
+    status: 'completed',
+    progress: 100,
+    outputPath: '/fixtures/exports/episode-04-clip-01.mp4',
+    errorMessage: null,
+    createdAt: now - 13_000,
+    updatedAt: now - 5_000,
+  },
+  {
+    id: '77777777-7777-4777-8777-777777777777',
+    projectId: projectC.id,
+    status: 'failed',
+    progress: 12,
+    outputPath: null,
+    errorMessage:
+      'Render failed while preparing filter graph. Ensure subtitle timing and output path are valid.',
+    createdAt: now - 11_000,
+    updatedAt: now - 3_000,
+  },
+  {
+    id: '88888888-8888-4888-8888-888888888888',
+    projectId: projectB.id,
+    status: 'cancelled',
+    progress: 33,
+    outputPath: null,
+    errorMessage: 'Cancelled by user before render start.',
+    createdAt: now - 9_000,
+    updatedAt: now - 2_500,
+  },
+];
+
+export const fixtureMap: Record<QaFixtureName, QaFixtureState> = {
+  'no-projects': {
+    name: 'no-projects',
+    projects: [],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'one-new-project': {
+    name: 'one-new-project',
+    projects: [{ ...projectA, status: 'draft' }],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'multiple-projects': {
+    name: 'multiple-projects',
+    projects: [projectA, projectB, projectC],
+    queue: queueJobs,
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: {
+      extension: '.srt',
+      name: 'sample-subtitles.srt',
+      path: '/fixtures/sample-subtitles.srt',
+    },
+  },
+  'project-video-no-subtitle': {
+    name: 'project-video-no-subtitle',
+    projects: [{ ...projectA, subtitlePath: null }],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'project-video-with-subtitle': {
+    name: 'project-video-with-subtitle',
+    projects: [projectA],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: {
+      extension: '.srt',
+      name: 'sample-subtitles.srt',
+      path: '/fixtures/sample-subtitles.srt',
+    },
+  },
+  'empty-queue': {
+    name: 'empty-queue',
+    projects: [projectA],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'queue-mixed': {
+    name: 'queue-mixed',
+    projects: [projectA, projectB, projectC],
+    queue: queueJobs,
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: {
+      extension: '.srt',
+      name: '字幕_日本語.srt',
+      path: '/fixtures/字幕_日本語.srt',
+    },
+  },
+  'ffmpeg-unavailable': {
+    name: 'ffmpeg-unavailable',
+    projects: [projectA],
+    queue: [],
+    settings: baseSettings,
+    capabilities: {
+      ...baseCapabilities,
+      ffmpeg: {
+        ffmpegAvailable: false,
+        ffprobeAvailable: false,
+      },
+    },
+    subtitleSelection: null,
+  },
+  'database-error': {
+    name: 'database-error',
+    projects: [projectA],
+    queue: [],
+    settings: baseSettings,
+    capabilities: {
+      ...baseCapabilities,
+      database: {
+        ok: false,
+        dbPath: '/fixtures/scenesift.sqlite',
+        migrationsApplied: false,
+      },
+    },
+    subtitleSelection: null,
+  },
+  'settings-defaults': {
+    name: 'settings-defaults',
+    projects: [projectA],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'settings-custom-output': {
+    name: 'settings-custom-output',
+    projects: [projectA],
+    queue: [],
+    settings: {
+      ...baseSettings,
+      defaultOutputDirectory: '/fixtures/exports/custom',
+      ffmpegPathOverride: '/fixtures/bin/ffmpeg',
+      ffprobePathOverride: '/fixtures/bin/ffprobe',
+    },
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'settings-save-failure': {
+    name: 'settings-save-failure',
+    projects: [projectA],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+};
+
+export const resolveFixtureName = (queryString: string): QaFixtureName => {
+  const value = new URLSearchParams(queryString).get(QA_FIXTURE_QUERY_KEY);
+  if (value && qaFixtureNames.includes(value as QaFixtureName)) {
+    return value as QaFixtureName;
+  }
+  return 'multiple-projects';
+};

@@ -1,0 +1,152 @@
+version: 1
+
+killSwitch:
+  enabled: false
+  reason: ''
+
+riskRules:
+  - id: docs-only
+    level: 0
+    description: Documentation-only and non-normative content.
+    paths:
+      - 'README.md'
+      - 'docs/**'
+      - '.github/prompts/**'
+
+  - id: low-risk
+    level: 1
+    description: Tests, types, non-sensitive UI, and dev tooling.
+    paths:
+      - 'tests/**'
+      - 'src/shared/**'
+      - 'src/renderer/components/**'
+      - 'src/renderer/styles/**'
+      - 'scripts/**'
+
+  - id: medium-risk
+    level: 2
+    description: Renderer state, settings UI, subtitle parsing, repositories, queue logic.
+    paths:
+      - 'src/renderer/features/**'
+      - 'src/renderer/hooks/**'
+      - 'src/renderer/stores/**'
+      - 'src/database/client.ts'
+      - 'src/database/schema.ts'
+      - 'src/main/services/jobs/**'
+      - 'src/main/services/database/**'
+
+  - id: high-risk-electron
+    level: 3
+    description: Electron main/preload, IPC, ffmpeg, filesystem, migrations, packaging, updater.
+    paths:
+      - 'src/main/**'
+      - 'src/preload/**'
+      - 'src/shared/ipc/**'
+      - 'src/main/services/ffmpeg/**'
+      - 'src/main/services/files/**'
+      - 'src/database/migrations/**'
+      - 'electron-builder.yml'
+      - '.github/workflows/**'
+
+  - id: critical-forbidden
+    level: 4
+    description: Credentials/secrets/release and policy-critical files.
+    paths:
+      - '.env'
+      - '.env.*'
+      - '**/secrets/**'
+      - '**/credentials/**'
+      - '**/*_key*'
+      - '**/*_secret*'
+      - '.github/workflows/release.yml'
+      - 'scripts/release/**'
+
+forbiddenAutonomousActions:
+  - 'edit-env-files'
+  - 'add-secrets'
+  - 'push-main'
+  - 'merge-pr'
+  - 'publish-release'
+  - 'delete-user-media'
+  - 'change-signing-config'
+  - 'upload-user-media'
+  - 'disable-security-settings'
+  - 'disable-tests'
+  - 'enable-shell-true'
+  - 'enable-telemetry-without-consent'
+  - 'change-ai-retention-policy'
+
+forbiddenPatterns:
+  - id: shell-true
+    pattern: "shell\\s*:\\s*true"
+    description: 'shell: true enables command injection risk.'
+    severity: critical
+  - id: node-integration-true
+    pattern: "nodeIntegration\\s*:\\s*true"
+    description: 'Electron renderer must not enable Node integration.'
+    severity: critical
+  - id: context-isolation-false
+    pattern: "contextIsolation\\s*:\\s*false"
+    description: 'Electron contextIsolation must remain true.'
+    severity: critical
+  - id: web-security-false
+    pattern: "webSecurity\\s*:\\s*false"
+    description: 'Electron webSecurity must not be disabled.'
+    severity: critical
+  - id: raw-ipcrenderer-exposure
+    pattern: "exposeInMainWorld\\([\\s\\S]{0,300}ipcRenderer"
+    description: 'Raw ipcRenderer exposure in preload is prohibited unless behind typed, validated wrappers.'
+    severity: high
+  - id: renderer-process-env-secrets
+    pattern: "process\\.env\\.[A-Z0-9_]*(KEY|SECRET|TOKEN|PASSWORD)"
+    description: 'Renderer must not read secret process env values.'
+    severity: critical
+  - id: telemetry-without-consent-guard
+    pattern: "sendTelemetry\\("
+    description: 'Telemetry calls require explicit consent + policy checks.'
+    severity: high
+  - id: preload-generic-invoke
+    pattern: "invoke\\s*:\\s*\\(\\s*channel\\s*:"
+    description: 'Generic channel-based preload invoke API is prohibited.'
+    severity: high
+  - id: command-injection-exec-string
+    pattern: "exec\\(\\s*`"
+    description: 'String-based exec template commands are prohibited.'
+    severity: critical
+  - id: test-skip-usage
+    pattern: "\\b(it|test|describe)\\.skip\\("
+    description: 'Skipping tests in committed changes requires explicit governance review.'
+    severity: high
+  - id: trivial-truthy-assertion
+    pattern: "expect\\(\\s*true\\s*\\)\\.to(Be|Equal)\\(\\s*true\\s*\\)"
+    description: 'Trivial always-true assertions are prohibited.'
+    severity: high
+  - id: hardcoded-secret-shape
+    pattern: "(API[_-]?KEY|SECRET|TOKEN|PASSWORD)\\s*[:=]\\s*['\\\"][A-Za-z0-9_\\-]{16,}['\\\"]"
+    description: 'Secret-shaped hardcoded credential value detected.'
+    severity: critical
+
+requiredChecksByRisk:
+  '0':
+    - 'pnpm governance:validate'
+  '1':
+    - 'pnpm governance:validate'
+    - 'pnpm typecheck'
+    - 'pnpm lint'
+    - 'pnpm test'
+  '2':
+    - 'pnpm governance:validate'
+    - 'pnpm typecheck'
+    - 'pnpm lint'
+    - 'pnpm test'
+    - 'pnpm build'
+  '3':
+    - 'pnpm governance:validate'
+    - 'pnpm typecheck'
+    - 'pnpm lint'
+    - 'pnpm test'
+    - 'pnpm build'
+    - 'pnpm package:dir'
+    - 'pnpm test:e2e'
+  '4':
+    - 'human-approval-required'

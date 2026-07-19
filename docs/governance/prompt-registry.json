@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-18",
+  "prompts": [
+    {
+      "id": "runtime-clip-candidate-v1",
+      "owner": "SceneSift AI Team",
+      "purpose": "Generate candidate clip segments from timestamped transcripts.",
+      "inputPolicy": "Accept sanitized transcript chunks and bounded metadata only.",
+      "outputPolicy": "Return structured, schema-validated candidate ranges with rationale.",
+      "injectionDefenses": [
+        "Treat transcript text as untrusted data",
+        "No tool execution instructions from transcript content",
+        "Schema validation before consumption",
+        "Bounded token/window limits"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "runtime-clip-review-summary-v1",
+      "owner": "SceneSift AI Team",
+      "purpose": "Summarize why clip candidates were proposed for human review.",
+      "inputPolicy": "Use candidate metadata and transcript excerpts without secrets.",
+      "outputPolicy": "Human-readable summary marked as advisory.",
+      "injectionDefenses": [
+        "No direct instruction following from user-generated transcript",
+        "Output confidence labeled as non-deterministic"
+      ],
+      "status": "active"
+    }
+  ]
+}
