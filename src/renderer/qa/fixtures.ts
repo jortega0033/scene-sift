@@ -26,6 +26,12 @@ export const qaFixtureNames = [
   'subtitle-parse-failed',
   'subtitle-missing',
   'subtitle-unsupported',
+  'sync-not-available',
+  'sync-ready-to-check',
+  'sync-timing-ok',
+  'sync-needs-review',
+  'sync-check-failed',
+  'sync-stale',
 ] as const;
 
 export type QaFixtureName = (typeof qaFixtureNames)[number];
@@ -68,6 +74,10 @@ const projectA: ProjectRecord = {
   subtitleLastCueEndMs: null,
   subtitleParseError: null,
   subtitleParsedAt: null,
+  syncStatus: null,
+  syncCheckedAt: null,
+  syncWarningsJson: null,
+  syncAnalysisVersion: null,
 };
 
 const projectB: ProjectRecord = {
@@ -87,6 +97,10 @@ const projectB: ProjectRecord = {
   subtitleLastCueEndMs: null,
   subtitleParseError: null,
   subtitleParsedAt: null,
+  syncStatus: null,
+  syncCheckedAt: null,
+  syncWarningsJson: null,
+  syncAnalysisVersion: null,
 };
 
 const projectC: ProjectRecord = {
@@ -105,6 +119,10 @@ const projectC: ProjectRecord = {
   subtitleLastCueEndMs: null,
   subtitleParseError: null,
   subtitleParsedAt: null,
+  syncStatus: null,
+  syncCheckedAt: null,
+  syncWarningsJson: null,
+  syncAnalysisVersion: null,
 };
 
 const projectD: ProjectRecord = {
@@ -123,6 +141,10 @@ const projectD: ProjectRecord = {
   subtitleLastCueEndMs: null,
   subtitleParseError: null,
   subtitleParsedAt: null,
+  syncStatus: null,
+  syncCheckedAt: null,
+  syncWarningsJson: null,
+  syncAnalysisVersion: null,
 };
 
 const baseSettings: AppSettings = {
@@ -492,6 +514,129 @@ export const fixtureMap: Record<QaFixtureName, QaFixtureState> = {
       name: 'sample-subtitles.srt',
       path: '/fixtures/sample-subtitles.srt',
     },
+  },
+  'sync-not-available': {
+    name: 'sync-not-available',
+    projects: [
+      {
+        ...projectA,
+        status: 'draft',
+        mediaMetadata: null,
+        subtitleStatus: null,
+        syncStatus: null,
+        syncCheckedAt: null,
+        syncWarningsJson: null,
+        syncAnalysisVersion: null,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'sync-ready-to-check': {
+    name: 'sync-ready-to-check',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready',
+        subtitleCueCount: 200,
+        subtitleLastCueEndMs: 2_844_100,
+        subtitleParsedAt: now - 5_000,
+        syncStatus: null,
+        syncCheckedAt: null,
+        syncWarningsJson: null,
+        syncAnalysisVersion: null,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'sync-timing-ok': {
+    name: 'sync-timing-ok',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready',
+        subtitleCueCount: 200,
+        subtitleLastCueEndMs: 2_844_100,
+        subtitleParsedAt: now - 60_000,
+        syncStatus: 'timing_ok',
+        syncCheckedAt: now - 30_000,
+        syncWarningsJson: null,
+        syncAnalysisVersion: 1,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'sync-needs-review': {
+    name: 'sync-needs-review',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready',
+        subtitleCueCount: 200,
+        subtitleLastCueEndMs: 2_844_100,
+        subtitleParsedAt: now - 60_000,
+        syncStatus: 'needs_review',
+        syncCheckedAt: now - 30_000,
+        syncWarningsJson: JSON.stringify([
+          { code: 'LARGE_TAIL_GAP', gapMs: 15_000 },
+          { code: 'LATE_SUBTITLE_START', startRatio: 0.18 },
+        ]),
+        syncAnalysisVersion: 1,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'sync-check-failed': {
+    name: 'sync-check-failed',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready',
+        subtitleCueCount: 200,
+        subtitleLastCueEndMs: 2_844_100,
+        subtitleParsedAt: now - 60_000,
+        syncStatus: 'check_failed',
+        syncCheckedAt: now - 30_000,
+        syncWarningsJson: null,
+        syncAnalysisVersion: 1,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'sync-stale': {
+    name: 'sync-stale',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready',
+        subtitleCueCount: 200,
+        subtitleLastCueEndMs: 2_844_100,
+        // subtitle re-parsed AFTER the last sync check → stale
+        subtitleParsedAt: now - 5_000,
+        syncStatus: 'timing_ok',
+        syncCheckedAt: now - 30_000,
+        syncWarningsJson: null,
+        syncAnalysisVersion: 1,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
   },
 };
 

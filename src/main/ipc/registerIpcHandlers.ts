@@ -35,11 +35,16 @@ import { checkFfmpegAvailability, inspectMediaFile } from '@main/services/ffmpeg
 import { AppError } from '@main/utils/errors';
 import { JobService } from '@main/services/jobs/jobService';
 import { SubtitleService } from '@main/services/subtitle/subtitleService';
+import { SynchronizationService } from '@main/services/synchronization/SynchronizationService';
 import {
   subtitleSelectInputSchema,
   subtitleParseInputSchema,
   subtitleClearInputSchema,
 } from '@shared/schemas/subtitle';
+import {
+  syncCheckForProjectInputSchema,
+  syncCheckForProjectOutputSchema,
+} from '@shared/schemas/sync';
 
 type RegisterIpcDeps = {
   databaseService: DatabaseService;
@@ -48,6 +53,7 @@ type RegisterIpcDeps = {
 export const registerIpcHandlers = ({ databaseService }: RegisterIpcDeps): void => {
   const jobService = new JobService(databaseService);
   const subtitleService = new SubtitleService(databaseService);
+  const synchronizationService = new SynchronizationService(databaseService);
   const sanitizeSettingsUpdate = (payload: {
     ffmpegPathOverride?: string | null | undefined;
     ffprobePathOverride?: string | null | undefined;
@@ -259,6 +265,13 @@ export const registerIpcHandlers = ({ databaseService }: RegisterIpcDeps): void 
     subtitleClearInputSchema,
     projectSchema,
     ({ projectId }) => subtitleService.clearSubtitleForProject(projectId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.SYNC_CHECK_FOR_PROJECT,
+    syncCheckForProjectInputSchema,
+    syncCheckForProjectOutputSchema,
+    ({ projectId }) => synchronizationService.checkForProject(projectId),
   );
 
   registerValidatedHandler(IPC_CHANNELS.QUEUE_LIST, z.undefined(), z.array(renderJobSchema), () =>

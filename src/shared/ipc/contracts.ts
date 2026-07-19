@@ -18,6 +18,10 @@ import {
   subtitleParseInputSchema,
   subtitleClearInputSchema,
 } from '@shared/schemas/subtitle';
+import {
+  syncCheckForProjectInputSchema,
+  syncCheckForProjectOutputSchema,
+} from '@shared/schemas/sync';
 
 export const databaseHealthSchema = z.object({
   ok: z.boolean(),
@@ -136,6 +140,12 @@ export const ipcContracts = {
     clearForProject: {
       input: subtitleClearInputSchema,
       output: projectSchema,
+    },
+  },
+  sync: {
+    checkForProject: {
+      input: syncCheckForProjectInputSchema,
+      output: syncCheckForProjectOutputSchema,
     },
   },
 };

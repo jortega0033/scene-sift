@@ -4,6 +4,7 @@ import type { ProjectRecord, CreateProjectInput, MediaInspectionResult } from '@
 import type { SelectedDirectory } from '@shared/types/common';
 import type { SafeError } from '@shared/types/common';
 import type { QueueStatus } from '@shared/types/common';
+import type { SyncCheckResult } from '@shared/schemas/sync';
 
 export type DatabaseHealth = {
   ok: boolean;
@@ -73,6 +74,11 @@ export type SceneSiftApi = {
     parseForProject: (projectId: string) => Promise<ProjectRecord>;
     clearForProject: (projectId: string) => Promise<ProjectRecord>;
   };
+  sync: {
+    checkForProject: (projectId: string) => Promise<SyncCheckResult>;
+  };
 };
+
+export type { SyncCheckResult };
 
 export type SerializedIpcError = SafeError;

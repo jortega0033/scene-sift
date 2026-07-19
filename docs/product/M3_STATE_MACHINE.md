@@ -140,14 +140,14 @@ impossible (button disabled) or no-ops (state unchanged).
 | `ready_to_check` | `VIDEO_RE_INSPECTED` | `ready_to_check` | No prior sync result exists | No-op; already in ready state |
 | `ready_to_check` | `SUBTITLE_RE_PARSED` | `ready_to_check` | No prior sync result exists | No-op; already in ready state |
 | `ready_to_check` | `USER_REQUESTED_CHECK` | _(in-flight)_ | Prerequisites met | Call `SynchronizationService.analyzeForProject()` |
-| `timing_ok` | `VIDEO_RE_INSPECTED` | `stale` | Prior result exists | Persist `stale`; retain `sync_warnings_json` |
-| `timing_ok` | `SUBTITLE_RE_PARSED` | `stale` | Prior result exists | Persist `stale`; retain `sync_warnings_json` |
+| `timing_ok` | `VIDEO_RE_INSPECTED` | `stale` | Prior result exists | Display stale (computed from timestamps, not persisted); retain `sync_warnings_json` |
+| `timing_ok` | `SUBTITLE_RE_PARSED` | `stale` | Prior result exists | Display stale (computed from timestamps, not persisted); retain `sync_warnings_json` |
 | `timing_ok` | `USER_REQUESTED_CHECK` | _(in-flight)_ | Prerequisites met | Re-run analysis |
-| `needs_review` | `VIDEO_RE_INSPECTED` | `stale` | Prior result exists | Persist `stale`; retain `sync_warnings_json` |
-| `needs_review` | `SUBTITLE_RE_PARSED` | `stale` | Prior result exists | Persist `stale`; retain `sync_warnings_json` |
+| `needs_review` | `VIDEO_RE_INSPECTED` | `stale` | Prior result exists | Display stale (computed from timestamps, not persisted); retain `sync_warnings_json` |
+| `needs_review` | `SUBTITLE_RE_PARSED` | `stale` | Prior result exists | Display stale (computed from timestamps, not persisted); retain `sync_warnings_json` |
 | `needs_review` | `USER_REQUESTED_CHECK` | _(in-flight)_ | Prerequisites met | Re-run analysis |
-| `check_failed` | `VIDEO_RE_INSPECTED` | `stale` | Prior result exists | Persist `stale`; retain `sync_warnings_json` |
-| `check_failed` | `SUBTITLE_RE_PARSED` | `stale` | Prior result exists | Persist `stale`; retain `sync_warnings_json` |
+| `check_failed` | `VIDEO_RE_INSPECTED` | `stale` | Prior result exists | Display stale (computed from timestamps, not persisted); retain `sync_warnings_json` |
+| `check_failed` | `SUBTITLE_RE_PARSED` | `stale` | Prior result exists | Display stale (computed from timestamps, not persisted); retain `sync_warnings_json` |
 | `check_failed` | `USER_REQUESTED_CHECK` | _(in-flight)_ | Prerequisites met | Re-run analysis |
 | `stale` | `VIDEO_RE_INSPECTED` | `stale` | Already stale | No-op (still stale) |
 | `stale` | `SUBTITLE_RE_PARSED` | `stale` | Already stale | No-op (still stale) |
@@ -191,7 +191,7 @@ pattern as `VIDEO_RE_INSPECTED`. Not fired on first subtitle parse.
 
 Fired when the user explicitly clicks the "Check sync" or "Re-check" button in the sync panel.
 This is the **only trigger** for running `SynchronizationAnalyzer`. Analysis is never automatic.
-The IPC channel `SYNC_ANALYZE_FOR_PROJECT` is invoked with `{ projectId }`.
+The IPC channel `SYNC_CHECK_FOR_PROJECT` is invoked with `{ projectId }`.
 
 ### `ANALYSIS_SUCCEEDED`
 
@@ -262,15 +262,17 @@ function computeLoadTimeState(project: ProjectRecord): SyncStatus {
   }
 
   // Step 5 — Use persisted state
-  // Valid persisted states: 'timing_ok', 'needs_review', 'check_failed', 'stale'
+  // Valid persisted states: 'timing_ok', 'needs_review', 'check_failed'
+  // ('stale' is never persisted — it is computed above, never stored)
   return syncStatus as SyncStatus;
 }
 ```
 
 **If `computeLoadTimeState` returns `stale` but the DB has a different persisted value:**
-`SynchronizationService` updates `projects.sync_status = 'stale'` in the DB. This UPDATE is
-performed lazily on first load, not eagerly for all projects at startup. It is a single-row
-UPDATE with no other changes.
+`SynchronizationService` does NOT write `stale` to the DB. Stale is a computed display state
+derived from timestamp comparisons — it is never persisted to `sync_status`. The service returns
+the computed `stale` status in-memory; the renderer displays the stale indicator while the DB
+retains the last real analysis result (`timing_ok`, `needs_review`, or `check_failed`).
 
 **If `computeLoadTimeState` returns `ready_to_check` but DB has null `sync_status`:**
 `SynchronizationService` updates `projects.sync_status = 'ready_to_check'` in the DB. This ensures
@@ -311,11 +313,11 @@ layer at render time from the live project fields, not stored in `sync_status`.
 ## 6. Persistence
 
 These are the DB columns on the `projects` table that store sync state. Added in migration
-`0003_sync_analysis.sql`. All are nullable; existing rows default to null.
+`0003_sync_check.sql`. All are nullable; existing rows default to null.
 
 | Column | Type | Description |
 |---|---|---|
-| `sync_status` | `TEXT` | The current sync state enum value. One of: `not_available`, `ready_to_check`, `timing_ok`, `needs_review`, `stale`, `check_failed`. Null is treated as `ready_to_check` (if prerequisites met) or `not_available` (if not) for display. |
+| `sync_status` | `TEXT` | The persisted sync state. One of: `not_available`, `ready_to_check`, `timing_ok`, `needs_review`, `check_failed`. Null is treated as `ready_to_check` (if prerequisites met) or `not_available` (if not) for display. **`stale` is never written here** — it is a computed display state derived from timestamp comparisons at load time. |
 | `sync_checked_at` | `INTEGER` | Unix milliseconds timestamp of the last completed analysis (set by `SynchronizationService` immediately after `analyze()` returns). Null if no analysis has run. |
 | `sync_warnings_json` | `TEXT` | JSON-serialized `SyncWarning[]` array from the most recent analysis. Null if state is `not_available`, `ready_to_check`, or `stale` with no prior result. The renderer deserializes via `syncFormatters.parseSyncWarnings()` which returns `[]` on parse failure. |
 | `sync_analysis_version` | `INTEGER` | The `SYNC_ANALYSIS_VERSION` constant value at the time the last analysis ran. Null if no analysis has run. Used to detect threshold-change staleness on load. |
