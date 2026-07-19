@@ -83,10 +83,10 @@ Never skip Phase 2 independent verification.
 
 ## Acceptance criteria
 
-33 criteria across AC-M4-001 through AC-M4-008.
+40 criteria across AC-M4-001 through AC-M4-008 (plus reviewer checklist).
 See `docs/product/M4_ACCEPTANCE_CRITERIA.md`.
 
-All 33 must pass before M4 can be accepted.
+All 40 must pass before M4 can be accepted.
 Critical/high audit findings cannot be waived (GD-005 override does not waive audit findings).
 
 ---
@@ -112,7 +112,7 @@ Per `AGENTS.md` and `loop-constraints.md`:
 | M4_SECURITY_AND_LIMITS.md | T1-T6 threats + mitigations |
 | M4_STATE_MACHINE.md | 6 player states + transitions |
 | M4_UX_SPECIFICATION.md | Layout, controls, data-testid attrs |
-| M4_ACCEPTANCE_CRITERIA.md | 33 ACs across 8 groups |
+| M4_ACCEPTANCE_CRITERIA.md | 40 ACs across 8 groups + reviewer checklist |
 | M4_DATABASE_STRATEGY.md | No new schema; existing tables |
 | M4_IMPLEMENTATION_PLAN.md | 6-phase plan with file list |
 | M4_TEST_PLAN.md | Unit / E2E / visual test coverage |

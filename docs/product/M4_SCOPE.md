@@ -20,6 +20,7 @@ Give users an in-app video player synchronized with subtitle cue display so they
 | Playback controls: play/pause, seek, speed | Speed: 0.5/0.75/1.0/1.25/1.5/2.0 |
 | Jump-to-cue navigation from cue list | Click cue → seek to startMs |
 | Custom Electron protocol for local file serving | `local://` scheme, no raw file path to renderer |
+| `video:getPlaybackUrl` IPC channel | Returns opaque `local://video/{projectId}` URL |
 | `video:getCues` IPC channel | Returns cue list for the project |
 | Preview page in renderer (4th nav route) | Accessible when project.status='ready' |
 | Player state machine (6 states) | not_ready, loading, ready, playing, paused, error |
@@ -41,6 +42,8 @@ Give users an in-app video player synchronized with subtitle cue display so they
 | Subtitle editing | Out of scope for MVP |
 | Multi-subtitle track | Post-M4 |
 | Keyboard shortcuts beyond space/arrow | Deferred |
+| Volume control slider | Deferred to M5 (not in scope or ACs) |
+| Restart (⏮) and End (⏭) buttons | Deferred to M5 (not in scope or ACs) |
 
 ---
 
@@ -49,6 +52,7 @@ Give users an in-app video player synchronized with subtitle cue display so they
 - Project status: `ready` (video inspected, mediaMetadata present)
 - Subtitle status: `ready` OR `ready_with_warnings` (subtitle parsed, cues in DB)
 - Both prerequisites shown as reasons when preview is unavailable
+- M3 sync check state (`sync_status`) is NOT a prerequisite — preview is available regardless of sync status (needs_review, check_failed, etc. do not block preview)
 
 ---
 

@@ -33,26 +33,32 @@ src/shared/
 
 ## Custom protocol: `local://`
 
-Registered in main process via `protocol.handle('local', handler)` before `app.ready` wait.
+**Registration sequence (order is critical)**:
+1. `protocol.registerSchemesAsPrivileged([{ scheme: 'local', privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true } }])` — MUST be called at module level, BEFORE `app.ready`
+2. `protocol.handle('local', handler)` — MUST be called inside `app.whenReady()` callback, BEFORE `new BrowserWindow()`
+
+**CSP change required**: `src/main/security/csp.ts` must add `media-src 'self' local:` to both production and development CSP. Without this, `<video src="local:///...">` is blocked by `default-src 'self'`.
 
 ### URL scheme
 
-`local://video/{projectId}`
+`local:///video/{projectId}` (triple-slash — empty host, pathname = `/video/{projectId}`)
+
+**CRITICAL**: `local:///` NOT `local://` — the three-slash form yields `pathname === '/video/{uuid}'`. The two-slash form `local://video/...` puts `video` as the hostname and `pathname === '/{uuid}'` — the UUID path regex never matches.
 
 - `projectId` is a UUID (validated with z.string().uuid())
 - No raw file paths in URLs
-- Protocol handler resolves path from DB, NOT from URL
+- Protocol handler resolves path from DB via VideoService, NOT from URL
 
 ### Protocol handler contract
 
 ```
-Request: local://video/{projectId}
-→ Main: validate projectId as UUID
-→ DB: getProject(projectId) → project.videoPath
-→ FS: stat(videoPath) → must be a file
-→ HTTP range: parse Accept-Range / Range headers
-→ Respond: 200 (full) or 206 (partial) with video bytes
-→ Error: 404 (not found), 415 (unsupported), 500 (internal)
+Request: local:///video/{projectId}
+→ Main: validate projectId as UUID (anchored regex)
+→ VideoService.resolveVideoPath(projectId) → videoPath from DB
+→ FS: lstat(videoPath) → must be isFile() (lstat rejects symlinks)
+→ HTTP range: parse Range header; return 416 for invalid/inverted ranges
+→ Respond: 200 (full) or 206 (partial) with video bytes via Readable.toWeb()
+→ Error: 404 (not found, invalid UUID, missing path), 416 (range not satisfiable)
 ```
 
 Only responds to `local:` scheme from renderer origin. No external URLs accepted.
@@ -71,7 +77,7 @@ Electron protocol handler must support HTTP Range requests for seeking. Without 
 ### `video:getPlaybackUrl`
 
 - Input: `{ projectId: z.string().uuid() }`
-- Output: `{ url: string }` — `local://video/{projectId}`
+- Output: `{ url: string }` — `local:///video/{projectId}` (triple-slash)
 - Notes: Does NOT read file; main validates project exists and videoPath is present before returning URL
 
 ### `video:getCues`
@@ -127,10 +133,11 @@ Edge cases:
 ## Architecture boundary rules
 
 1. `src/renderer/features/preview/**` must NOT import `electron`, `node:*`, `@main/*`, `@database/*`
-2. Video URL construction on renderer side uses the returned `local://video/...` URL directly
-3. File serving is entirely in main process — renderer sees only the opaque URL
+2. Renderer calls `window.sceneSift.video.getPlaybackUrl(projectId)` to get URL — NEVER constructs `local:///video/...` from projectId template
+3. File serving is entirely in main process — renderer sees only the opaque `local:///` URL
 4. `localVideoProtocol.ts` resides in `src/main/services/video/` — main process only
 5. No raw file paths returned to renderer at any time
+6. Protocol handler accesses filesystem only through `VideoService.resolveVideoPath()` — no direct DB access in handler
 
 ---
 

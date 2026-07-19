@@ -29,7 +29,8 @@ export const VideoCueItemSchema = z.object({
   index: z.number().int().nonneg(),
   startMs: z.number().int().nonneg(),
   endMs: z.number().int().nonneg(),
-  text: z.string(),
+  text: z.string().max(2000), // capped to prevent oversized IPC payloads
+  // Note: SubtitleCue.lines is intentionally excluded (not needed for overlay display)
 });
 export type VideoCueItem = z.infer<typeof VideoCueItemSchema>;
 export const videoGetCuesOutputSchema = z.object({ cues: z.array(VideoCueItemSchema) });
@@ -65,26 +66,47 @@ Add coverage for `VIDEO_GET_CUES` and `VIDEO_GET_PLAYBACK_URL`.
 **New: `src/main/services/video/videoService.ts`**
 
 ```typescript
+// Structured error codes (no raw exception messages to renderer)
+export type VideoServiceError = { code: 'PROJECT_NOT_FOUND' | 'NO_VIDEO_PATH' | 'SUBTITLE_DATA_CORRUPT' };
+
 export class VideoService {
   constructor(private db: DatabaseService) {}
 
+  // Returns local:///video/{projectId} URL (triple-slash = empty host, pathname = /video/{uuid})
+  // Validates project exists and videoPath is set before returning URL.
   public getPlaybackUrl(projectId: string): string {
     const project = this.db.getProject(projectId);
-    if (!project?.videoPath) throw new Error('Project not found or no video');
-    return `local://video/${projectId}`;
+    if (!project) throw { code: 'PROJECT_NOT_FOUND' } as VideoServiceError;
+    if (!project.videoPath) throw { code: 'NO_VIDEO_PATH' } as VideoServiceError;
+    return `local:///video/${projectId}`;
+  }
+
+  // Resolves the filesystem path for use by the protocol handler only.
+  // Protocol handler must call this instead of accessing db directly.
+  public resolveVideoPath(projectId: string): string | null {
+    const project = this.db.getProject(projectId);
+    return project?.videoPath ?? null;
   }
 
   public getCues(projectId: string): VideoCueItem[] {
     const project = this.db.getProject(projectId);
-    if (!project) throw new Error('Project not found');
-    const doc = this.db.getSubtitleDocument(projectId);
-    if (!doc) return [];
-    return doc.cues.map(c => ({
-      index: c.index,
-      startMs: c.startMs,
-      endMs: c.endMs,
-      text: c.text,
-    }));
+    if (!project) throw { code: 'PROJECT_NOT_FOUND' } as VideoServiceError;
+    // Prerequisite gate: only return cues for projects with parsed subtitles
+    if (project.subtitleStatus !== 'ready' && project.subtitleStatus !== 'ready_with_warnings') {
+      return [];
+    }
+    try {
+      const doc = this.db.getSubtitleDocument(projectId);
+      if (!doc) return [];
+      return doc.cues.map(c => ({
+        index: c.index,
+        startMs: c.startMs,
+        endMs: c.endMs,
+        text: c.text,
+      }));
+    } catch {
+      throw { code: 'SUBTITLE_DATA_CORRUPT' } as VideoServiceError;
+    }
   }
 }
 ```
@@ -92,44 +114,68 @@ export class VideoService {
 **New: `src/main/services/video/localVideoProtocol.ts`**
 
 ```typescript
-export function registerLocalVideoProtocol(db: DatabaseService): void {
+// Protocol registration sequence (Electron requirement):
+// 1. protocol.registerSchemesAsPrivileged — MUST run at module level BEFORE app.ready
+// 2. protocol.handle — MUST run inside app.whenReady() callback, before new BrowserWindow()
+// See src/main/index.ts for registration order.
+
+// URL scheme is local:///video/{uuid} (triple-slash — empty host, pathname = /video/{uuid})
+// Confirmed: new URL('local:///video/<uuid>').pathname === '/video/<uuid>'
+// NOT: local://video/<uuid> (that puts 'video' as hostname, pathname = '/<uuid>')
+
+const UUID_PATH_REGEX =
+  /^\/video\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+
+export function registerLocalVideoProtocol(videoService: VideoService): void {
   protocol.handle('local', async (request) => {
-    const url = new URL(request.url);
-    // Validate path format: /video/{uuid}
-    const match = url.pathname.match(/^\/video\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+    const pathname = new URL(request.url).pathname;
+    const match = pathname.match(UUID_PATH_REGEX);
     if (!match) return new Response(null, { status: 404 });
 
+    // Path resolved from DB via VideoService only — never from URL
     const projectId = match[1];
-    const project = db.getProject(projectId);
-    if (!project?.videoPath) return new Response(null, { status: 404 });
+    const videoPath = videoService.resolveVideoPath(projectId);
+    if (!videoPath) return new Response(null, { status: 404 });
 
-    const stat = await fsStat(project.videoPath).catch(() => null);
+    // Use lstat (not stat) to reject symlinks
+    const stat = await fsLstat(videoPath).catch(() => null);
     if (!stat?.isFile()) return new Response(null, { status: 404 });
 
     const totalSize = stat.size;
     const rangeHeader = request.headers.get('Range');
 
     if (rangeHeader) {
-      const [start, end] = parseRange(rangeHeader, totalSize);
-      const stream = createReadStream(project.videoPath, { start, end });
-      return new Response(stream, {
+      const range = parseRange(rangeHeader, totalSize);
+      // Return 416 Range Not Satisfiable for invalid/inverted ranges
+      if (!range) {
+        return new Response(null, {
+          status: 416,
+          headers: { 'Content-Range': `bytes */${totalSize}` },
+        });
+      }
+      const [start, end] = range;
+      // Use Readable.toWeb() to convert Node.js Readable to Web ReadableStream
+      const nodeStream = createReadStream(videoPath, { start, end });
+      const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>;
+      return new Response(webStream, {
         status: 206,
         headers: {
           'Content-Range': `bytes ${start}-${end}/${totalSize}`,
           'Content-Length': String(end - start + 1),
-          'Content-Type': mimeForExtension(project.videoPath),
+          'Content-Type': mimeForExtension(videoPath),
           'Accept-Ranges': 'bytes',
         },
       });
     }
 
     // Full file response
-    const stream = createReadStream(project.videoPath);
-    return new Response(stream, {
+    const nodeStream = createReadStream(videoPath);
+    const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>;
+    return new Response(webStream, {
       status: 200,
       headers: {
         'Content-Length': String(totalSize),
-        'Content-Type': mimeForExtension(project.videoPath),
+        'Content-Type': mimeForExtension(videoPath),
         'Accept-Ranges': 'bytes',
       },
     });
@@ -148,18 +194,34 @@ function mimeForExtension(filePath: string): string {
   return mimes[ext] ?? 'application/octet-stream';
 }
 
-function parseRange(header: string, total: number): [number, number] {
+// Returns null for invalid/inverted ranges (caller returns 416)
+function parseRange(header: string, total: number): [number, number] | null {
   const match = header.match(/^bytes=(\d+)-(\d*)$/);
-  if (!match) return [0, total - 1];
-  const start = parseInt(match[1], 10);
-  const end = match[2] ? parseInt(match[2], 10) : total - 1;
-  return [Math.min(start, total - 1), Math.min(end, total - 1)];
+  if (!match) return null; // invalid format → 416
+  const start = Math.min(parseInt(match[1], 10), total - 1);
+  const end = match[2] ? Math.min(parseInt(match[2], 10), total - 1) : total - 1;
+  if (start > end || start >= total) return null; // inverted or out-of-range → 416
+  return [start, end];
 }
 ```
 
-**Modified: `src/main/app.ts` or equivalent entry point**
-- Call `registerLocalVideoProtocol(db)` after db.initialize() and before `app.whenReady()`
-- Must be called before `new BrowserWindow()` (Electron requirement for custom protocols)
+**Modified: `src/main/index.ts` (or equivalent entry point)**
+
+Two-step registration (order is critical):
+```typescript
+// Step 1: BEFORE app.whenReady() — at module load
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'local', privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true, corsEnabled: false } },
+]);
+
+// Step 2: INSIDE app.whenReady() — after ready, before new BrowserWindow()
+app.whenReady().then(async () => {
+  registerLocalVideoProtocol(videoService); // protocol.handle('local', ...)
+  // ... then create BrowserWindow
+});
+```
+
+**Modified: `src/main/security/csp.ts`** — add `media-src 'self' local:` to both production and development CSP strings. This is a security-boundary change; electron-security-reviewer must verify Phase 2 includes this. Without it, `<video src="local:///video/...">` is blocked by CSP `default-src 'self'`.
 
 **Modified: `src/main/ipc/registerIpcHandlers.ts`**
 - Register `video:getPlaybackUrl` and `video:getCues` handlers using `registerValidatedHandler`
@@ -182,7 +244,7 @@ Unit tests (use mock db and mock fs.stat):
 4. Valid UUID → file not found (stat fails) → returns 404
 5. Valid UUID → project has no videoPath → returns 404
 
-**Checks**: pnpm typecheck, pnpm lint, pnpm test, pnpm governance:validate, pnpm architecture:validate
+**Checks**: pnpm typecheck, pnpm lint, pnpm test, pnpm test:database, pnpm governance:validate, pnpm architecture:validate
 
 **Independent verification required before Phase 3.**
 
@@ -193,10 +255,15 @@ Unit tests (use mock db and mock fs.stat):
 **New in `src/preload/index.ts` contextBridge:**
 ```typescript
 video: {
-  getPlaybackUrl: (projectId: string) =>
-    ipcRenderer.invoke(IPC_CHANNELS.VIDEO_GET_PLAYBACK_URL, { projectId }),
-  getCues: (projectId: string) =>
-    ipcRenderer.invoke(IPC_CHANNELS.VIDEO_GET_CUES, { projectId }),
+  getPlaybackUrl: (projectId: string) => {
+    // Validate input before forwarding (rule: preload-ipc.md all methods must validate inputs)
+    if (typeof projectId !== 'string' || !projectId) throw new TypeError('projectId must be a non-empty string');
+    return ipcRenderer.invoke(IPC_CHANNELS.VIDEO_GET_PLAYBACK_URL, { projectId });
+  },
+  getCues: (projectId: string) => {
+    if (typeof projectId !== 'string' || !projectId) throw new TypeError('projectId must be a non-empty string');
+    return ipcRenderer.invoke(IPC_CHANNELS.VIDEO_GET_CUES, { projectId });
+  },
 },
 ```
 
@@ -218,7 +285,7 @@ Add video namespace types.
 
 **`src/renderer/features/preview/VideoPlayer.tsx`**
 - HTMLVideoElement wrapped
-- `src={`local://video/${projectId}`}` (URL constructed from projectId)
+- `src={playbackUrl}` where `playbackUrl` is loaded via `window.sceneSift.video.getPlaybackUrl(projectId)` IPC call — renderer NEVER constructs the URL from projectId directly
 - Playback controls
 - Time display
 - Speed picker
@@ -262,7 +329,7 @@ Add video namespace types.
 - Add `preview-with-subtitle` fixture (project with cues in mockSceneSiftApi)
 
 **Modified: `src/renderer/qa/mockSceneSiftApi.ts`**
-- Add `video.getPlaybackUrl()` → returns `'local://video/{projectId}'`
+- Add `video.getPlaybackUrl()` → returns blank/silent mp4 data URI (e.g. `'data:video/mp4;base64,...'`) — NOT `'local://video/{projectId}'` (local: scheme not available in browser QA mode)
 - Add `video.getCues()` → returns fixture cue array
 
 ### Unit tests
@@ -319,6 +386,7 @@ All must exit 0.
 | New | `src/main/services/video/videoService.ts` | 3 |
 | New | `src/main/services/video/localVideoProtocol.ts` | 3 |
 | Mod | `src/main/app.ts` (or equivalent) | 3 |
+| Mod | `src/main/security/csp.ts` | 3 |
 | Mod | `src/main/ipc/registerIpcHandlers.ts` | 3 |
 | Mod | `src/preload/index.ts` | 3 |
 | New | `src/renderer/features/preview/*.tsx` | 1 |

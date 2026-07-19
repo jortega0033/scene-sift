@@ -7,6 +7,9 @@ Status: PLANNING
 
 ## AC-M4-001 — Preview navigation
 
+### AC-M4-001.0
+Preview nav item is visible in left nav bar at all times, regardless of project selection state. When no project is selected (or prerequisites not met), nav item has disabled visual appearance but remains visible.
+
 ### AC-M4-001.1
 Preview nav item is visible in the left nav bar when any project is selected.
 
@@ -45,7 +48,7 @@ Seek bar (`preview-seek-bar`) reflects current position; clicking/dragging seeks
 -5s button seeks backward; +5s seeks forward; does not seek past 0 or past duration.
 
 ### AC-M4-002.7
-When video ends, player returns to `ready` state (paused at 0 or end, ready to replay).
+When video ends (`ended` event fires), player transitions to `ready` state with `currentTime` reset to 0, ready to replay.
 
 ---
 
@@ -84,6 +87,16 @@ When there are no cues (subtitle has 0 cues or no subtitle), cue list is empty o
 
 ---
 
+## AC-M4-004b — Loading state
+
+### AC-M4-004b.1
+When prerequisites are met and video is initializing (player in `loading` state), a spinner is visible in the player area (`preview-loading` testid or equivalent).
+
+### AC-M4-004b.2
+Loading state transitions to `ready` state once HTMLVideoElement fires `canplay` event.
+
+---
+
 ## AC-M4-005 — Error handling
 
 ### AC-M4-005.1
@@ -111,8 +124,15 @@ The `local://` protocol handler returns 404 when the project's videoPath no long
 ### AC-M4-006.4
 Raw file paths are NOT exposed to the renderer at any point (URL contains only `local://video/{projectId}`).
 
-### AC-M4-006.5
-No `shell: true`, `nodeIntegration: true`, `contextIsolation: false`, or `webSecurity: false` changes introduced.
+---
+
+## Reviewer checklist (not testable ACs — required by governance)
+
+- [ ] No `shell: true`, `nodeIntegration: true`, `contextIsolation: false`, or `webSecurity: false` changes introduced
+- [ ] No unapproved new dependencies added
+- [ ] No raw `ipcRenderer` exposure in preload
+- [ ] `protocol.registerSchemesAsPrivileged` called before `app.ready`
+- [ ] `media-src 'self' local:` added to CSP in `src/main/security/csp.ts`
 
 ---
 

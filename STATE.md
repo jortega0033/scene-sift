@@ -6,12 +6,24 @@ defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-m4-implementation
+- milestone: M4 Video Preview Workspace — Implementation
+- branch: feature/m4-video-preview (base: overnight/m3-plus-2026-07-20)
+- risk_level: 3 (VideoService, protocol handler, preload, CSP — main/preload/IPC risk)
+- status: in_progress
+- started: 2026-07-20
+- governance_decision: GD-005
+
+## Previous active run (complete — M4 planning reconciled)
+
 - run_id: 2026-07-20T-m4-planning
 - milestone: M4 Video Preview Workspace — Planning and Specification
 - branch: overnight/m3-plus-2026-07-20
 - risk_level: 0 (docs only — no product code)
-- status: in_progress
-- started: 2026-07-20
+- status: complete
+- verdict: M4 PLANNING COMPLETE — 6 specialist reviews (parallel), 4 CRITICAL + multiple HIGH findings resolved; ADR-014 created; all 12 planning docs reconciled; 40 ACs defined
+- critical_fixes: (1) triple-slash URL scheme local:/// (2) missing registerSchemesAsPrivileged (3) CSP media-src local: (4) renderer URL dead-IPC-channel fix
+- completed: 2026-07-20
 - governance_decision: GD-005
 
 ## Previous active run (complete — M3 integrated)

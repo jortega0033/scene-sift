@@ -15,7 +15,9 @@ Status: PLANNING
 ### T2 — Serving arbitrary files
 
 **Vector**: Attacker controls a `videoPath` in DB to point to sensitive files.
-**Mitigation**: `videoPath` was stored at project creation via user-selected file dialog (M1). Path goes through `path.resolve()` + `stat().isFile()` at project creation. Protocol handler re-validates `stat().isFile()` before serving. Does not follow symlinks.
+**Mitigation**: `videoPath` was stored at project creation via user-selected file dialog (M1). Path goes through `path.resolve()` + `stat().isFile()` at project creation. Protocol handler re-validates `fs.lstat().isFile()` before serving. `lstat` is used (not `stat`) to reject symlinks — if the video file was replaced with a symlink after project creation, `lstat().isFile()` returns false for the symlink itself.
+
+Note: even with `lstat`, the path is exclusively DB-sourced (never URL-sourced), so the trust model remains: only user-dialog-selected paths can appear in `videoPath`.
 
 ### T3 — SSRF via custom protocol
 
@@ -66,25 +68,28 @@ No changes required to BrowserWindow config for M4.
 ## Protocol handler security rules
 
 ```typescript
+// URL scheme: local:///video/{uuid} (triple-slash → empty host, pathname = /video/{uuid})
+// new URL('local:///video/<uuid>').pathname === '/video/<uuid>' ✓
+// new URL('local://video/<uuid>').pathname  === '/<uuid>'       ✗ (video is treated as hostname)
+
 // In protocol handler:
-// 1. Validate URL pattern
-const match = url.pathname.match(/^\/video\/([0-9a-f-]{36})$/i);
+// 1. Validate URL pattern — strict UUID format, anchored
+const match = new URL(request.url).pathname.match(
+  /^\/video\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
+);
 if (!match) return new Response(null, { status: 404 });
 
-// 2. Validate UUID format
+// 2. Resolve path from DB only (no separate isValidUUID — strict regex is sufficient)
 const projectId = match[1];
-if (!isValidUUID(projectId)) return new Response(null, { status: 404 });
+const videoPath = await videoService.resolveVideoPath(projectId);
+if (!videoPath) return new Response(null, { status: 404 });
 
-// 3. Resolve path from DB only
-const project = db.getProject(projectId);
-if (!project?.videoPath) return new Response(null, { status: 404 });
-
-// 4. Validate file existence
-const stat = await fsStat(project.videoPath).catch(() => null);
+// 3. Validate file existence using lstat (rejects symlinks)
+const stat = await fsLstat(videoPath).catch(() => null);
 if (!stat?.isFile()) return new Response(null, { status: 404 });
 
-// 5. Stream with range support
-// ... (range parsing, 206 response)
+// 4. Stream with range support (Node Readable → Web ReadableStream via Readable.toWeb)
+// Malformed or inverted ranges return 416 Range Not Satisfiable
 ```
 
 ---

@@ -1050,15 +1050,85 @@ Append one JSON line per material run.
 
 ---
 
-## Run: 2026-07-20T-m4-planning — M4 Video Preview Workspace Planning (in progress)
+## Run: 2026-07-20T-m4-planning — M4 Video Preview Workspace Planning
 
 ```json
 {
   "run_id": "2026-07-20T-m4-planning",
   "task": "M4 Video Preview Workspace — Planning and Specification",
   "risk_level": 0,
-  "status": "in_progress",
+  "status": "complete",
   "branch": "overnight/m3-plus-2026-07-20",
+  "governance_decision": "GD-005 — overnight owner override",
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "reviewers": [
+      "Architecture Reviewer (independent)",
+      "Electron Security Reviewer (independent)",
+      "Database Reviewer (independent)",
+      "Product Scope Reviewer (independent)",
+      "Test Plan Reviewer (independent)",
+      "Skeptical Reviewer (independent)"
+    ]
+  },
+  "docs_produced": [
+    "docs/product/M4_SCOPE.md",
+    "docs/product/M4_ARCHITECTURE.md",
+    "docs/product/M4_SECURITY_AND_LIMITS.md",
+    "docs/product/M4_STATE_MACHINE.md",
+    "docs/product/M4_UX_SPECIFICATION.md",
+    "docs/product/M4_ACCEPTANCE_CRITERIA.md",
+    "docs/product/M4_DATABASE_STRATEGY.md",
+    "docs/product/M4_IMPLEMENTATION_PLAN.md",
+    "docs/product/M4_TEST_PLAN.md",
+    "docs/product/M4_USER_STORIES.md",
+    "docs/product/M4_RISK_REGISTER.md",
+    "docs/product/M4_HANDOFF.md",
+    "docs/architecture/adr/ADR-014-local-protocol-for-video-serving.md"
+  ],
+  "critical_findings_resolved": [
+    "CRITICAL-1 (Architecture): local://video/<uuid> parsed as hostname=video, pathname=/<uuid> — regex never matches. Fix: triple-slash local:///video/<uuid> throughout all docs.",
+    "CRITICAL-2 (Electron Security): Missing protocol.registerSchemesAsPrivileged before app.ready — scheme not marked standard/secure, Range requests unreliable. Fix: documented in ADR-014 + implementation plan with correct registration sequence.",
+    "CRITICAL-3 (Electron Security): CSP default-src 'self' blocks local: scheme. Fix: media-src 'self' local: added to M4_IMPLEMENTATION_PLAN.md + ADR-014 + M4_ARCHITECTURE.md.",
+    "CRITICAL-4 (Product Scope): VideoPlayer constructs URL from projectId template string — IPC channel dead, QA mock useless. Fix: renderer must call window.sceneSift.video.getPlaybackUrl(projectId) and use returned URL."
+  ],
+  "high_findings_resolved": [
+    "Node.js Readable not Web ReadableStream — Readable.toWeb() required in protocol handler",
+    "parseRange start>end returns negative Content-Length — parseRange must return null for invalid/inverted → 416",
+    "fs.stat follows symlinks — security doc claimed otherwise. Fix: use fs.lstat, explicit documentation",
+    "getCues missing subtitleStatus prerequisite gate — only checked project existence, not subtitle readiness",
+    "Protocol handler direct DB access — fix: handler takes VideoService param, calls resolveVideoPath()",
+    "AC count mismatch 33 vs 38 (now 40) — fixed in handoff",
+    "Volume/Restart/End in scope vs UX table conflict — resolved by moving to out-of-scope",
+    "media_metadata as single column — fixed to individual columns in database strategy"
+  ],
+  "independent_reviewer_verdicts": {
+    "architecture_reviewer": "resolved — missing ADR-014 file, URL scheme parse bug",
+    "electron_security_reviewer": "resolved — registerSchemesAsPrivileged, CSP gap, fsStat symlink, Readable.toWeb, parseRange",
+    "database_reviewer": "resolved — getCues prerequisite gate, protocol handler DB access pattern, media_metadata column",
+    "product_scope_reviewer": "resolved — dead IPC channel, AC count, volume/restart/end scope",
+    "test_plan_reviewer": "resolved — state machine tests, range boundary tests, error state tests, DOM XSS test",
+    "skeptical_reviewer": "resolved — all critical findings confirmed real by URL parser test"
+  },
+  "checks": ["pnpm governance:validate — not run (docs only — required pre-commit)"],
+  "started": "2026-07-20",
+  "completed": "2026-07-20",
+  "outcome": "pass",
+  "verdict": "M4 PLANNING COMPLETE — all 4 critical and multiple high findings resolved across all 12 planning docs + ADR-014. 40 ACs defined. Implementation may begin on feature/m4-video-preview."
+}
+```
+
+---
+
+## Run: 2026-07-20T-m4-implementation — M4 Video Preview Workspace Implementation (in progress)
+
+```json
+{
+  "run_id": "2026-07-20T-m4-implementation",
+  "task": "M4 Video Preview Workspace — Implementation",
+  "risk_level": 3,
+  "status": "in_progress",
+  "branch": "feature/m4-video-preview",
   "governance_decision": "GD-005 — overnight owner override",
   "started": "2026-07-20",
   "outcome": "pending"

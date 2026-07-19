@@ -18,7 +18,7 @@ M4 requires NO new database schema. All data needed for video preview is already
 | `projects.video_path` | Resolved by protocol handler to serve video bytes |
 | `projects.status` | prerequisitesMet check (must be 'ready') |
 | `projects.subtitle_status` | prerequisitesMet check (must be 'ready'/'ready_with_warnings') |
-| `projects.media_metadata` | Display duration, fps, resolution in preview header |
+| `projects` (individual media columns: `duration_seconds`, `width`, `height`, `fps`, `bit_rate_bps`, etc.) | Display duration, fps, resolution in preview header — assembled into `mediaMetadata` by database service, no single `media_metadata` column |
 | `subtitle_documents.cues_json` | Cue list + overlay display |
 | `subtitle_documents.project_id` | Lookup key |
 
@@ -51,6 +51,6 @@ Player position, speed, volume, and mute are NOT persisted. Each preview session
 
 ## DB layer boundary
 
-Only `VideoService` accesses the database. The protocol handler does NOT have a reference to `DatabaseService` directly — it receives the resolved file path through `VideoService` at registration time OR it is initialized with a db reference and calls `db.getProject(projectId).videoPath` directly (to be determined in implementation plan — see security constraint: the protocol handler must have access to DB to validate project paths without trusting the URL).
+Only `VideoService` accesses the database. The protocol handler does NOT have a direct `DatabaseService` reference — it takes a `VideoService` parameter at registration time and calls `videoService.resolveVideoPath(projectId)` to get the filesystem path.
 
-Recommended: protocol handler is initialized with `DatabaseService` reference at app startup, so it can validate projectId → videoPath independently of the IPC path.
+This keeps single-responsibility: DB path resolution stays in VideoService, protocol handler only handles HTTP layer concerns (request parsing, streaming, range support). Direct DB access in the protocol handler would bypass VideoService's validation logic.

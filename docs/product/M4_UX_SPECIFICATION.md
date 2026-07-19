@@ -44,18 +44,17 @@ Add "Preview" to the left nav bar (4th item, below Projects/Queue/Settings). Ico
 ### Playback controls (below video)
 
 ```
-[⏮ Restart] [⏪ -5s] [▶ Play / ⏸ Pause] [⏩ +5s] [⏭ End]   [🔊] [─────●─────] [1.0×▾]
-            timestamp: 00:12:34 / 01:23:45
+[⏪ -5s] [▶ Play / ⏸ Pause] [⏩ +5s]   [1.0×▾]
+         timestamp: 00:12:34 / 01:23:45
 ```
+
+Note: Restart (⏮), End (⏭), and volume slider are deferred to M5.
 
 | Control | Behavior |
 |---|---|
-| Restart | Seek to 0, pause |
 | -5s | Seek currentTime - 5 |
 | Play/Pause | Toggle |
 | +5s | Seek currentTime + 5 |
-| End | Seek to duration |
-| Volume slider | `videoElement.volume` 0–1 |
 | Speed picker | 0.5 / 0.75 / 1.0 / 1.25 / 1.5 / 2.0 via `playbackRate` |
 | Progress bar | Click/drag to seek |
 
