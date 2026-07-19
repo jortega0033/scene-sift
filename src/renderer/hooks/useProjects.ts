@@ -17,6 +17,16 @@ export const useCreateProject = () => {
   });
 };
 
+export const useInspectProject = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (projectId: string) => window.sceneSift.projects.inspect(projectId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+};
+
 export const useDeleteProject = () => {
   const queryClient = useQueryClient();
   return useMutation({

@@ -4,6 +4,8 @@ import {
   createProjectInputSchema,
   deleteProjectInputSchema,
   getProjectInputSchema,
+  inspectProjectInputSchema,
+  mediaInspectionResultSchema,
   projectSchema,
   selectedDirectorySchema,
   selectedSubtitleSchema,
@@ -83,6 +85,10 @@ export const ipcContracts = {
     delete: {
       input: deleteProjectInputSchema,
       output: z.object({ deleted: z.boolean() }),
+    },
+    inspect: {
+      input: inspectProjectInputSchema,
+      output: mediaInspectionResultSchema,
     },
   },
   settings: {

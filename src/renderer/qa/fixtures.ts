@@ -1,6 +1,6 @@
 import type { RenderJob, SceneSiftApi, SystemCapabilities } from '@shared/api/sceneSiftApi';
 import type { AppSettings } from '@shared/schemas/settings';
-import type { ProjectRecord } from '@shared/schemas/project';
+import type { MediaMetadata, ProjectRecord } from '@shared/schemas/project';
 
 export const QA_FIXTURE_QUERY_KEY = 'fixture';
 
@@ -17,6 +17,8 @@ export const qaFixtureNames = [
   'settings-defaults',
   'settings-custom-output',
   'settings-save-failure',
+  'dark-multiple-projects',
+  'inspection-failed-project',
 ] as const;
 
 export type QaFixtureName = (typeof qaFixtureNames)[number];
@@ -32,15 +34,28 @@ export type QaFixtureState = {
 
 const now = Date.UTC(2026, 6, 18, 12, 0, 0);
 
+const projectAMediaMetadata: MediaMetadata = {
+  durationSeconds: 2847.6,
+  width: 1920,
+  height: 1080,
+  videoCodec: 'h264',
+  fps: 23.976,
+  bitRateBps: 8_500_000,
+  fileSizeBytes: 3_021_000_000,
+  inspectedAt: now - 20_000,
+};
+
 const projectA: ProjectRecord = {
   id: '11111111-1111-4111-8111-111111111111',
   name: 'Episode 04 — Candidate Review',
   videoPath: '/fixtures/sample-episode.mp4',
   subtitlePath: '/fixtures/sample-subtitles.srt',
   outputDirectory: '/fixtures/exports',
-  status: 'active',
+  status: 'ready',
   createdAt: now - 100_000,
   updatedAt: now - 20_000,
+  mediaMetadata: projectAMediaMetadata,
+  inspectionError: null,
 };
 
 const projectB: ProjectRecord = {
@@ -53,6 +68,8 @@ const projectB: ProjectRecord = {
   status: 'draft',
   createdAt: now - 90_000,
   updatedAt: now - 30_000,
+  mediaMetadata: null,
+  inspectionError: null,
 };
 
 const projectC: ProjectRecord = {
@@ -64,6 +81,21 @@ const projectC: ProjectRecord = {
   status: 'archived',
   createdAt: now - 70_000,
   updatedAt: now - 40_000,
+  mediaMetadata: null,
+  inspectionError: null,
+};
+
+const projectD: ProjectRecord = {
+  id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  name: 'Corrupted Source File',
+  videoPath: '/fixtures/corrupted-file.mp4',
+  subtitlePath: null,
+  outputDirectory: null,
+  status: 'inspection_failed',
+  createdAt: now - 50_000,
+  updatedAt: now - 10_000,
+  mediaMetadata: null,
+  inspectionError: 'FFPROBE_ERROR',
 };
 
 const baseSettings: AppSettings = {
@@ -156,7 +188,7 @@ export const fixtureMap: Record<QaFixtureName, QaFixtureState> = {
   },
   'one-new-project': {
     name: 'one-new-project',
-    projects: [{ ...projectA, status: 'draft' }],
+    projects: [{ ...projectA, status: 'draft', mediaMetadata: null }],
     queue: [],
     settings: baseSettings,
     capabilities: baseCapabilities,
@@ -267,6 +299,26 @@ export const fixtureMap: Record<QaFixtureName, QaFixtureState> = {
   'settings-save-failure': {
     name: 'settings-save-failure',
     projects: [projectA],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'dark-multiple-projects': {
+    name: 'dark-multiple-projects',
+    projects: [projectA, projectB, projectC],
+    queue: queueJobs,
+    settings: { ...baseSettings, preferredTheme: 'dark' },
+    capabilities: baseCapabilities,
+    subtitleSelection: {
+      extension: '.srt',
+      name: 'sample-subtitles.srt',
+      path: '/fixtures/sample-subtitles.srt',
+    },
+  },
+  'inspection-failed-project': {
+    name: 'inspection-failed-project',
+    projects: [projectD, projectA],
     queue: [],
     settings: baseSettings,
     capabilities: baseCapabilities,

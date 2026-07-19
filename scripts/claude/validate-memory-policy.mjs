@@ -3,6 +3,10 @@
  * Scans Claude Code memory files for policy violations.
  * Flags entries containing secrets, credentials, or forbidden content.
  * Exit 0 = clean, 1 = violations found.
+ *
+ * Override scan path for testing: SCENESIFT_CLAUDE_MEMORY_ROOT=<dir>
+ * When set, that directory is scanned directly instead of the computed
+ * ~/.claude/projects/<slug>/memory path.
  */
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
@@ -58,17 +62,30 @@ if (existsSync(localMemory)) {
   console.log('  (no local memory directory found — skipping)');
 }
 
-// Also scan the session memory path if it exists
-const sessionMemory = join(homedir(), '.claude', 'projects');
-if (existsSync(sessionMemory)) {
-  console.log(`\nScanning ${sessionMemory} for project memory ...`);
-  // Only scan subdirs matching this project
-  const projectSlug = ROOT.replace(/\//g, '-').replace(/^-/, '');
-  const projectMemory = join(sessionMemory, projectSlug, 'memory');
-  if (existsSync(projectMemory)) {
-    scanDir(projectMemory);
+// Scan the session memory path
+// SCENESIFT_CLAUDE_MEMORY_ROOT overrides the computed path (used in tests).
+if (process.env.SCENESIFT_CLAUDE_MEMORY_ROOT) {
+  const overridePath = process.env.SCENESIFT_CLAUDE_MEMORY_ROOT;
+  console.log(`\nScanning ${overridePath} (SCENESIFT_CLAUDE_MEMORY_ROOT override) ...`);
+  if (existsSync(overridePath)) {
+    scanDir(overridePath);
   } else {
-    console.log('  (no project memory at session path — skipping)');
+    console.warn(`  WARNING: override path does not exist — no secrets scan performed`);
+    console.warn(`  Expected: ${overridePath}`);
+  }
+} else {
+  const sessionMemory = join(homedir(), '.claude', 'projects');
+  if (existsSync(sessionMemory)) {
+    console.log(`\nScanning ${sessionMemory} for project memory ...`);
+    // Derive slug: replace every '/' with '-' (leading '/' becomes leading '-', matching Claude's convention)
+    const projectSlug = ROOT.replace(/\//g, '-');
+    const projectMemory = join(sessionMemory, projectSlug, 'memory');
+    if (existsSync(projectMemory)) {
+      scanDir(projectMemory);
+    } else {
+      console.warn(`  WARNING: project memory directory not found at computed path — no secrets scan performed`);
+      console.warn(`  Expected: ${projectMemory}`);
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import { app } from 'electron';
-import { basename } from 'node:path';
+import { stat } from 'node:fs/promises';
+import { basename, resolve as resolvePath } from 'node:path';
 import { z } from 'zod';
 import { IPC_CHANNELS } from '@shared/ipc/channels';
 import { databaseHealthSchema, systemCapabilitiesSchema } from '@shared/ipc/contracts';
@@ -13,6 +14,8 @@ import {
   createProjectInputSchema,
   deleteProjectInputSchema,
   getProjectInputSchema,
+  inspectProjectInputSchema,
+  mediaInspectionResultSchema,
   projectSchema,
   selectedDirectorySchema,
   selectedSubtitleSchema,
@@ -28,7 +31,8 @@ import {
   selectVideoFile,
   selectBinaryPath,
 } from '@main/services/files/dialogService';
-import { checkFfmpegAvailability } from '@main/services/ffmpeg/ffmpegService';
+import { checkFfmpegAvailability, inspectMediaFile } from '@main/services/ffmpeg/ffmpegService';
+import { AppError } from '@main/utils/errors';
 import { JobService } from '@main/services/jobs/jobService';
 
 type RegisterIpcDeps = {
@@ -120,7 +124,46 @@ export const registerIpcHandlers = ({ databaseService }: RegisterIpcDeps): void 
     IPC_CHANNELS.PROJECT_CREATE,
     createProjectInputSchema,
     projectSchema,
-    (payload) => databaseService.createProject(payload),
+    async (payload) => {
+      const resolved = resolvePath(payload.video.path);
+      try {
+        const fileStat = await stat(resolved);
+        if (!fileStat.isFile()) {
+          throw new AppError('VIDEO_FILE_NOT_FOUND', 'Video path is not a file.');
+        }
+      } catch (err) {
+        if (err instanceof AppError) throw err;
+        throw new AppError('VIDEO_FILE_NOT_FOUND', 'Video path does not exist.');
+      }
+      return databaseService.createProject(payload);
+    },
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.PROJECT_INSPECT,
+    inspectProjectInputSchema,
+    mediaInspectionResultSchema,
+    async ({ projectId }) => {
+      const project = databaseService.getProject(projectId);
+      if (!project) {
+        throw new AppError('PROJECT_NOT_FOUND', 'Project not found.');
+      }
+
+      const caps = await checkFfmpegAvailability(databaseService.getSettings());
+      if (!caps.ffprobeAvailable || !caps.ffprobePath) {
+        throw new AppError('FFPROBE_NOT_AVAILABLE', 'FFprobe not available.');
+      }
+
+      const outcome = await inspectMediaFile(project.videoPath, caps.ffprobePath);
+      const updated = databaseService.updateProjectInspection(projectId, outcome);
+
+      return {
+        projectId: updated.id,
+        status: updated.status,
+        mediaMetadata: updated.mediaMetadata,
+        inspectionError: updated.inspectionError,
+      };
+    },
   );
 
   registerValidatedHandler(IPC_CHANNELS.PROJECT_LIST, z.undefined(), z.array(projectSchema), () =>

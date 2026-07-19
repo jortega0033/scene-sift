@@ -13,4 +13,6 @@ export const FIXTURES = {
   settingsDefaults: 'settings-defaults',
   settingsCustomOutput: 'settings-custom-output',
   settingsSaveFailure: 'settings-save-failure',
+  darkMultipleProjects: 'dark-multiple-projects',
+  inspectionFailedProject: 'inspection-failed-project',
 } as const;

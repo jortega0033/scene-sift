@@ -30,7 +30,18 @@ export const createProjectInputSchema = z.object({
   outputDirectory: selectedDirectorySchema.optional(),
 });
 
-export const projectStatusSchema = z.enum(['draft', 'active', 'archived']);
+export const projectStatusSchema = z.enum(['draft', 'ready', 'inspection_failed', 'archived']);
+
+export const mediaMetadataSchema = z.object({
+  durationSeconds: z.number().nullable(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+  videoCodec: z.string().nullable(),
+  fps: z.number().nullable(),
+  bitRateBps: z.number().int().nullable(),
+  fileSizeBytes: z.number().int().nullable(),
+  inspectedAt: z.number().int(),
+});
 
 export const projectSchema = z.object({
   id: z.string().uuid(),
@@ -41,6 +52,8 @@ export const projectSchema = z.object({
   status: projectStatusSchema,
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
+  mediaMetadata: mediaMetadataSchema.nullable(),
+  inspectionError: z.string().max(64).nullable(),
 });
 
 export const deleteProjectInputSchema = z.object({
@@ -51,5 +64,18 @@ export const getProjectInputSchema = z.object({
   projectId: z.string().uuid(),
 });
 
+export const inspectProjectInputSchema = z.object({
+  projectId: z.string().uuid(),
+});
+
+export const mediaInspectionResultSchema = z.object({
+  projectId: z.string().uuid(),
+  status: projectStatusSchema,
+  mediaMetadata: mediaMetadataSchema.nullable(),
+  inspectionError: z.string().max(64).nullable(),
+});
+
 export type CreateProjectInput = z.infer<typeof createProjectInputSchema>;
 export type ProjectRecord = z.infer<typeof projectSchema>;
+export type MediaMetadata = z.infer<typeof mediaMetadataSchema>;
+export type MediaInspectionResult = z.infer<typeof mediaInspectionResultSchema>;

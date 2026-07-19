@@ -1,7 +1,6 @@
 import type { AppSettings } from '@shared/schemas/settings';
 import type { FfmpegCapabilities } from '@shared/schemas/ffmpeg';
-import type { ProjectRecord } from '@shared/schemas/project';
-import type { CreateProjectInput } from '@shared/schemas/project';
+import type { ProjectRecord, CreateProjectInput, MediaInspectionResult } from '@shared/schemas/project';
 import type { SelectedDirectory } from '@shared/types/common';
 import type { SafeError } from '@shared/types/common';
 import type { QueueStatus } from '@shared/types/common';
@@ -57,6 +56,7 @@ export type SceneSiftApi = {
     list: () => Promise<ProjectRecord[]>;
     get: (projectId: string) => Promise<ProjectRecord | null>;
     delete: (projectId: string) => Promise<{ deleted: boolean }>;
+    inspect: (projectId: string) => Promise<MediaInspectionResult>;
   };
   queue: {
     list: () => Promise<RenderJob[]>;

@@ -1,9 +1,23 @@
 import { useMemo, useRef, useState } from 'react';
-import { useDeleteProject, useProjects } from '@renderer/hooks/useProjects';
+import { useDeleteProject, useInspectProject, useProjects } from '@renderer/hooks/useProjects';
 import { useUiStore } from '@renderer/stores/uiStore';
 import { useFocusTrap } from '@renderer/hooks/useFocusTrap';
 import { CreateProjectForm } from './CreateProjectForm';
 import { StatusPill } from '@renderer/components/StatusPill';
+import {
+  formatBitRate,
+  formatDuration,
+  formatFileSize,
+  formatInspectionError,
+} from './mediaFormatters';
+
+const statusPillVariant = (
+  status: string,
+): 'ok' | 'warning' | 'neutral' => {
+  if (status === 'ready') return 'ok';
+  if (status === 'inspection_failed') return 'warning';
+  return 'neutral';
+};
 
 export const ProjectsPage = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -15,6 +29,7 @@ export const ProjectsPage = () => {
   const { selectedProjectId, setSelectedProjectId } = useUiStore();
   const projects = useProjects();
   const deleteProject = useDeleteProject();
+  const inspectProject = useInspectProject();
 
   const selectedProject = useMemo(
     () => projects.data?.find((item) => item.id === selectedProjectId) ?? null,
@@ -33,6 +48,10 @@ export const ProjectsPage = () => {
       setSelectedProjectId(null);
     }
     setDeleteTarget(null);
+  };
+
+  const handleInspect = async (projectId: string) => {
+    await inspectProject.mutateAsync(projectId);
   };
 
   return (
@@ -106,7 +125,7 @@ export const ProjectsPage = () => {
                     </div>
                     <StatusPill
                       label={project.status}
-                      status={project.status === 'active' ? 'ok' : 'neutral'}
+                      status={statusPillVariant(project.status)}
                     />
                   </div>
                 </button>
@@ -131,7 +150,7 @@ export const ProjectsPage = () => {
                 <h3 className="break-words text-lg font-semibold">{selectedProject.name}</h3>
                 <StatusPill
                   label={selectedProject.status}
-                  status={selectedProject.status === 'active' ? 'ok' : 'neutral'}
+                  status={statusPillVariant(selectedProject.status)}
                 />
               </div>
 
@@ -162,18 +181,106 @@ export const ProjectsPage = () => {
                 </div>
               </dl>
 
+              <dl className="space-y-3 border-t border-border pt-3">
+                <h4 className="text-label font-semibold uppercase tracking-label text-muted-foreground">
+                  Media info
+                </h4>
+                <div>
+                  <dt className="text-label uppercase tracking-label text-muted-foreground">
+                    Duration
+                  </dt>
+                  <dd className="mt-1 font-mono text-mono-path">
+                    {formatDuration(selectedProject.mediaMetadata?.durationSeconds ?? null)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-label uppercase tracking-label text-muted-foreground">
+                    Resolution
+                  </dt>
+                  <dd className="mt-1 font-mono text-mono-path">
+                    {selectedProject.mediaMetadata?.width != null &&
+                    selectedProject.mediaMetadata?.height != null
+                      ? `${selectedProject.mediaMetadata.width}×${selectedProject.mediaMetadata.height}`
+                      : '—'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-label uppercase tracking-label text-muted-foreground">
+                    Codec
+                  </dt>
+                  <dd className="mt-1 font-mono text-mono-path">
+                    {selectedProject.mediaMetadata?.videoCodec ?? '—'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-label uppercase tracking-label text-muted-foreground">
+                    FPS
+                  </dt>
+                  <dd className="mt-1 font-mono text-mono-path">
+                    {selectedProject.mediaMetadata?.fps != null
+                      ? selectedProject.mediaMetadata.fps.toFixed(3)
+                      : '—'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-label uppercase tracking-label text-muted-foreground">
+                    Bit rate
+                  </dt>
+                  <dd className="mt-1 font-mono text-mono-path">
+                    {formatBitRate(selectedProject.mediaMetadata?.bitRateBps ?? null)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-label uppercase tracking-label text-muted-foreground">
+                    File size
+                  </dt>
+                  <dd className="mt-1 font-mono text-mono-path">
+                    {formatFileSize(selectedProject.mediaMetadata?.fileSizeBytes ?? null)}
+                  </dd>
+                </div>
+              </dl>
+
+              {selectedProject.inspectionError && (
+                <p
+                  data-testid="inspection-error"
+                  className="rounded border border-border px-3 py-2 text-xs text-muted-foreground"
+                >
+                  {formatInspectionError(selectedProject.inspectionError)}
+                </p>
+              )}
+
               <p className="border-t border-border pt-3 text-xs text-muted-foreground">
                 Candidate generation, timeline editing, and rendering are not yet available.
               </p>
 
-              <button
-                ref={deleteTriggerRef}
-                type="button"
-                className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-foreground px-3 text-sm hover:bg-muted"
-                onClick={() => setDeleteTarget(selectedProject.id)}
-              >
-                Delete project
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-testid="inspect-button"
+                  className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-foreground bg-foreground px-3 text-sm font-medium text-background disabled:opacity-50"
+                  disabled={inspectProject.isPending}
+                  onClick={() => void handleInspect(selectedProject.id)}
+                >
+                  {inspectProject.isPending ? 'Inspecting…' : 'Inspect media'}
+                </button>
+
+                <button
+                  ref={deleteTriggerRef}
+                  type="button"
+                  className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-foreground px-3 text-sm hover:bg-muted"
+                  onClick={() => setDeleteTarget(selectedProject.id)}
+                >
+                  Delete project
+                </button>
+              </div>
+
+              {inspectProject.error && (
+                <p role="alert" className="text-xs text-foreground">
+                  {inspectProject.error instanceof Error
+                    ? inspectProject.error.message
+                    : 'Inspection failed. Check that FFprobe is available.'}
+                </p>
+              )}
             </div>
           )}
         </div>

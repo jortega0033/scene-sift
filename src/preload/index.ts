@@ -26,6 +26,7 @@ const sceneSiftApi: SceneSiftApi = {
     list: () => ipcRenderer.invoke(IPC_CHANNELS.PROJECT_LIST),
     get: (projectId) => ipcRenderer.invoke(IPC_CHANNELS.PROJECT_GET, { projectId }),
     delete: (projectId) => ipcRenderer.invoke(IPC_CHANNELS.PROJECT_DELETE, { projectId }),
+    inspect: (projectId) => ipcRenderer.invoke(IPC_CHANNELS.PROJECT_INSPECT, { projectId }),
   },
   queue: {
     list: () => ipcRenderer.invoke(IPC_CHANNELS.QUEUE_LIST),

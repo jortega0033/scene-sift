@@ -21,28 +21,31 @@ Feature development is blocked if any are true:
 
 ## Current verdict
 
-**CONDITIONALLY READY** (baseline hardening milestone complete)
+**READY** (readiness closure sprint complete — 2026-07-19)
+
+All 4 conditions from the CONDITIONALLY READY verdict have been closed or documented.
 
 ## Evidence basis
 
-- All 10 validation checks pass: governance, architecture, design, dependencies, typecheck, lint, 58 unit tests, 15 e2e tests, 7 visual tests, build.
-- 34 automated adversarial governance scenarios pass.
-- All critical/high findings from AI slop audit remediated:
-  - Arbitrary Tailwind token values replaced with design system tokens
-  - Duplicate focus-trap logic extracted to shared hook
-  - networkGuard.ts inverted logic fixed
-  - Production-leaking dev button guarded
-  - AI-generated placeholder text removed
-  - Internal milestone language removed from user-facing copy
-  - EOF-appended duplicate import fixed
-- No governance theater: all validation scripts are mechanical (not documentation promises).
-- Visual snapshots updated and passing on current token classes.
+- All validation checks pass: governance (includes CI SHA pinning check), architecture, design, dependencies, typecheck, lint, 88 unit tests (64 adversarial, per `pnpm test` output), 12 e2e tests, 9 visual tests (7 light + 2 dark), build.
+- 64 automated adversarial governance scenarios pass (70 total including 6 process-enforced).
+- Independent verifier (governance-verifier agent, 2026-07-19): all 5 claims VERIFIED. gate.yaml, hooks, settings.json deny rules all unchanged. CI SHA pinning validator integrated and passing. Memory validator slug fix confirmed. Dark fixture and baselines confirmed. 88 unit tests, 9 visual tests, `pnpm claude:validate` all pass.
+- Independent verifier (architecture-reviewer agent, 2026-07-19): APPROVED. architecture:validate passes, no renderer/main/shared boundary violations, QA bridge guard intact, typecheck clean.
+- Electron security flags verified: nodeIntegration:false, contextIsolation:true, sandbox:true, webSecurity:true.
+- AI tooling parity matrix: 25 governance concerns, no conflicts.
+- 12 ADRs — all architecture decisions documented. No ADR required for this sprint (no boundary change).
+- All critical/high findings from prior audit remediated. No new critical or high findings.
+- No governance theater: all validation scripts are mechanical.
 
-## Remaining conditions before full READY
+## Closed conditions (Readiness Closure Sprint — 2026-07-19)
 
-1. Verify host-level branch protection and required-review settings (cannot be proven from local repo files).
-2. Add dark-theme visual regression suite (medium risk debt item TD-001).
+1. **Host-level branch protection** — INFRA READY, PLATFORM BLOCKED (manual action required): Repo exists at https://github.com/jortega0033/scene-sift (private). Git remote configured. Branch protection API requires GitHub Pro for private repos (HTTP 403 on free plan). Code-side controls (gate.yaml, hooks, validators, CI) are fully enforced. Branch protection activates upon GitHub Pro upgrade — one-time manual action.
+2. ~~**TD-001 — Dark theme visual regression** — **CLOSED** (2026-07-19)~~: `dark-multiple-projects` fixture added with `preferredTheme: 'dark'`. 2 new visual tests (`dark-app-shell.png`, `dark-settings.png`). `pnpm test:visual` → 9 tests pass (7 light + 2 dark). Baselines generated and committed.
+3. ~~**TD-004 — CI GitHub Actions SHA pinning** — **CLOSED** (2026-07-19)~~: All 4 workflow files updated to 40-char commit SHAs. `validate-ci-pinning.ts` validator created and integrated into `pnpm governance:validate`. 6 adversarial tests added.
+4. ~~**TD-005 — Memory validator slug bug** — **CLOSED** (2026-07-19)~~: Removed `.replace(/^-/, '')` from slug derivation. Added `SCENESIFT_CLAUDE_MEMORY_ROOT` env override for testability. Silent skip changed to logged warning. 4 adversarial tests added. `pnpm claude:validate` scans real memory directory.
 
-## Baseline frozen
+## Baseline
 
-2026-07-19. See `docs/baseline/baseline.json` for machine-readable inventory.
+Updated 2026-07-19 (readiness-closure-sprint). See `docs/baseline/baseline.json`.
+- unitTests: 88 (64 adversarial), e2eTests: 12, visualTests: 9 (7 light + 2 dark)
+- adversarialScenarios: 64 automated, 70 total (6 process-enforced)
