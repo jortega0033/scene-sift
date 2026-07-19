@@ -6,15 +6,27 @@ defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-m3-acceptance-audit
+- milestone: M3 Subtitle Synchronization Check — Acceptance Audit
+- branch: feature/m3-subtitle-synchronization → overnight/m3-plus-2026-07-20
+- risk_level: 0 (audit only)
+- status: in_progress
+- scope: 3 independent auditors verifying all 30 ACs in M3_ACCEPTANCE_CRITERIA.md
+- started: 2026-07-20
+- governance_decision: GD-005 — manual approval gate waived; independent audit required
+
+## Previous active run (complete — implementation + E2E + visual clean)
+
 - run_id: 2026-07-20T-m3-implementation
 - milestone: M3 Subtitle Synchronization Check — Implementation
 - branch: feature/m3-subtitle-synchronization → overnight/m3-plus-2026-07-20
-- risk_level: 2 (service orchestration + DB migration); risk 1 (pure analyzer + formatters + renderer)
-- status: in_progress
-- scope: Implement 8 phases: shared types, DB migration, SynchronizationAnalyzer (pure), SynchronizationService, IPC handler, syncFormatters, SyncPanel renderer, full test suite
-- started: 2026-07-20
-- planning_verdict: CONDITIONALLY READY — all 6 planning reviews resolved, all critical/high blockers fixed across 16 docs (3 reconciliation commits)
-- governance_decision: GD-005 — owner override active for overnight branch, not main
+- risk_level: 2/3
+- status: complete
+- commits: b915a78 (implementation), cb46e2a (fixture fix + visual baselines), 6af2c30 (log)
+- tests: 289/289 unit, 37/37 E2E, 19/19 visual, all checks exit 0
+- architecture_review: APPROVED
+- electron_security_review: REJECTED (MEDIUM: pre-existing ZodError→INTERNAL_ERROR) — accepted per GD-006
+- governance_decision: GD-005, GD-006
 
 ## Previous active run (complete — planning verdict CONDITIONALLY READY)
 
