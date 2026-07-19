@@ -6,12 +6,25 @@ defaultMode: L2
 
 ## Active run
 
-- run_id: 2026-07-19T-m3-planning
-- milestone: M3 Subtitle Synchronization Check — Planning
-- branch: main
-- risk_level: 0 (planning and documentation only — no product code)
+- run_id: 2026-07-20T-m3-implementation
+- milestone: M3 Subtitle Synchronization Check — Implementation
+- branch: feature/m3-subtitle-synchronization → overnight/m3-plus-2026-07-20
+- risk_level: 2 (service orchestration + DB migration); risk 1 (pure analyzer + formatters + renderer)
 - status: in_progress
-- scope: Define synchronization problem, timing model, state machine, architecture, UX, tests, acceptance criteria; independent review; implementation-readiness verdict
+- scope: Implement 8 phases: shared types, DB migration, SynchronizationAnalyzer (pure), SynchronizationService, IPC handler, syncFormatters, SyncPanel renderer, full test suite
+- started: 2026-07-20
+- planning_verdict: CONDITIONALLY READY — all 6 planning reviews resolved, all critical/high blockers fixed across 16 docs (3 reconciliation commits)
+- governance_decision: GD-005 — owner override active for overnight branch, not main
+
+## Previous active run (complete — planning verdict CONDITIONALLY READY)
+
+- run_id: 2026-07-20T-m3-planning
+- milestone: M3 Subtitle Synchronization Check — Planning
+- branch: overnight/m3-plus-2026-07-20
+- risk_level: 0 (planning and documentation only — no product code)
+- status: complete
+- verdict: M3 CONDITIONALLY READY — all critical/high blockers resolved across 16 planning docs; independent specialist reviews completed (6 reviewers, all NOT APPROVED on first pass); 3 reconciliation commits applied canonical state names, types, IPC channel, thresholds; ADR-013 created; GD-005 recorded
+- completed: 2026-07-20
 
 ## Previous active run (complete — MERGED)
 

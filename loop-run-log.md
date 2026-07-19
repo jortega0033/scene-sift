@@ -870,3 +870,118 @@ Append one JSON line per material run.
   "next_step": "M3 Subtitle Synchronization Check planning begins"
 }
 ```
+
+---
+
+## Run: 2026-07-20T-m3-planning — M3 Planning and Specification
+
+```json
+{
+  "run_id": "2026-07-20T-m3-planning",
+  "task": "M3 Subtitle Synchronization Check — Planning and Specification",
+  "risk_level": 0,
+  "status": "complete",
+  "branch": "overnight/m3-plus-2026-07-20",
+  "governance_decision": "GD-005 — owner override for overnight unattended development; manual gates skipped; independent verification + automated validation + acceptance audit mandatory; M3+ to overnight branch only",
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "reviewers": [
+      "DB Reviewer (independent)",
+      "Architecture Reviewer (independent)",
+      "Electron Security Reviewer (independent)",
+      "Product Scope Reviewer (independent)",
+      "QA Reviewer (independent)",
+      "Skeptical Reviewer (independent)"
+    ]
+  },
+  "docs_produced": [
+    "docs/product/M3_CURRENT_TIMING_STATE.md",
+    "docs/product/M3_SCOPE.md",
+    "docs/product/M3_SYNCHRONIZATION_DEFINITION.md",
+    "docs/product/M3_TIMING_MODEL.md",
+    "docs/product/M3_ANALYSIS_RULES.md",
+    "docs/product/M3_STATE_MACHINE.md",
+    "docs/product/M3_ARCHITECTURE.md",
+    "docs/product/M3_DATABASE_STRATEGY.md",
+    "docs/product/M3_SECURITY_AND_PRIVACY.md",
+    "docs/product/M3_USER_STORIES.md",
+    "docs/product/M3_UX_SPECIFICATION.md",
+    "docs/product/M3_ACCEPTANCE_CRITERIA.md",
+    "docs/product/M3_TEST_PLAN.md",
+    "docs/product/M3_RISK_REGISTER.md",
+    "docs/product/M3_IMPLEMENTATION_PLAN.md",
+    "docs/product/M3_HANDOFF.md",
+    "docs/architecture/adr/ADR-013-sync-check-service-boundary.md",
+    "docs/governance/GOVERNANCE_DECISIONS.md (GD-005 appended)"
+  ],
+  "planning_issues": {
+    "root_cause": "16 planning docs written in parallel by 6 independent specialist agents without cross-referencing, producing widespread naming inconsistencies",
+    "reconciliation_passes": 3,
+    "pass_1": "Clear-cut blockers: getCuesForProject SQL, statement-breakpoint markers, IPC channel name in STATE_MACHINE, stale persistence in STATE_MACHINE, migration filename in STATE_MACHINE, GD-005 governance record",
+    "pass_2": "Comprehensive reconciliation: canonical state names, SyncWarning flat type, SyncWarningCode names, z.string().uuid(), not_available service logic, POSSIBLE_OFFSET removal, threshold 10%→15%, test plan TC-ANA-01/TC-ANA-13/Guard-A/TC-FMT-11 fixes, SyncAnalysisResult type, ROADMAP global offset removal, ADR-013 created",
+    "pass_3": "None needed — pass 2 closed all remaining blockers"
+  },
+  "canonical_decisions": {
+    "state_names": ["not_available", "ready_to_check", "timing_ok", "needs_review", "stale (display-only)", "check_failed"],
+    "ipc_channel": "SYNC_CHECK_FOR_PROJECT / sync:checkForProject",
+    "db_column": "sync_checked_at",
+    "migration": "0003_sync_check.sql",
+    "stale_persistence": "NEVER written to DB — computed from timestamps on load",
+    "status_derivation": "any warning → needs_review; empty warnings → timing_ok (no severity split)",
+    "sync_warning_type": "flat numeric-only {code, outOfRangeCount?, spanRatio?, gapMs?, startRatio?}",
+    "late_start_threshold": "0.15 (15%)",
+    "possible_offset": "OUT OF SCOPE for M3"
+  },
+  "independent_reviewer_verdicts": {
+    "db_reviewer": "NOT APPROVED → resolved",
+    "architecture_reviewer": "NOT APPROVED → resolved",
+    "electron_security_reviewer": "NOT APPROVED → resolved",
+    "product_scope_reviewer": "NOT APPROVED → resolved",
+    "qa_reviewer": "NOT APPROVED → resolved",
+    "skeptical_reviewer": "NOT APPROVED → resolved"
+  },
+  "outcome": "pass",
+  "verdict": "M3 CONDITIONALLY READY — all critical/high blockers resolved across 16 planning docs after 3 reconciliation passes. All 6 independent reviewers' findings addressed. Implementation may begin on feature/m3-subtitle-synchronization.",
+  "completed": "2026-07-20"
+}
+```
+
+---
+
+## Run: 2026-07-20T-m3-implementation — M3 Implementation (in progress)
+
+```json
+{
+  "run_id": "2026-07-20T-m3-implementation",
+  "task": "M3 Subtitle Synchronization Check — Implementation",
+  "risk_level": "2 (SynchronizationService + DB migration); 3 (IPC handler in registerIpcHandlers.ts); 1 (pure analyzer + formatters + renderer)",
+  "status": "in_progress",
+  "branch": "feature/m3-subtitle-synchronization → overnight/m3-plus-2026-07-20",
+  "governance_decision": "GD-005 — owner override active; manual gates skipped; independent specialist verification + automated validation mandatory",
+  "authorization": "M3 planning CONDITIONALLY READY declared by orchestrator 2026-07-20; overnight autonomous development authorized by owner override (GD-005)",
+  "scope": "8 phases: shared schemas, DB migration, SynchronizationAnalyzer (pure), SynchronizationService, IPC handler, syncFormatters, SyncPanel renderer, full test suite (unit + E2E + visual)",
+  "planned_deliverables": [
+    "src/shared/schemas/sync.ts — Zod schemas + SyncWarningCode + SyncStatus",
+    "src/shared/ipc/channels.ts — SYNC_CHECK_FOR_PROJECT added to IPC_CHANNELS",
+    "src/shared/ipc/contracts.ts — sync contract",
+    "src/database/migrations/0003_sync_check.sql",
+    "src/database/schema.ts — 4 new sync columns",
+    "src/main/services/synchronization/SynchronizationAnalyzer.ts — pure function",
+    "src/main/services/synchronization/SynchronizationService.ts — orchestration",
+    "src/main/services/database/databaseService.ts — getCuesForProject + updateProjectSyncStatus",
+    "src/main/ipc/registerIpcHandlers.ts — sync handler (Risk 3)",
+    "src/preload/index.ts — sync bridge method",
+    "src/renderer/features/projects/syncFormatters.ts",
+    "src/renderer/features/projects/SyncPanel.tsx",
+    "src/renderer/features/projects/ProjectsPage.tsx — SyncPanel integration",
+    "tests/main/synchronization/SynchronizationAnalyzer.test.ts",
+    "tests/main/synchronization/SynchronizationService.test.ts",
+    "tests/renderer/syncFormatters.test.ts",
+    "tests/main/ipc-contracts.test.ts — sync channel tests",
+    "tests/e2e/sync.spec.ts",
+    "tests/visual/sync.visual.spec.ts"
+  ],
+  "started": "2026-07-20",
+  "outcome": "pending"
+}
+```
