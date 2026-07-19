@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { SUBTITLE_EXTENSIONS, VIDEO_EXTENSIONS } from '@shared/constants/files';
 import { subtitleStatusSchema } from '@shared/schemas/subtitle';
+import { syncCheckForProjectOutputSchema } from '@shared/schemas/sync';
 
 const allowedVideoExtension = z.enum(VIDEO_EXTENSIONS);
 const allowedSubtitleExtension = z.enum(SUBTITLE_EXTENSIONS);
@@ -60,6 +61,10 @@ export const projectSchema = z.object({
   subtitleLastCueEndMs: z.number().int().nullable(),
   subtitleParseError: z.string().max(64).nullable(),
   subtitleParsedAt: z.number().int().nullable(),
+  syncStatus: syncCheckForProjectOutputSchema.shape.syncStatus.nullable(),
+  syncCheckedAt: z.number().int().nullable(),
+  syncWarningsJson: z.string().nullable(),
+  syncAnalysisVersion: z.number().int().nullable(),
 });
 
 export const deleteProjectInputSchema = z.object({

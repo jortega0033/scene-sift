@@ -47,6 +47,10 @@ const sceneSiftApi: SceneSiftApi = {
     clearForProject: (projectId: string) =>
       ipcRenderer.invoke(IPC_CHANNELS.SUBTITLE_CLEAR_FOR_PROJECT, { projectId }),
   },
+  sync: {
+    checkForProject: (projectId: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.SYNC_CHECK_FOR_PROJECT, { projectId }),
+  },
 };
 
 contextBridge.exposeInMainWorld('sceneSift', sceneSiftApi);

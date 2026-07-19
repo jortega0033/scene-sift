@@ -13,6 +13,14 @@ import { AppError } from '@main/utils/errors';
 import type { QueueStatus } from '@shared/types/common';
 import type { InspectionOutcome } from '@main/services/ffmpeg/ffmpegService';
 import type { SubtitleDocument, SubtitlePersistOutcome } from '@shared/schemas/subtitle';
+import type { SyncWarning } from '@shared/schemas/sync';
+
+type SyncStatusUpdate = {
+  syncStatus: string | null;
+  syncWarnings: SyncWarning[];
+  syncCheckedAt: number | null;
+  syncAnalysisVersion: number | null;
+};
 
 const SETTINGS_ID = 'default';
 
@@ -298,6 +306,10 @@ export class DatabaseService {
       subtitleLastCueEndMs: row.subtitleLastCueEndMs ?? null,
       subtitleParseError: row.subtitleParseError ?? null,
       subtitleParsedAt: row.subtitleParsedAt ?? null,
+      syncStatus: (row.syncStatus ?? null) as ProjectRecord['syncStatus'],
+      syncCheckedAt: row.syncCheckedAt ?? null,
+      syncWarningsJson: row.syncWarningsJson ?? null,
+      syncAnalysisVersion: row.syncAnalysisVersion ?? null,
     };
   }
 
@@ -422,6 +434,22 @@ export class DatabaseService {
       summary,
       parsedAt: row.parsedAt,
     };
+  }
+
+  public updateProjectSyncStatus(projectId: string, data: SyncStatusUpdate): void {
+    const orm = this.ensureOrm();
+    const now = Date.now();
+    orm
+      .update(projectsTable)
+      .set({
+        syncStatus: data.syncStatus,
+        syncCheckedAt: data.syncCheckedAt,
+        syncWarningsJson: data.syncWarnings.length > 0 ? JSON.stringify(data.syncWarnings) : null,
+        syncAnalysisVersion: data.syncAnalysisVersion,
+        updatedAt: now,
+      })
+      .where(eq(projectsTable.id, projectId))
+      .run();
   }
 
   // Internal helper: removes only the subtitle_documents row. Project-row state is managed by the

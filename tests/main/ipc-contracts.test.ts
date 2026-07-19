@@ -6,6 +6,7 @@ import {
   subtitleParseInputSchema,
   subtitleClearInputSchema,
 } from '@shared/schemas/subtitle';
+import { syncCheckForProjectInputSchema } from '@shared/schemas/sync';
 
 describe('ipc contracts', () => {
   it('registers explicit channels only', () => {
@@ -89,5 +90,35 @@ describe('subtitle ipc contracts', () => {
     const subtitleChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('subtitle:'));
     expect(new Set(subtitleChannels).size).toBe(subtitleChannels.length);
     expect(subtitleChannels.length).toBe(3);
+  });
+});
+
+describe('sync ipc contracts', () => {
+  it('registers sync:checkForProject channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('sync:checkForProject');
+  });
+
+  it('rejects non-uuid projectId in syncCheckForProjectInputSchema', () => {
+    expect(syncCheckForProjectInputSchema.safeParse({ projectId: 'not-a-uuid' }).success).toBe(
+      false,
+    );
+  });
+
+  it('rejects missing projectId in syncCheckForProjectInputSchema', () => {
+    expect(syncCheckForProjectInputSchema.safeParse({}).success).toBe(false);
+  });
+
+  it('accepts valid uuid in syncCheckForProjectInputSchema', () => {
+    expect(
+      syncCheckForProjectInputSchema.safeParse({
+        projectId: '11111111-1111-4111-8111-111111111111',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('sync channels are unique (no duplicates)', () => {
+    const syncChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('sync:'));
+    expect(new Set(syncChannels).size).toBe(syncChannels.length);
+    expect(syncChannels.length).toBe(1);
   });
 });

@@ -21,6 +21,10 @@ export const projectsTable = sqliteTable('projects', {
   subtitleLastCueEndMs: integer('subtitle_last_cue_end_ms'),
   subtitleParseError: text('subtitle_parse_error'),
   subtitleParsedAt: integer('subtitle_parsed_at', { mode: 'number' }),
+  syncStatus: text('sync_status'),
+  syncCheckedAt: integer('sync_checked_at', { mode: 'number' }),
+  syncWarningsJson: text('sync_warnings_json'),
+  syncAnalysisVersion: integer('sync_analysis_version'),
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 });

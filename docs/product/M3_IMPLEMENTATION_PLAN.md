@@ -74,8 +74,11 @@ Both must exit 0 with no warnings before Phase 1 is marked done.
 -- Safe: ADD COLUMN with NULL default only. Reversible by dropping columns.
 
 ALTER TABLE projects ADD COLUMN sync_status TEXT;
+--> statement-breakpoint
 ALTER TABLE projects ADD COLUMN sync_checked_at INTEGER;
+--> statement-breakpoint
 ALTER TABLE projects ADD COLUMN sync_warnings_json TEXT;
+--> statement-breakpoint
 ALTER TABLE projects ADD COLUMN sync_analysis_version INTEGER;
 ```
 

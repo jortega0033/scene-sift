@@ -21,6 +21,7 @@ export const IPC_CHANNELS = {
   SUBTITLE_SELECT_FOR_PROJECT: 'subtitle:selectForProject',
   SUBTITLE_PARSE_FOR_PROJECT: 'subtitle:parseForProject',
   SUBTITLE_CLEAR_FOR_PROJECT: 'subtitle:clearForProject',
+  SYNC_CHECK_FOR_PROJECT: 'sync:checkForProject',
 } as const;
 
 export const ALL_IPC_CHANNELS = Object.values(IPC_CHANNELS);

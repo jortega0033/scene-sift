@@ -2,6 +2,7 @@ import type { SceneSiftApi } from '@shared/api/sceneSiftApi';
 import type { CreateProjectInput, ProjectRecord } from '@shared/schemas/project';
 import type { AppSettings } from '@shared/schemas/settings';
 import { fixtureMap, resolveFixtureName } from './fixtures';
+import type { SyncCheckResult } from '@shared/schemas/sync';
 
 const delay = async (ms = 8): Promise<void> =>
   new Promise((resolve) => {
@@ -69,6 +70,10 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
           subtitleLastCueEndMs: null,
           subtitleParseError: null,
           subtitleParsedAt: null,
+          syncStatus: null,
+          syncCheckedAt: null,
+          syncWarningsJson: null,
+          syncAnalysisVersion: null,
         };
         projects = [created, ...projects];
         return created;
@@ -203,6 +208,56 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
         };
         projects = projects.map((p) => (p.id === projectId ? updated : p));
         return updated;
+      },
+    },
+    sync: {
+      checkForProject: async (projectId: string): Promise<SyncCheckResult> => {
+        await delay(200);
+        const project = findProject(projectId);
+        if (!project) {
+          return {
+            syncStatus: 'not_available',
+            syncWarnings: [],
+            syncCheckedAt: null,
+            syncAnalysisVersion: null,
+          };
+        }
+
+        const prerequisitesMet =
+          project.status === 'ready' &&
+          (project.subtitleStatus === 'ready' || project.subtitleStatus === 'ready_with_warnings');
+
+        if (!prerequisitesMet) {
+          return {
+            syncStatus: 'not_available',
+            syncWarnings: [],
+            syncCheckedAt: null,
+            syncAnalysisVersion: null,
+          };
+        }
+
+        const now = Date.now();
+        const result: SyncCheckResult = {
+          syncStatus: 'timing_ok',
+          syncWarnings: [],
+          syncCheckedAt: now,
+          syncAnalysisVersion: 1,
+        };
+
+        projects = projects.map((p) =>
+          p.id === projectId
+            ? {
+                ...p,
+                syncStatus: result.syncStatus,
+                syncCheckedAt: result.syncCheckedAt,
+                syncWarningsJson:
+                  result.syncWarnings.length > 0 ? JSON.stringify(result.syncWarnings) : null,
+                syncAnalysisVersion: result.syncAnalysisVersion,
+              }
+            : p,
+        );
+
+        return result;
       },
     },
   };

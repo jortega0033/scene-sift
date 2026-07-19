@@ -22,6 +22,7 @@ import {
   formatCueCount,
   formatSubtitleDuration,
 } from './subtitleFormatters';
+import { SyncPanel } from './SyncPanel';
 
 const statusPillVariant = (
   status: string,
@@ -351,6 +352,8 @@ export const ProjectsPage = () => {
                   )}
                 </div>
               </dl>
+
+              <SyncPanel project={selectedProject} />
 
               {selectedProject.inspectionError && (
                 <p

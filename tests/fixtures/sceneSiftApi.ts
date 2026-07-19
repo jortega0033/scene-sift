@@ -22,4 +22,10 @@ export const FIXTURES = {
   subtitleParseFailed: 'subtitle-parse-failed',
   subtitleMissing: 'subtitle-missing',
   subtitleUnsupported: 'subtitle-unsupported',
+  syncNotAvailable: 'sync-not-available',
+  syncReadyToCheck: 'sync-ready-to-check',
+  syncTimingOk: 'sync-timing-ok',
+  syncNeedsReview: 'sync-needs-review',
+  syncCheckFailed: 'sync-check-failed',
+  syncStale: 'sync-stale',
 } as const;

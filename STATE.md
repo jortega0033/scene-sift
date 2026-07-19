@@ -6,12 +6,37 @@ defaultMode: L2
 
 ## Active run
 
-- run_id: 2026-07-19T-m3-planning
-- milestone: M3 Subtitle Synchronization Check — Planning
-- branch: main
-- risk_level: 0 (planning and documentation only — no product code)
+- run_id: 2026-07-20T-m3-acceptance-audit
+- milestone: M3 Subtitle Synchronization Check — Acceptance Audit
+- branch: feature/m3-subtitle-synchronization → overnight/m3-plus-2026-07-20
+- risk_level: 0 (audit only)
 - status: in_progress
-- scope: Define synchronization problem, timing model, state machine, architecture, UX, tests, acceptance criteria; independent review; implementation-readiness verdict
+- scope: 3 independent auditors verifying all 30 ACs in M3_ACCEPTANCE_CRITERIA.md
+- started: 2026-07-20
+- governance_decision: GD-005 — manual approval gate waived; independent audit required
+
+## Previous active run (complete — implementation + E2E + visual clean)
+
+- run_id: 2026-07-20T-m3-implementation
+- milestone: M3 Subtitle Synchronization Check — Implementation
+- branch: feature/m3-subtitle-synchronization → overnight/m3-plus-2026-07-20
+- risk_level: 2/3
+- status: complete
+- commits: b915a78 (implementation), cb46e2a (fixture fix + visual baselines), 6af2c30 (log)
+- tests: 289/289 unit, 37/37 E2E, 19/19 visual, all checks exit 0
+- architecture_review: APPROVED
+- electron_security_review: REJECTED (MEDIUM: pre-existing ZodError→INTERNAL_ERROR) — accepted per GD-006
+- governance_decision: GD-005, GD-006
+
+## Previous active run (complete — planning verdict CONDITIONALLY READY)
+
+- run_id: 2026-07-20T-m3-planning
+- milestone: M3 Subtitle Synchronization Check — Planning
+- branch: overnight/m3-plus-2026-07-20
+- risk_level: 0 (planning and documentation only — no product code)
+- status: complete
+- verdict: M3 CONDITIONALLY READY — all critical/high blockers resolved across 16 planning docs; independent specialist reviews completed (6 reviewers, all NOT APPROVED on first pass); 3 reconciliation commits applied canonical state names, types, IPC channel, thresholds; ADR-013 created; GD-005 recorded
+- completed: 2026-07-20
 
 ## Previous active run (complete — MERGED)
 
