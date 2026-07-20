@@ -10,9 +10,12 @@ defaultMode: L2
 - milestone: M4 Video Preview Workspace — Implementation
 - branch: feature/m4-video-preview (base: overnight/m3-plus-2026-07-20)
 - risk_level: 3 (VideoService, protocol handler, preload, CSP — main/preload/IPC risk)
-- status: in_progress
+- status: in_progress — fixing design-reviewer NOT ACCEPTED findings
 - started: 2026-07-20
 - governance_decision: GD-005
+- acceptance_audit_security: ACCEPTED (electron-security-reviewer) — MEDIUM: Content-Type hardcoded video/mp4; preload validates string+non-empty (not UUID; main-process Zod enforces z.string().uuid())
+- acceptance_audit_design: NOT ACCEPTED (design-system-reviewer) — CRITICAL: missing docs/design/components/ usage docs for 4 new components; MEDIUM: bg-black/text-white/border-white in VideoPlayer.tsx + SubtitleOverlay.tsx bypass token system
+- remediation: (1) create docs/design/components/ with usage docs (2) add video-bg/video-fg/video-border tokens (3) replace hardcoded classes
 
 ## Previous active run (complete — M4 planning reconciled)
 

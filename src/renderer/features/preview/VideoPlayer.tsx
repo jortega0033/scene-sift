@@ -84,10 +84,10 @@ export const VideoPlayer = ({
         }
       }}
     >
-      <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-md)] bg-black">
+      <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-md)] bg-video-bg">
         {isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-video-fg">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-video-fg/30 border-t-video-fg" />
             <span className="text-sm">Loading preview…</span>
           </div>
         )}
