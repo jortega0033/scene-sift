@@ -162,7 +162,6 @@ export const CandidatesSection = ({ project }: CandidatesSectionProps) => {
   const [scoreThreshold, setScoreThreshold] = useState(0);
   const [sortKey, setSortKey] = useState<SortKey>('score');
 
-  // Reset filter/sort when project changes
   const projectId = project.id;
   const handleScoreThresholdChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

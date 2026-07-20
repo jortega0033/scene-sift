@@ -365,7 +365,7 @@ export const ProjectsPage = () => {
                 </p>
               )}
 
-              <CandidatesSection project={selectedProject} />
+              <CandidatesSection key={selectedProject.id} project={selectedProject} />
 
               <div className="flex flex-wrap gap-2">
                 <button
