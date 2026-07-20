@@ -26,6 +26,14 @@ export default {
         primary: 'hsl(var(--primary))',
         'primary-foreground': 'hsl(var(--primary-foreground))',
         danger: 'hsl(var(--danger))',
+        'video-bg': ({ opacityValue }: { opacityValue?: string }) =>
+          opacityValue !== undefined
+            ? `hsl(var(--video-bg) / ${opacityValue})`
+            : 'hsl(var(--video-bg))',
+        'video-fg': ({ opacityValue }: { opacityValue?: string }) =>
+          opacityValue !== undefined
+            ? `hsl(var(--video-fg) / ${opacityValue})`
+            : 'hsl(var(--video-fg))',
       },
     },
   },

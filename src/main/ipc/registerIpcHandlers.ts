@@ -25,6 +25,13 @@ import { createDemoJobInputSchema, renderJobSchema } from '@shared/schemas/queue
 import { ffmpegCapabilitiesSchema } from '@shared/schemas/ffmpeg';
 import { registerValidatedHandler } from '@main/ipc/createIpcHandler';
 import type { DatabaseService } from '@main/services/database/databaseService';
+import type { VideoService } from '@main/services/video/videoService';
+import {
+  videoGetPlaybackUrlInputSchema,
+  videoGetPlaybackUrlOutputSchema,
+  videoGetCuesInputSchema,
+  videoGetCuesOutputSchema,
+} from '@shared/schemas/video';
 import {
   selectOutputDirectory,
   selectSubtitleFile,
@@ -48,9 +55,10 @@ import {
 
 type RegisterIpcDeps = {
   databaseService: DatabaseService;
+  videoService: VideoService;
 };
 
-export const registerIpcHandlers = ({ databaseService }: RegisterIpcDeps): void => {
+export const registerIpcHandlers = ({ databaseService, videoService }: RegisterIpcDeps): void => {
   const jobService = new JobService(databaseService);
   const subtitleService = new SubtitleService(databaseService);
   const synchronizationService = new SynchronizationService(databaseService);
@@ -283,5 +291,19 @@ export const registerIpcHandlers = ({ databaseService }: RegisterIpcDeps): void 
     createDemoJobInputSchema,
     renderJobSchema,
     ({ projectId }) => jobService.createDemoJob(projectId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.VIDEO_GET_PLAYBACK_URL,
+    videoGetPlaybackUrlInputSchema,
+    videoGetPlaybackUrlOutputSchema,
+    ({ projectId }) => videoService.getPlaybackUrl(projectId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.VIDEO_GET_CUES,
+    videoGetCuesInputSchema,
+    videoGetCuesOutputSchema,
+    ({ projectId }) => videoService.getCues(projectId),
   );
 };

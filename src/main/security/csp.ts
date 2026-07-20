@@ -7,6 +7,7 @@ const productionCsp = [
   "img-src 'self' data:",
   "font-src 'self'",
   "connect-src 'self'",
+  "media-src 'self' local:",
 ].join('; ');
 
 const developmentCsp = [
@@ -16,6 +17,7 @@ const developmentCsp = [
   "img-src 'self' data:",
   "font-src 'self'",
   "connect-src 'self' ws://localhost:5173 http://localhost:5173",
+  "media-src 'self' local:",
 ].join('; ');
 
 export const applyCsp = (): void => {

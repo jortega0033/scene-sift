@@ -37,7 +37,7 @@ Adopt Option C: custom `local://` Electron protocol.
 - Renderer URL contains only a UUID (`local://video/{projectId}`). No filesystem path crosses the IPC boundary in either direction.
 - UUID is validated via regex before any DB or filesystem access.
 - File path is resolved exclusively from the DB by the main process.
-- `stat().isFile()` check before serving bytes prevents serving directories or non-existent paths.
+- `lstat().isFile()` check before serving bytes prevents serving directories, non-existent paths, and symlinks (`lstat` does not follow symlinks; a symlink reports `isFile() === false`).
 - CSP `media-src` must explicitly allow `local:` scheme (see Consequences section).
 
 ### Protocol registration sequence

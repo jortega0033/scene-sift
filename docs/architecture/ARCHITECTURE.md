@@ -10,7 +10,11 @@ Renderer
     -> shared IPC channel contracts
       -> main-process IPC handlers
         -> privileged services (database/files/dialog/process)
+  -> local:// protocol (main-process protocol handler)
+        -> VideoService (UUID validated, lstat, range-served bytes)
 ```
+
+The `local://` protocol is a privileged main-process data path for video streaming. The renderer requests `local:///video/{uuid}` — no filesystem path is embedded. The protocol handler in `src/main/services/video/localVideoProtocol.ts` validates the UUID, resolves the path from the DB via VideoService, and serves bytes with HTTP 206 range support. See ADR-014.
 
 ## Layer ownership
 

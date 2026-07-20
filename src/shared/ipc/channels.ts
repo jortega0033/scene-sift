@@ -22,6 +22,8 @@ export const IPC_CHANNELS = {
   SUBTITLE_PARSE_FOR_PROJECT: 'subtitle:parseForProject',
   SUBTITLE_CLEAR_FOR_PROJECT: 'subtitle:clearForProject',
   SYNC_CHECK_FOR_PROJECT: 'sync:checkForProject',
+  VIDEO_GET_PLAYBACK_URL: 'video:getPlaybackUrl',
+  VIDEO_GET_CUES: 'video:getCues',
 } as const;
 
 export const ALL_IPC_CHANNELS = Object.values(IPC_CHANNELS);

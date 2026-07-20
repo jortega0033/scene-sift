@@ -1134,3 +1134,68 @@ Append one JSON line per material run.
   "outcome": "pending"
 }
 ```
+
+```json
+{
+  "run_id": "2026-07-20T-m4-implementation",
+  "task": "m4-video-preview-workspace-implementation",
+  "risk_level": 3,
+  "branch": "feature/m4-video-preview",
+  "base": "overnight/m3-plus-2026-07-20",
+  "status": "awaiting-human-merge-review",
+  "governance_decision": "GD-005",
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "verifier_architecture": "architecture-reviewer (independent)",
+    "verifier_electron_security": "electron-security-reviewer (independent)",
+    "verifier_design_system": "design-system-reviewer (independent, 3 rounds)"
+  },
+  "authorization": "Authorized overnight autonomous development run per GD-005. Owner overrides: manual milestone approval SKIPPED, diff review SKIPPED, Electron runtime testing SKIPPED. Independent specialist verification, automated validation, acceptance audit REQUIRED.",
+  "deliverables": [
+    "src/shared/schemas/video.ts — VideoCueItem schema, video IPC contracts",
+    "src/shared/ipc/channels.ts — video:getPlaybackUrl, video:getCues channels",
+    "src/main/services/video/videoService.ts — VideoService: resolveVideoPath, getPlaybackUrl, getCues",
+    "src/main/services/video/localVideoProtocol.ts — local:///video/{uuid} protocol handler with range support",
+    "src/main/index.ts — registerSchemesAsPrivileged (module-level), protocol.handle in app.whenReady",
+    "src/main/security/csp.ts — media-src 'self' local: in prod + dev CSPs",
+    "src/preload/index.ts — video namespace: getPlaybackUrl, getCues with input validation",
+    "src/renderer/features/preview/useVideoPlayer.ts — player state machine hook",
+    "src/renderer/features/preview/VideoPlayer.tsx — purely presentational, token-based colors",
+    "src/renderer/features/preview/CueList.tsx — scrollable cue list with active-cue highlighting",
+    "src/renderer/features/preview/SubtitleOverlay.tsx — active cue overlay with token-based colors",
+    "src/renderer/features/preview/PreviewPage.tsx — lifted state, canPreview gate, two-column layout",
+    "src/renderer/features/preview/hooks/useCues.ts — React Query wrapper for getCues",
+    "src/renderer/features/preview/videoFormatters.ts — formatPlayerTime, formatCueTime",
+    "src/renderer/stores/uiStore.ts — AppRoute extended with 'preview'",
+    "src/renderer/components/Layout.tsx — Preview nav item added",
+    "src/renderer/styles/globals.css — --video-bg, --video-fg tokens added",
+    "tailwind.config.ts — video-bg, video-fg color mappings with alpha-value support",
+    "tests/e2e/preview.spec.ts — 4 E2E scenarios",
+    "tests/visual/preview.visual.spec.ts — 3 visual regression scenarios",
+    "tests/visual/*/snapshots — all snapshots regenerated (nav item cascade)",
+    "docs/design/components/{SubtitleOverlay,CueList,VideoPlayer,PreviewPage}.md — usage docs",
+    "tests/fixtures/sceneSiftApi.ts — 3 preview fixture entries"
+  ],
+  "checks": [
+    "pnpm governance:validate — exit 0",
+    "pnpm architecture:validate — exit 0",
+    "pnpm design:validate — exit 0",
+    "pnpm dependencies:validate — exit 0",
+    "pnpm typecheck — exit 0",
+    "pnpm lint — exit 0 (0 warnings)",
+    "pnpm test — exit 0, 353/353 tests, 27 files",
+    "pnpm build — exit 0",
+    "pnpm test:e2e — exit 0, 41/41",
+    "pnpm test:visual — exit 0, 22/22",
+    "pnpm test:electron — SKIPPED (pre-existing environment constraint + GD-005 override)"
+  ],
+  "verifier_evidence": {
+    "architecture_reviewer": "APPROVED after Phase 2 — identified 3 findings (protocol handler, CSP, preload filtering); all resolved in fix(m4) commit 4c7e632",
+    "electron_security_reviewer": "ACCEPTED — CRITICAL: none, HIGH: none. MEDIUM informational: (1) Content-Type hardcoded video/mp4 not exploitable; (2) preload validates string+non-empty, main-process Zod enforces z.string().uuid(). All Electron security defaults confirmed: nodeIntegration:false, contextIsolation:true, sandbox:true, webSecurity:true.",
+    "design_system_reviewer": "ACCEPTED (3 rounds) — Round 1 (a04309b): NOT ACCEPTED — CRITICAL: missing docs/design/components/, MEDIUM: bg-black/text-white bypass tokens. Round 2 (ad300249): NOT ACCEPTED — MEDIUM: rgb(0,0,0) in text-shadow arbitrary value. Round 3 (adfcde9): ACCEPTED — all findings resolved. Final state: zero critical, zero high, zero remaining findings."
+  },
+  "outcome": "pass",
+  "verdict": "M4 ACCEPTED by independent dual audit — electron-security-reviewer + design-system-reviewer. All 9 commits on branch. Awaiting human merge review (cannot merge autonomously per loop-constraints.md).",
+  "notes": "Test count: 299/299 (pre-M4) → 353/353 (+54: 41 E2E + 3 visual new + existing). Visual snapshot cascade: adding Preview nav item to Layout.tsx broke all 19 existing snapshots — deleted and regenerated all 22 (including 3 new preview scenarios). Design token additions: --video-bg, --video-fg with opacity modifier support for bg-video-bg/60, border-video-fg/30, border-t-video-fg."
+}
+```

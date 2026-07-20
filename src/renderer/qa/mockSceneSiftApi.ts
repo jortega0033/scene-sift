@@ -210,6 +210,23 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
         return updated;
       },
     },
+    video: {
+      getPlaybackUrl: async () => ({
+        url: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDE=',
+      }),
+      getCues: async () => {
+        if (fixture.name === 'preview-ready') {
+          return {
+            cues: [
+              { index: 0, startMs: 1_000, endMs: 3_000, text: 'Previously on SceneSift…' },
+              { index: 1, startMs: 5_000, endMs: 8_000, text: 'The quick brown fox\njumped over the lazy dog.' },
+              { index: 2, startMs: 10_000, endMs: 12_000, text: 'End of clip.' },
+            ],
+          };
+        }
+        return { cues: [] };
+      },
+    },
     sync: {
       checkForProject: async (projectId: string): Promise<SyncCheckResult> => {
         await delay(200);

@@ -10,9 +10,15 @@ defaultMode: L2
 - milestone: M4 Video Preview Workspace — Implementation
 - branch: feature/m4-video-preview (base: overnight/m3-plus-2026-07-20)
 - risk_level: 3 (VideoService, protocol handler, preload, CSP — main/preload/IPC risk)
-- status: in_progress
+- status: awaiting-human-merge-review
 - started: 2026-07-20
 - governance_decision: GD-005
+- acceptance_audit_verdict: M4 ACCEPTED — 0 critical, 0 high findings across 2 independent reviewers
+- acceptance_audit_security: ACCEPTED (electron-security-reviewer) — MEDIUM informational: Content-Type hardcoded video/mp4; preload validates string+non-empty (main-process Zod enforces z.string().uuid())
+- acceptance_audit_design: ACCEPTED (design-system-reviewer, 3 rounds) — all findings resolved: docs/design/components/ created (4 files), video-bg/video-fg tokens added, bg-black/text-white/rgb() replaced with token classes
+- all_validators: typecheck exit 0, lint exit 0, 353/353 unit, governance:validate exit 0, architecture:validate exit 0, design:validate exit 0, test:e2e 41/41, test:visual 22/22
+- electron_smoke: SKIPPED per GD-005 owner override
+- next_step: HUMAN MERGE REVIEW — merge feature/m4-video-preview into overnight/m3-plus-2026-07-20
 
 ## Previous active run (complete — M4 planning reconciled)
 

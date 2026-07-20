@@ -32,6 +32,9 @@ export const qaFixtureNames = [
   'sync-needs-review',
   'sync-check-failed',
   'sync-stale',
+  'preview-not-available',
+  'preview-ready',
+  'preview-no-cues',
 ] as const;
 
 export type QaFixtureName = (typeof qaFixtureNames)[number];
@@ -631,6 +634,46 @@ export const fixtureMap: Record<QaFixtureName, QaFixtureState> = {
         syncCheckedAt: now - 30_000,
         syncWarningsJson: null,
         syncAnalysisVersion: 1,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'preview-not-available': {
+    name: 'preview-not-available',
+    projects: [{ ...projectB }],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'preview-ready': {
+    name: 'preview-ready',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready',
+        subtitleCueCount: 3,
+        subtitleLastCueEndMs: 12_000,
+        subtitleParsedAt: now - 5_000,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'preview-no-cues': {
+    name: 'preview-no-cues',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: null,
+        subtitleCueCount: null,
+        subtitleLastCueEndMs: null,
+        subtitleParsedAt: null,
       },
     ],
     queue: [],

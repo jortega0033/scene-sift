@@ -40,6 +40,8 @@
   --motion-fast: 120ms;
   --motion-base: 180ms;
   --z-overlay: 30;
+  --video-bg: 0 0% 0%;
+  --video-fg: 0 0% 100%;
   font-family:
     Inter,
     system-ui,
