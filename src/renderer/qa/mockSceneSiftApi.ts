@@ -419,6 +419,9 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
       updateCandidateNotes: async () => ({
         ok: true as const,
       }),
+      updateCandidateTiming: async () => ({
+        ok: true as const,
+      }),
     },
   };
 };

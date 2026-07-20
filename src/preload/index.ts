@@ -148,6 +148,17 @@ const sceneSiftApi: SceneSiftApi = {
         return Promise.reject(new TypeError('notes must be a string (max 1000 chars) or null'));
       return ipcRenderer.invoke(IPC_CHANNELS.AI_UPDATE_CANDIDATE_NOTES, { candidateId, notes });
     },
+    updateCandidateTiming: (candidateId: string, startMs: number, endMs: number) => {
+      if (!UUID_RE.test(candidateId))
+        return Promise.reject(new TypeError('candidateId must be a UUID'));
+      if (!Number.isInteger(startMs) || startMs < 0)
+        return Promise.reject(new TypeError('startMs must be a non-negative integer'));
+      if (!Number.isInteger(endMs) || endMs <= 0 || endMs > 86_400_000)
+        return Promise.reject(new TypeError('endMs must be a positive integer <= 86400000'));
+      if (endMs <= startMs)
+        return Promise.reject(new TypeError('endMs must be greater than startMs'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_UPDATE_CANDIDATE_TIMING, { candidateId, startMs, endMs });
+    },
   },
 };
 

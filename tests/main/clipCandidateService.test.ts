@@ -393,6 +393,52 @@ describe('ClipCandidateService', () => {
     });
   });
 
+  describe('updateCandidateTiming', () => {
+    it('updates startMs and endMs on a candidate', async () => {
+      const { db, dir } = setupDb();
+      const project = createProjectWithSubtitle(db);
+      const svc = new ClipCandidateService(db, makeAiServiceMock());
+
+      await svc.generateCandidates(project.id);
+      const { candidates } = svc.listCandidates(project.id);
+      const candidateId = candidates[0].id;
+
+      svc.updateCandidateTiming(candidateId, 1000, 5000);
+
+      const updated = svc.listCandidates(project.id);
+      expect(updated.candidates[0].startMs).toBe(1000);
+      expect(updated.candidates[0].endMs).toBe(5000);
+
+      db.close();
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('timing persists across service restart', async () => {
+      const { dir, dbPath, migrationsFolder } = createDbPath();
+      const db = new DatabaseService(dbPath, migrationsFolder);
+      db.initialize();
+
+      const project = createProjectWithSubtitle(db);
+      const svc = new ClipCandidateService(db, makeAiServiceMock());
+      await svc.generateCandidates(project.id);
+      const { candidates } = svc.listCandidates(project.id);
+      const candidateId = candidates[0].id;
+
+      svc.updateCandidateTiming(candidateId, 2000, 8000);
+      db.close();
+
+      const db2 = new DatabaseService(dbPath, migrationsFolder);
+      db2.initialize();
+      const svc2 = new ClipCandidateService(db2, makeAiServiceMock());
+      const updated = svc2.listCandidates(project.id);
+      expect(updated.candidates[0].startMs).toBe(2000);
+      expect(updated.candidates[0].endMs).toBe(8000);
+
+      db2.close();
+      rmSync(dir, { recursive: true, force: true });
+    });
+  });
+
   describe('listCandidates', () => {
     it('returns null generationStatus before any generation', () => {
       const { db, dir } = setupDb();

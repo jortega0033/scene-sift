@@ -74,6 +74,16 @@ export const updateCandidateNotesOutputSchema = z.object({
   ok: z.literal(true),
 });
 
+export const updateCandidateTimingInputSchema = z.object({
+  candidateId: z.string().uuid(),
+  startMs: z.number().int().nonnegative(),
+  endMs: z.number().int().positive().max(86_400_000),
+}).refine((d) => d.endMs > d.startMs, { message: 'endMs must be greater than startMs' });
+
+export const updateCandidateTimingOutputSchema = z.object({
+  ok: z.literal(true),
+});
+
 // Schema for AI raw output validation (used by structuredOutputParser)
 export const aiCandidateItemSchema = z
   .object({
@@ -100,3 +110,5 @@ export type ListCandidatesOutput = z.infer<typeof listCandidatesOutputSchema>;
 export type GenerateCandidatesOutput = z.infer<typeof generateCandidatesOutputSchema>;
 export type UpdateCandidateNotesInput = z.infer<typeof updateCandidateNotesInputSchema>;
 export type UpdateCandidateNotesOutput = z.infer<typeof updateCandidateNotesOutputSchema>;
+export type UpdateCandidateTimingInput = z.infer<typeof updateCandidateTimingInputSchema>;
+export type UpdateCandidateTimingOutput = z.infer<typeof updateCandidateTimingOutputSchema>;

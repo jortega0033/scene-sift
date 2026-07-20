@@ -48,3 +48,22 @@ export const useUpdateCandidateNotes = () => {
     },
   });
 };
+
+export const useUpdateCandidateTiming = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      candidateId,
+      startMs,
+      endMs,
+    }: {
+      candidateId: string;
+      projectId: string;
+      startMs: number;
+      endMs: number;
+    }) => window.sceneSift.ai.updateCandidateTiming(candidateId, startMs, endMs),
+    onSuccess: async (_data, { projectId }) => {
+      await queryClient.invalidateQueries({ queryKey: ['candidates', projectId] });
+    },
+  });
+};

@@ -9,6 +9,7 @@ import {
   useUpdateCandidateStatus,
   useUpdateCandidateNotes,
 } from '@renderer/hooks/useCandidates';
+import { TimingEditorModal } from './TimingEditorModal';
 
 type CandidatesSectionProps = {
   project: ProjectRecord;
@@ -63,9 +64,11 @@ const candidateStatusLabel: Record<string, string> = {
 function CandidateRow({
   candidate,
   projectId,
+  onEditTiming,
 }: {
   candidate: ClipCandidate;
   projectId: string;
+  onEditTiming: (c: ClipCandidate) => void;
 }) {
   const updateStatus = useUpdateCandidateStatus();
   const updateNotes = useUpdateCandidateNotes();
@@ -128,6 +131,16 @@ function CandidateRow({
               Approve
             </button>
           )}
+          {candidate.candidateStatus === 'approved' && (
+            <button
+              type="button"
+              data-testid="edit-timing-button"
+              className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-border px-2 text-xs hover:bg-muted"
+              onClick={() => onEditTiming(candidate)}
+            >
+              Edit timing
+            </button>
+          )}
           {candidate.candidateStatus !== 'skipped' && (
             <button
               type="button"
@@ -161,6 +174,7 @@ export const CandidatesSection = ({ project }: CandidatesSectionProps) => {
 
   const [scoreThreshold, setScoreThreshold] = useState(0);
   const [sortKey, setSortKey] = useState<SortKey>('score');
+  const [editingCandidate, setEditingCandidate] = useState<ClipCandidate | null>(null);
 
   const projectId = project.id;
   const handleScoreThresholdChange = useCallback(
@@ -335,9 +349,22 @@ export const CandidatesSection = ({ project }: CandidatesSectionProps) => {
       {filteredCandidates.length > 0 && (
         <ul data-testid="candidates-list" className="space-y-2">
           {filteredCandidates.map((candidate) => (
-            <CandidateRow key={candidate.id} candidate={candidate} projectId={projectId} />
+            <CandidateRow
+              key={candidate.id}
+              candidate={candidate}
+              projectId={projectId}
+              onEditTiming={setEditingCandidate}
+            />
           ))}
         </ul>
+      )}
+
+      {editingCandidate && (
+        <TimingEditorModal
+          candidate={editingCandidate}
+          projectId={projectId}
+          onClose={() => setEditingCandidate(null)}
+        />
       )}
 
       {data && data.candidates.length === 0 && data.generationStatus === 'done' && (
