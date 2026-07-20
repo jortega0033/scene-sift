@@ -84,6 +84,13 @@ export class ClipCandidateService {
       throw new AppError('AI_PROVIDER_UNAVAILABLE', AI_ERROR_MESSAGES.AI_PROVIDER_UNAVAILABLE);
     }
 
+    if (this.config) {
+      const fullConfig = this.config.getConfigurationStatus();
+      if (fullConfig.consentRecordedAt === null) {
+        throw new AppError('AI_CONSENT_REQUIRED', AI_ERROR_MESSAGES.AI_CONSENT_REQUIRED);
+      }
+    }
+
     if (this.activeProjectIds.has(projectId)) {
       throw new AppError('GENERATION_ALREADY_IN_PROGRESS', 'A generation is already running for this project.');
     }
