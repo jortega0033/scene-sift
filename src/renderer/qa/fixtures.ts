@@ -38,6 +38,7 @@ export const qaFixtureNames = [
   'transcript-not-available',
   'transcript-ready',
   'transcript-ready-with-warnings',
+  'ai-provider-available',
 ] as const;
 
 export type QaFixtureName = (typeof qaFixtureNames)[number];
@@ -719,6 +720,14 @@ export const fixtureMap: Record<QaFixtureName, QaFixtureState> = {
         subtitleParsedAt: now - 8_000,
       },
     ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'ai-provider-available': {
+    name: 'ai-provider-available',
+    projects: [projectA],
     queue: [],
     settings: baseSettings,
     capabilities: baseCapabilities,

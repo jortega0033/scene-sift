@@ -7,6 +7,10 @@ import { DatabaseService } from '@main/services/database/databaseService';
 import { VideoService } from '@main/services/video/videoService';
 import { registerLocalVideoProtocol } from '@main/services/video/localVideoProtocol';
 import { applyCsp } from '@main/security/csp';
+import { AiSecretsService } from '@main/services/ai/aiSecretsService';
+import { AiConfigurationService } from '@main/services/ai/aiConfigurationService';
+import { AiHttpClientImpl } from '@main/services/ai/aiHttpClient';
+import { AiServiceImpl } from '@main/services/ai/aiService';
 
 // Must run before app.ready
 protocol.registerSchemesAsPrivileged([
@@ -38,7 +42,12 @@ const initializeApp = async (): Promise<void> => {
       dbService.initialize();
       const videoService = new VideoService(dbService);
       registerLocalVideoProtocol(videoService);
-      registerIpcHandlers({ databaseService: dbService, videoService });
+      const aiSecretsService = new AiSecretsService();
+      const aiConfigurationService = new AiConfigurationService(dbService, aiSecretsService);
+      aiConfigurationService.initialize();
+      const aiHttpClient = new AiHttpClientImpl();
+      const aiService = new AiServiceImpl(aiConfigurationService, aiHttpClient);
+      registerIpcHandlers({ databaseService: dbService, videoService, aiService, aiConfigurationService });
     }
 
     await createMainWindow();

@@ -34,4 +34,5 @@ export const FIXTURES = {
   transcriptNotAvailable: 'transcript-not-available',
   transcriptReady: 'transcript-ready',
   transcriptReadyWithWarnings: 'transcript-ready-with-warnings',
+  aiProviderAvailable: 'ai-provider-available',
 } as const;

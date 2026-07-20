@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { useCapabilities } from '@renderer/hooks/useCapabilities';
 import { useSettings, useUpdateSettings } from '@renderer/hooks/useSettings';
 import { StatusPill } from '@renderer/components/StatusPill';
+import { AiProviderSection } from './AiProviderSection';
 
 const settingsFormSchema = z.object({
   ffmpegPathOverride: z.string(),
@@ -192,6 +193,8 @@ export const SettingsPage = () => {
           </p>
         )}
       </form>
+
+      <AiProviderSection />
 
       <div data-mono-surface="panel" className="space-y-3 p-4 text-sm">
         <h3 className="font-semibold uppercase tracking-label">System status</h3>

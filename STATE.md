@@ -6,6 +6,40 @@ defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-m6-implementation
+- milestone: M6 AI Provider Infrastructure — Implementation
+- branch: feature/m6-ai-provider (from overnight/m3-plus-2026-07-20 a43a82b)
+- risk_level: 3 (main/preload/IPC/migrations risk paths)
+- status: acceptance_audit_ACCEPTED — awaiting human merge review
+- started: 2026-07-20
+- governance_decision: GD-005
+- phase_0: COMPLETE — all 4 contradictions resolved, validators pass (governance:validate, architecture:validate, typecheck, lint, 419/419 tests)
+- phases_1a_1b: COMPLETE — shared schemas (AiConfigurationStatus, AI_ERROR_CODES, AI_ERROR_MESSAGES), prompt registry, IPC channels + contracts
+- phases_2_9_risk3: COMPLETE (7 risk-3 phases, each with independent electron-security-reviewer approval) — DB migration 0004, SecretsService, AiConfigurationService, AiHttpClient, structuredOutputParser, AiService, IPC handlers, preload bridge
+- phase_10: COMPLETE (risk-2) — prompt registry files (prompt-registry.json, connectionTest.ts)
+- phase_11: COMPLETE (risk-2) — AiProviderSection React component + SettingsPage integration
+- phase_12: COMPLETE — 17 unit tests (AiProviderSection.test.tsx), all passing
+- phase_13: COMPLETE — 5 E2E tests (ai-provider-config.e2e.spec.ts), all passing
+- phase_14: COMPLETE — visual regression tests: 2 new AI provider snapshots (unconfigured, available), existing settings snapshots regenerated; 27/27 visual tests pass
+- phase_15: COMPLETE — adversarial governance tests: ai-redirect-follow pattern added to gate.yaml, 8 new adversarial scenarios (72 total in adversarial-scenarios.test.ts), all passing
+- remediation_pass: COMPLETE — 4 critical + 3 minor findings from first audit addressed; 7 files modified; all 7 items verified by independent delta auditor; 37 test files / 561 tests all passing
+- remediation_findings_closed: AC-M6-009 (consent_recorded_at = NULL on clear), AC-M6-016 (AI_CANCEL_TEST channel + cancelTestConnection + preload + renderer), AC-M6-028 (env var path sets is_configured=1), AC-M6-035 (htmlFor label association), AC-M6-012 (spinner text "Testing connection…"), AC-M6-039 (PROMPT_REGISTRY.connectionTest), ipc-contracts 6 channels
+- acceptance_audit_first: NOT ACCEPTED (4 critical, 3 minor)
+- acceptance_audit_delta: ACCEPTED — all 7 remediated items PASS (independent verifier, 2026-07-20)
+- validation_unit: 37 test files / 561 tests — all passing
+- validation_e2e: 52/53 passing — 1 pre-existing failure (transcript.spec.ts:12, unrelated to M6)
+- validation_visual: 27/27 passing (including 2 new AI provider snapshots)
+- validation_governance: governance:validate PASS, architecture:validate PASS, design:validate PASS, dependencies:validate PASS, claude:validate PASS
+- validation_typecheck: exit 0
+- validation_lint: exit 0
+- validation_build: exit 0
+- validation_package_dir: exit 0
+- validation_electron: SKIPPED — pre-existing environment limitation (Electron binary not available headlessly; "Process failed to launch!" error pre-dates M6 changes; consistent with M4 acceptance where electron smoke was skipped per GD-005 owner override)
+- pre_existing_failures_documented: transcript.spec.ts:12 (project lacks subtitle prerequisite text), test:electron (environment limitation)
+- next: human merge review
+
+## Previous active run (complete)
+
 - run_id: 2026-07-20T-m6-planning
 - milestone: M6 AI Provider Infrastructure — Planning and Specification
 - branch: overnight/m3-plus-2026-07-20 (docs only — no product code)

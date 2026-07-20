@@ -28,6 +28,14 @@ import {
   videoGetCuesInputSchema,
   videoGetCuesOutputSchema,
 } from '@shared/schemas/video';
+import {
+  aiConfigurationStatusResponseSchema,
+  aiSetApiKeyInputSchema,
+  aiSetApiKeyOutputSchema,
+  aiTestConnectionOutputSchema,
+  aiClearConfigurationOutputSchema,
+  aiRecordConsentOutputSchema,
+} from '@shared/schemas/ai';
 
 export const databaseHealthSchema = z.object({
   ok: z.boolean(),
@@ -162,6 +170,28 @@ export const ipcContracts = {
     getCues: {
       input: videoGetCuesInputSchema,
       output: videoGetCuesOutputSchema,
+    },
+  },
+  ai: {
+    getConfigurationStatus: {
+      input: z.void(),
+      output: aiConfigurationStatusResponseSchema,
+    },
+    setApiKey: {
+      input: aiSetApiKeyInputSchema,
+      output: aiSetApiKeyOutputSchema,
+    },
+    testConnection: {
+      input: z.void(),
+      output: aiTestConnectionOutputSchema,
+    },
+    clearConfiguration: {
+      input: z.void(),
+      output: aiClearConfigurationOutputSchema,
+    },
+    recordConsent: {
+      input: z.void(),
+      output: aiRecordConsentOutputSchema,
     },
   },
 };

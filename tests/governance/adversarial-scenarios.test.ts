@@ -546,6 +546,81 @@ describe('governance adversarial scenarios', () => {
     }
   });
 
+  // --- M6 AI provider adversarial scenarios ---
+
+  it('detects redirect:follow in AI HTTP client code', () => {
+    const assessment = evaluateChangeSet(
+      gateConfig,
+      ['src/main/services/ai/aiHttpClient.ts'],
+      [],
+      { 'src/main/services/ai/aiHttpClient.ts': "fetch(url, { redirect: 'follow', method: 'POST' })" },
+    );
+    expect(assessment.forbiddenPatternsHit.some((p) => p.id === 'ai-redirect-follow')).toBe(true);
+  });
+
+  it('detects redirect:follow double-quoted variant', () => {
+    const assessment = evaluateChangeSet(
+      gateConfig,
+      ['src/main/services/ai/aiHttpClient.ts'],
+      [],
+      { 'src/main/services/ai/aiHttpClient.ts': 'fetch(url, { redirect: "follow" })' },
+    );
+    expect(assessment.forbiddenPatternsHit.some((p) => p.id === 'ai-redirect-follow')).toBe(true);
+  });
+
+  it('does NOT flag redirect:manual — correct production setting', () => {
+    const assessment = evaluateChangeSet(
+      gateConfig,
+      ['src/main/services/ai/aiHttpClient.ts'],
+      [],
+      { 'src/main/services/ai/aiHttpClient.ts': "fetch(url, { redirect: 'manual', method: 'POST' })" },
+    );
+    expect(assessment.forbiddenPatternsHit.some((p) => p.id === 'ai-redirect-follow')).toBe(false);
+  });
+
+  it('classifies AI service files as high risk (risk 3)', () => {
+    const assessment = evaluateChangeSet(
+      gateConfig,
+      ['src/main/services/ai/aiHttpClient.ts'],
+      [],
+      {},
+    );
+    expect(assessment.maxRisk).toBe(3);
+  });
+
+  it('classifies AI configuration service as high risk', () => {
+    const assessment = evaluateChangeSet(
+      gateConfig,
+      ['src/main/services/ai/aiConfigurationService.ts'],
+      [],
+      {},
+    );
+    expect(assessment.maxRisk).toBe(3);
+  });
+
+  it('detects forbidden change-ai-retention-policy action', () => {
+    const assessment = evaluateChangeSet(gateConfig, [], ['change-ai-retention-policy'], {});
+    expect(assessment.forbiddenActionsHit).toContain('change-ai-retention-policy');
+  });
+
+  it('production aiHttpClient.ts does not use redirect:follow', () => {
+    const aiHttpClientPath = path.join(repoRoot, 'src/main/services/ai/aiHttpClient.ts');
+    const content = fs.readFileSync(aiHttpClientPath, 'utf-8');
+    expect(content).not.toMatch(/redirect\s*:\s*['"]follow['"]/);
+    expect(content).toMatch(/redirect\s*:\s*['"]manual['"]/);
+  });
+
+  it('production AiConfigurationStatusResponse schema does not include apiKey field', () => {
+    const schemaPath = path.join(repoRoot, 'src/shared/schemas/ai.ts');
+    const content = fs.readFileSync(schemaPath, 'utf-8');
+    // Match just the Zod object block for the status response schema (stops at closing brace + semicolon)
+    const responseSchemaMatch = content.match(
+      /aiConfigurationStatusResponseSchema\s*=\s*z\.object\(\{[\s\S]*?\}\)/,
+    );
+    expect(responseSchemaMatch).not.toBeNull();
+    expect(responseSchemaMatch![0]).not.toMatch(/\bapiKey\b/);
+  });
+
   // --- CI SHA pinning validator (6 scenarios) ---
 
   it('CI pinning validator detects floating @v4 tag', () => {

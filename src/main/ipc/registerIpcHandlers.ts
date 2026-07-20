@@ -51,6 +51,18 @@ import { AppError } from '@main/utils/errors';
 import { JobService } from '@main/services/jobs/jobService';
 import { SubtitleService } from '@main/services/subtitle/subtitleService';
 import { SynchronizationService } from '@main/services/synchronization/SynchronizationService';
+import type { AiService } from '@main/services/ai/aiService';
+import type { AiConfigurationService } from '@main/services/ai/aiConfigurationService';
+import {
+  aiConfigurationStatusResponseSchema,
+  aiSetApiKeyInputSchema,
+  aiSetApiKeyOutputSchema,
+  aiTestConnectionOutputSchema,
+  aiCancelTestOutputSchema,
+  aiClearConfigurationOutputSchema,
+  aiRecordConsentOutputSchema,
+  AI_ERROR_MESSAGES,
+} from '@shared/schemas/ai';
 import {
   subtitleSelectInputSchema,
   subtitleParseInputSchema,
@@ -64,9 +76,11 @@ import {
 type RegisterIpcDeps = {
   databaseService: DatabaseService;
   videoService: VideoService;
+  aiService: AiService;
+  aiConfigurationService: AiConfigurationService;
 };
 
-export const registerIpcHandlers = ({ databaseService, videoService }: RegisterIpcDeps): void => {
+export const registerIpcHandlers = ({ databaseService, videoService, aiService, aiConfigurationService }: RegisterIpcDeps): void => {
   const jobService = new JobService(databaseService);
   const subtitleService = new SubtitleService(databaseService);
   const synchronizationService = new SynchronizationService(databaseService);
@@ -333,6 +347,67 @@ export const registerIpcHandlers = ({ databaseService, videoService }: RegisterI
       if (!document) return { entries: [], subtitleStatus: null };
       const entries = transcriptService.generateTranscript(document.cues, { gapThresholdMs });
       return { entries, subtitleStatus: project.subtitleStatus };
+    },
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_GET_CONFIGURATION_STATUS,
+    z.undefined(),
+    aiConfigurationStatusResponseSchema,
+    () => aiConfigurationService.getConfigurationStatus(),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_SET_API_KEY,
+    aiSetApiKeyInputSchema,
+    aiSetApiKeyOutputSchema,
+    (input) => {
+      aiConfigurationService.setApiKey(input);
+      return { ok: true as const };
+    },
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_TEST_CONNECTION,
+    z.undefined(),
+    aiTestConnectionOutputSchema,
+    async () => {
+      const result = await aiService.testConnection();
+      if (!result.success) {
+        const code = result.errorCode!;
+        throw new AppError(code, AI_ERROR_MESSAGES[code]);
+      }
+      return { ok: true as const };
+    },
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_CANCEL_TEST,
+    z.undefined(),
+    aiCancelTestOutputSchema,
+    () => {
+      aiService.cancelTestConnection();
+      return { cancelled: true as const };
+    },
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_CLEAR_CONFIGURATION,
+    z.undefined(),
+    aiClearConfigurationOutputSchema,
+    () => {
+      aiConfigurationService.clearConfiguration();
+      return { cleared: true as const };
+    },
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_RECORD_CONSENT,
+    z.undefined(),
+    aiRecordConsentOutputSchema,
+    () => {
+      aiConfigurationService.recordConsent();
+      return { ok: true as const };
     },
   );
 

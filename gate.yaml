@@ -125,6 +125,10 @@ forbiddenPatterns:
     pattern: "(API[_-]?KEY|SECRET|TOKEN|PASSWORD)\\s*[:=]\\s*['\\\"][A-Za-z0-9_\\-]{16,}['\\\"]"
     description: 'Secret-shaped hardcoded credential value detected.'
     severity: critical
+  - id: ai-redirect-follow
+    pattern: "redirect\\s*:\\s*['\"]follow['\"]"
+    description: 'AI HTTP client must use redirect: manual to prevent SSRF and credential leakage via open redirects.'
+    severity: critical
 
 requiredChecksByRisk:
   '0':

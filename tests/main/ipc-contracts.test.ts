@@ -15,6 +15,7 @@ import {
   transcriptGenerateInputSchema,
   transcriptExportInputSchema,
 } from '@shared/schemas/transcript';
+import { aiSetApiKeyInputSchema } from '@shared/schemas/ai';
 
 describe('ipc contracts', () => {
   it('registers explicit channels only', () => {
@@ -244,5 +245,76 @@ describe('transcript ipc contracts', () => {
     const tChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('transcript:'));
     expect(new Set(tChannels).size).toBe(tChannels.length);
     expect(tChannels.length).toBe(2);
+  });
+});
+
+describe('ai ipc contracts', () => {
+  it('registers all 6 ai:* channels', () => {
+    expect(ALL_IPC_CHANNELS).toContain('ai:getConfigurationStatus');
+    expect(ALL_IPC_CHANNELS).toContain('ai:setApiKey');
+    expect(ALL_IPC_CHANNELS).toContain('ai:testConnection');
+    expect(ALL_IPC_CHANNELS).toContain('ai:cancelTest');
+    expect(ALL_IPC_CHANNELS).toContain('ai:clearConfiguration');
+    expect(ALL_IPC_CHANNELS).toContain('ai:recordConsent');
+  });
+
+  it('no generic ai:invoke channel exists', () => {
+    expect(ALL_IPC_CHANNELS).not.toContain('ai:invoke');
+    const aiChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('ai:'));
+    expect(aiChannels.every((c) => c !== 'ai:invoke')).toBe(true);
+  });
+
+  it('ai channels are unique (no duplicates)', () => {
+    const aiChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('ai:'));
+    expect(new Set(aiChannels).size).toBe(aiChannels.length);
+    expect(aiChannels.length).toBe(6);
+  });
+
+  it('rejects empty apiKey in aiSetApiKeyInputSchema', () => {
+    expect(aiSetApiKeyInputSchema.safeParse({ apiKey: '' }).success).toBe(false);
+  });
+
+  it('accepts apiKey at max length (512 chars)', () => {
+    expect(aiSetApiKeyInputSchema.safeParse({ apiKey: 'k'.repeat(512) }).success).toBe(true);
+  });
+
+  it('rejects apiKey exceeding max length (513 chars)', () => {
+    expect(aiSetApiKeyInputSchema.safeParse({ apiKey: 'k'.repeat(513) }).success).toBe(false);
+  });
+
+  it('accepts valid apiKey with no optional fields', () => {
+    expect(aiSetApiKeyInputSchema.safeParse({ apiKey: 'sk-test-key' }).success).toBe(true);
+  });
+
+  it('rejects baseUrl exceeding max length (2049 chars)', () => {
+    const longUrl = 'a'.repeat(2049);
+    expect(aiSetApiKeyInputSchema.safeParse({ apiKey: 'sk-test', baseUrl: longUrl }).success).toBe(
+      false,
+    );
+  });
+
+  it('accepts baseUrl at max length (2048 chars)', () => {
+    const url = 'a'.repeat(2048);
+    expect(aiSetApiKeyInputSchema.safeParse({ apiKey: 'sk-test', baseUrl: url }).success).toBe(
+      true,
+    );
+  });
+
+  it('rejects empty model string in aiSetApiKeyInputSchema', () => {
+    expect(
+      aiSetApiKeyInputSchema.safeParse({ apiKey: 'sk-test', model: '' }).success,
+    ).toBe(false);
+  });
+
+  it('rejects model exceeding max length (129 chars)', () => {
+    expect(
+      aiSetApiKeyInputSchema.safeParse({ apiKey: 'sk-test', model: 'm'.repeat(129) }).success,
+    ).toBe(false);
+  });
+
+  it('accepts model at max length (128 chars)', () => {
+    expect(
+      aiSetApiKeyInputSchema.safeParse({ apiKey: 'sk-test', model: 'm'.repeat(128) }).success,
+    ).toBe(true);
   });
 });

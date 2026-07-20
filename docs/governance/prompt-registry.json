@@ -1,7 +1,21 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-18",
+  "updatedAt": "2026-07-20",
   "prompts": [
+    {
+      "id": "connectionTest",
+      "owner": "SceneSift AI Team",
+      "purpose": "Minimal probe sent to an AI provider to verify authentication and model availability. Contains no user data.",
+      "inputPolicy": "No user-supplied data. Static system instruction and static user message only.",
+      "outputPolicy": "Accept only {ok: true} JSON. Any other response is rejected as schema validation failure.",
+      "injectionDefenses": [
+        "No user-supplied content in prompt — injection surface is zero",
+        "skipResponseFormat enabled to avoid provider-side wrapping confusion",
+        "Zod z.literal(true) enforces exact output shape; {ok: false} or extra fields cause AI_SCHEMA_VALIDATION_FAILED",
+        "Response size capped at 20 tokens max"
+      ],
+      "status": "active"
+    },
     {
       "id": "runtime-clip-candidate-v1",
       "owner": "SceneSift AI Team",
