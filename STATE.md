@@ -21,6 +21,7 @@ defaultMode: L2
 - validation_visual: pnpm test:visual:update 25/25, 3 new transcript baselines generated
 - remediation: 11 AC failures addressed — 5 stripTags tests, UUID preload check, 4 IPC tests, 2 governance grep tests, visual baselines
 - acceptance_audit_verdict: M5 ACCEPTED — all 41/41 ACs PASS (independent re-auditor, 2026-07-20); 11 previously-failed ACs all confirmed PASS after remediation
+- merge_commit: 575ccdb (feat(m5): implement M5 Transcript Preparation — ACCEPTED)
 
 ## Previous active run (complete — M5 planning reconciled)
 

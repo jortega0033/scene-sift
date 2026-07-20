@@ -1377,6 +1377,7 @@ Append one JSON line per material run.
   ],
   "status": "complete",
   "acceptance_audit_verdict": "ACCEPTED — all 11/11 previously-failed ACs now PASS; 41/41 total ACs PASS (independent re-auditor, 2026-07-20)",
+  "commit": "575ccdb",
   "completed": "2026-07-20"
 }
 ```
