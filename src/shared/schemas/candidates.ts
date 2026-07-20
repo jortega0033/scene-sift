@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const candidateStatusSchema = z.enum(['suggested', 'approved', 'rejected']);
+export const candidateStatusSchema = z.enum(['suggested', 'approved', 'rejected', 'skipped']);
 
 export const clipCandidateSchema = z.object({
   id: z.string().uuid(),
@@ -15,6 +15,7 @@ export const clipCandidateSchema = z.object({
   sortOrder: z.number().int().nonnegative(),
   modelId: z.string(),
   promptVersion: z.string(),
+  notes: z.string().max(1000).nullable(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
 });
@@ -57,10 +58,19 @@ export const listCandidatesOutputSchema = z.object({
 
 export const updateCandidateStatusInputSchema = z.object({
   candidateId: z.string().uuid(),
-  status: z.enum(['approved', 'rejected']),
+  status: z.enum(['approved', 'rejected', 'skipped']),
 });
 
 export const updateCandidateStatusOutputSchema = z.object({
+  ok: z.literal(true),
+});
+
+export const updateCandidateNotesInputSchema = z.object({
+  candidateId: z.string().uuid(),
+  notes: z.string().max(1000).nullable(),
+});
+
+export const updateCandidateNotesOutputSchema = z.object({
   ok: z.literal(true),
 });
 
@@ -88,3 +98,5 @@ export type AiCandidateItem = z.infer<typeof aiCandidateItemSchema>;
 export type AiCandidatesOutput = z.infer<typeof aiCandidatesOutputSchema>;
 export type ListCandidatesOutput = z.infer<typeof listCandidatesOutputSchema>;
 export type GenerateCandidatesOutput = z.infer<typeof generateCandidatesOutputSchema>;
+export type UpdateCandidateNotesInput = z.infer<typeof updateCandidateNotesInputSchema>;
+export type UpdateCandidateNotesOutput = z.infer<typeof updateCandidateNotesOutputSchema>;

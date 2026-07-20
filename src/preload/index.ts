@@ -134,12 +134,19 @@ const sceneSiftApi: SceneSiftApi = {
         return Promise.reject(new TypeError('projectId must be a UUID'));
       return ipcRenderer.invoke(IPC_CHANNELS.AI_LIST_CANDIDATES, { projectId });
     },
-    updateCandidateStatus: (candidateId: string, status: 'approved' | 'rejected') => {
+    updateCandidateStatus: (candidateId: string, status: 'approved' | 'rejected' | 'skipped') => {
       if (!UUID_RE.test(candidateId))
         return Promise.reject(new TypeError('candidateId must be a UUID'));
-      if (status !== 'approved' && status !== 'rejected')
-        return Promise.reject(new TypeError('status must be approved or rejected'));
+      if (status !== 'approved' && status !== 'rejected' && status !== 'skipped')
+        return Promise.reject(new TypeError('status must be approved, rejected, or skipped'));
       return ipcRenderer.invoke(IPC_CHANNELS.AI_UPDATE_CANDIDATE_STATUS, { candidateId, status });
+    },
+    updateCandidateNotes: (candidateId: string, notes: string | null) => {
+      if (!UUID_RE.test(candidateId))
+        return Promise.reject(new TypeError('candidateId must be a UUID'));
+      if (notes !== null && (typeof notes !== 'string' || notes.length > 1000))
+        return Promise.reject(new TypeError('notes must be a string (max 1000 chars) or null'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_UPDATE_CANDIDATE_NOTES, { candidateId, notes });
     },
   },
 };
