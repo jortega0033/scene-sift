@@ -25,6 +25,9 @@ export const projectsTable = sqliteTable('projects', {
   syncCheckedAt: integer('sync_checked_at', { mode: 'number' }),
   syncWarningsJson: text('sync_warnings_json'),
   syncAnalysisVersion: integer('sync_analysis_version'),
+  candidateGenerationStatus: text('candidate_generation_status'),
+  candidateGenerationError: text('candidate_generation_error'),
+  candidateGeneratedAt: integer('candidate_generated_at', { mode: 'number' }),
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 });
@@ -79,5 +82,22 @@ export const aiProviderConfigTable = sqliteTable('ai_provider_config', {
 export const aiSecretsTable = sqliteTable('ai_secrets', {
   id: text('id').primaryKey().default('ai_provider'),
   encryptedKey: blob('encrypted_key'),
+  updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
+});
+
+export const clipCandidatesTable = sqliteTable('clip_candidates', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull().references(() => projectsTable.id, { onDelete: 'cascade' }),
+  generationId: text('generation_id').notNull(),
+  candidateStatus: text('candidate_status').notNull().default('suggested'),
+  startMs: integer('start_ms').notNull(),
+  endMs: integer('end_ms').notNull(),
+  title: text('title').notNull(),
+  reason: text('reason').notNull(),
+  scoreRaw: real('score_raw').notNull(),
+  sortOrder: integer('sort_order').notNull(),
+  modelId: text('model_id').notNull(),
+  promptVersion: text('prompt_version').notNull(),
+  createdAt: integer('created_at', { mode: 'number' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 });

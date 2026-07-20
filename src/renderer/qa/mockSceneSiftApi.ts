@@ -330,6 +330,88 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
       cancelTest: async () => ({ cancelled: true as const }),
       clearConfiguration: async () => ({ cleared: true as const }),
       recordConsent: async () => ({ ok: true as const }),
+      generateCandidates: async () => ({
+        ok: true as const,
+        candidateCount: 3,
+        generationId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      }),
+      cancelGeneration: async () => ({ cancelled: true }),
+      listCandidates: async () => {
+        if (fixture.name === 'candidates-ready') {
+          return {
+            candidates: [
+              {
+                id: 'c1c1c1c1-c1c1-4c1c-8c1c-c1c1c1c1c1c1',
+                projectId: '11111111-1111-4111-8111-111111111111',
+                generationId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+                candidateStatus: 'suggested' as const,
+                startMs: 120_000,
+                endMs: 180_000,
+                title: 'Opening statement on market disruption',
+                reason: 'High-energy delivery with a clear thesis — great hook for social media.',
+                scoreRaw: 0.92,
+                sortOrder: 0,
+                modelId: 'gpt-4o-mini',
+                promptVersion: '1',
+                createdAt: 1_753_000_000_000,
+                updatedAt: 1_753_000_000_000,
+              },
+              {
+                id: 'c2c2c2c2-c2c2-4c2c-8c2c-c2c2c2c2c2c2',
+                projectId: '11111111-1111-4111-8111-111111111111',
+                generationId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+                candidateStatus: 'approved' as const,
+                startMs: 480_000,
+                endMs: 545_000,
+                title: 'Key insight: the cost of inaction',
+                reason: 'Compelling argument with concrete numbers — shareable and actionable.',
+                scoreRaw: 0.87,
+                sortOrder: 1,
+                modelId: 'gpt-4o-mini',
+                promptVersion: '1',
+                createdAt: 1_753_000_000_000,
+                updatedAt: 1_753_000_100_000,
+              },
+              {
+                id: 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3',
+                projectId: '11111111-1111-4111-8111-111111111111',
+                generationId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+                candidateStatus: 'rejected' as const,
+                startMs: 900_000,
+                endMs: 940_000,
+                title: 'Q&A tangent about methodology',
+                reason: 'Brief tangent, moderate engagement potential.',
+                scoreRaw: 0.41,
+                sortOrder: 2,
+                modelId: 'gpt-4o-mini',
+                promptVersion: '1',
+                createdAt: 1_753_000_000_000,
+                updatedAt: 1_753_000_200_000,
+              },
+            ],
+            generationStatus: 'done' as const,
+            generationError: null,
+            generatedAt: 1_753_000_000_000,
+          };
+        }
+        if (fixture.name === 'candidates-generating') {
+          return {
+            candidates: [],
+            generationStatus: 'generating' as const,
+            generationError: null,
+            generatedAt: null,
+          };
+        }
+        return {
+          candidates: [],
+          generationStatus: null,
+          generationError: null,
+          generatedAt: null,
+        };
+      },
+      updateCandidateStatus: async () => ({
+        ok: true as const,
+      }),
     },
   };
 };

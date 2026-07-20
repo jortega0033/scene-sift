@@ -16,6 +16,12 @@ import {
   transcriptExportInputSchema,
 } from '@shared/schemas/transcript';
 import { aiSetApiKeyInputSchema } from '@shared/schemas/ai';
+import {
+  generateCandidatesInputSchema,
+  cancelGenerationInputSchema,
+  listCandidatesInputSchema,
+  updateCandidateStatusInputSchema,
+} from '@shared/schemas/candidates';
 
 describe('ipc contracts', () => {
   it('registers explicit channels only', () => {
@@ -249,13 +255,17 @@ describe('transcript ipc contracts', () => {
 });
 
 describe('ai ipc contracts', () => {
-  it('registers all 6 ai:* channels', () => {
+  it('registers all 10 ai:* channels', () => {
     expect(ALL_IPC_CHANNELS).toContain('ai:getConfigurationStatus');
     expect(ALL_IPC_CHANNELS).toContain('ai:setApiKey');
     expect(ALL_IPC_CHANNELS).toContain('ai:testConnection');
     expect(ALL_IPC_CHANNELS).toContain('ai:cancelTest');
     expect(ALL_IPC_CHANNELS).toContain('ai:clearConfiguration');
     expect(ALL_IPC_CHANNELS).toContain('ai:recordConsent');
+    expect(ALL_IPC_CHANNELS).toContain('ai:generateCandidates');
+    expect(ALL_IPC_CHANNELS).toContain('ai:cancelGeneration');
+    expect(ALL_IPC_CHANNELS).toContain('ai:listCandidates');
+    expect(ALL_IPC_CHANNELS).toContain('ai:updateCandidateStatus');
   });
 
   it('no generic ai:invoke channel exists', () => {
@@ -267,7 +277,7 @@ describe('ai ipc contracts', () => {
   it('ai channels are unique (no duplicates)', () => {
     const aiChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('ai:'));
     expect(new Set(aiChannels).size).toBe(aiChannels.length);
-    expect(aiChannels.length).toBe(6);
+    expect(aiChannels.length).toBe(10);
   });
 
   it('rejects empty apiKey in aiSetApiKeyInputSchema', () => {
@@ -315,6 +325,58 @@ describe('ai ipc contracts', () => {
   it('accepts model at max length (128 chars)', () => {
     expect(
       aiSetApiKeyInputSchema.safeParse({ apiKey: 'sk-test', model: 'm'.repeat(128) }).success,
+    ).toBe(true);
+  });
+});
+
+describe('ai candidate ipc contracts', () => {
+  const VALID_UUID = '11111111-1111-4111-8111-111111111111';
+
+  it('rejects non-uuid projectId in generateCandidatesInputSchema', () => {
+    expect(generateCandidatesInputSchema.safeParse({ projectId: 'not-uuid' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in generateCandidatesInputSchema', () => {
+    expect(generateCandidatesInputSchema.safeParse({ projectId: VALID_UUID }).success).toBe(true);
+  });
+
+  it('rejects non-uuid projectId in cancelGenerationInputSchema', () => {
+    expect(cancelGenerationInputSchema.safeParse({ projectId: 'bad' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in cancelGenerationInputSchema', () => {
+    expect(cancelGenerationInputSchema.safeParse({ projectId: VALID_UUID }).success).toBe(true);
+  });
+
+  it('rejects non-uuid projectId in listCandidatesInputSchema', () => {
+    expect(listCandidatesInputSchema.safeParse({ projectId: 'bad' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in listCandidatesInputSchema', () => {
+    expect(listCandidatesInputSchema.safeParse({ projectId: VALID_UUID }).success).toBe(true);
+  });
+
+  it('rejects non-uuid candidateId in updateCandidateStatusInputSchema', () => {
+    expect(
+      updateCandidateStatusInputSchema.safeParse({ candidateId: 'bad', status: 'approved' }).success,
+    ).toBe(false);
+  });
+
+  it('rejects invalid status in updateCandidateStatusInputSchema', () => {
+    expect(
+      updateCandidateStatusInputSchema.safeParse({ candidateId: VALID_UUID, status: 'suggested' }).success,
+    ).toBe(false);
+  });
+
+  it('accepts approved status in updateCandidateStatusInputSchema', () => {
+    expect(
+      updateCandidateStatusInputSchema.safeParse({ candidateId: VALID_UUID, status: 'approved' }).success,
+    ).toBe(true);
+  });
+
+  it('accepts rejected status in updateCandidateStatusInputSchema', () => {
+    expect(
+      updateCandidateStatusInputSchema.safeParse({ candidateId: VALID_UUID, status: 'rejected' }).success,
     ).toBe(true);
   });
 });

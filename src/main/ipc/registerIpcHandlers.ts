@@ -53,6 +53,7 @@ import { SubtitleService } from '@main/services/subtitle/subtitleService';
 import { SynchronizationService } from '@main/services/synchronization/SynchronizationService';
 import type { AiService } from '@main/services/ai/aiService';
 import type { AiConfigurationService } from '@main/services/ai/aiConfigurationService';
+import { ClipCandidateService } from '@main/services/ai/clipCandidateService';
 import {
   aiConfigurationStatusResponseSchema,
   aiSetApiKeyInputSchema,
@@ -63,6 +64,16 @@ import {
   aiRecordConsentOutputSchema,
   AI_ERROR_MESSAGES,
 } from '@shared/schemas/ai';
+import {
+  generateCandidatesInputSchema,
+  generateCandidatesOutputSchema,
+  cancelGenerationInputSchema,
+  cancelGenerationOutputSchema,
+  listCandidatesInputSchema,
+  listCandidatesOutputSchema,
+  updateCandidateStatusInputSchema,
+  updateCandidateStatusOutputSchema,
+} from '@shared/schemas/candidates';
 import {
   subtitleSelectInputSchema,
   subtitleParseInputSchema,
@@ -84,6 +95,7 @@ export const registerIpcHandlers = ({ databaseService, videoService, aiService, 
   const jobService = new JobService(databaseService);
   const subtitleService = new SubtitleService(databaseService);
   const synchronizationService = new SynchronizationService(databaseService);
+  const clipCandidateService = new ClipCandidateService(databaseService, aiService, aiConfigurationService);
   const sanitizeSettingsUpdate = (payload: {
     ffmpegPathOverride?: string | null | undefined;
     ffprobePathOverride?: string | null | undefined;
@@ -409,6 +421,34 @@ export const registerIpcHandlers = ({ databaseService, videoService, aiService, 
       aiConfigurationService.recordConsent();
       return { ok: true as const };
     },
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_GENERATE_CANDIDATES,
+    generateCandidatesInputSchema,
+    generateCandidatesOutputSchema,
+    ({ projectId }) => clipCandidateService.generateCandidates(projectId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_CANCEL_GENERATION,
+    cancelGenerationInputSchema,
+    cancelGenerationOutputSchema,
+    ({ projectId }) => clipCandidateService.cancelGeneration(projectId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_LIST_CANDIDATES,
+    listCandidatesInputSchema,
+    listCandidatesOutputSchema,
+    ({ projectId }) => clipCandidateService.listCandidates(projectId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_UPDATE_CANDIDATE_STATUS,
+    updateCandidateStatusInputSchema,
+    updateCandidateStatusOutputSchema,
+    ({ candidateId, status }) => clipCandidateService.updateCandidateStatus(candidateId, status),
   );
 
   registerValidatedHandler(
