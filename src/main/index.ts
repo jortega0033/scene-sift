@@ -10,7 +10,7 @@ import { applyCsp } from '@main/security/csp';
 
 // Must run before app.ready
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'local', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } },
+  { scheme: 'local', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: false, stream: true } },
 ]);
 
 let dbService: DatabaseService | null = null;
