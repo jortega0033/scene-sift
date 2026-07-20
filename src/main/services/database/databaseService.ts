@@ -678,7 +678,7 @@ export class DatabaseService {
       .select()
       .from(clipCandidatesTable)
       .where(eq(clipCandidatesTable.projectId, projectId))
-      .orderBy(asc(clipCandidatesTable.sortOrder))
+      .orderBy(desc(clipCandidatesTable.scoreRaw), asc(clipCandidatesTable.sortOrder))
       .all();
 
     const candidates: ClipCandidate[] = dbRows.map((r) => ({

@@ -23,8 +23,9 @@ const VALID_UUID = '11111111-1111-4111-8111-111111111111';
 
 const makeAiServiceMock = (
   result?: AiCandidatesOutput | Error,
+  configStatus = 'available',
 ): AiService => ({
-  getConfigurationStatus: vi.fn().mockReturnValue('available'),
+  getConfigurationStatus: vi.fn().mockReturnValue(configStatus),
   testConnection: vi.fn(),
   cancelTestConnection: vi.fn(),
   cancelRequest: vi.fn(),
@@ -131,6 +132,54 @@ describe('ClipCandidateService', () => {
       await expect(svc.generateCandidates(randomUUID())).rejects.toMatchObject({
         code: 'PROJECT_NOT_FOUND',
       });
+
+      db.close();
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('throws AI_NOT_CONFIGURED when AI not configured', async () => {
+      const { db, dir } = setupDb();
+      const project = createProjectWithSubtitle(db);
+      const ai = makeAiServiceMock(undefined, 'unconfigured');
+      const svc = new ClipCandidateService(db, ai);
+
+      await expect(svc.generateCandidates(project.id)).rejects.toMatchObject({
+        code: 'AI_NOT_CONFIGURED',
+      });
+
+      db.close();
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('throws AI_PROVIDER_UNAVAILABLE when AI not available', async () => {
+      const { db, dir } = setupDb();
+      const project = createProjectWithSubtitle(db);
+      const ai = makeAiServiceMock(undefined, 'unavailable');
+      const svc = new ClipCandidateService(db, ai);
+
+      await expect(svc.generateCandidates(project.id)).rejects.toMatchObject({
+        code: 'AI_PROVIDER_UNAVAILABLE',
+      });
+
+      db.close();
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('filters candidates with endMs exceeding video duration', async () => {
+      const { db, dir } = setupDb();
+      const project = createProjectWithSubtitle(db);
+      const ai = makeAiServiceMock({
+        candidates: [
+          { startMs: 0, endMs: 5000, title: 'Valid', reason: 'ok', score: 0.9 },
+          { startMs: 14000, endMs: 20000, title: 'Exceeds duration', reason: 'bad', score: 0.8 },
+        ],
+      });
+      const svc = new ClipCandidateService(db, ai);
+
+      const result = await svc.generateCandidates(project.id);
+      expect(result.candidateCount).toBe(1);
+      const listed = svc.listCandidates(project.id);
+      expect(listed.candidates[0].title).toBe('Valid');
 
       db.close();
       rmSync(dir, { recursive: true, force: true });

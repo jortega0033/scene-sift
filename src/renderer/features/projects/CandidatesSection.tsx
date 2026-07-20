@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import type { ProjectRecord } from '@shared/schemas/project';
 import type { ClipCandidate } from '@shared/schemas/candidates';
 import {
@@ -110,22 +111,42 @@ function CandidateRow({
 }
 
 export const CandidatesSection = ({ project }: CandidatesSectionProps) => {
-  const canGenerate =
+  const subtitleReady =
     project.subtitleStatus === 'ready' || project.subtitleStatus === 'ready_with_warnings';
+  const projectReady = project.status === 'ready';
 
-  const candidatesQuery = useCandidates(project.id);
+  const aiConfigQuery = useQuery({
+    queryKey: ['ai-config-status'],
+    queryFn: () => window.sceneSift.ai.getConfigurationStatus(),
+    enabled: subtitleReady && projectReady,
+  });
+  const aiAvailable = aiConfigQuery.data?.configurationStatus === 'available';
+
+  const candidatesQuery = useCandidates(subtitleReady && projectReady ? project.id : null);
   const generate = useGenerateCandidates();
   const cancel = useCancelGeneration();
 
   const data = candidatesQuery.data;
   const isGenerating = data?.generationStatus === 'generating' || generate.isPending;
+  const canGenerate = subtitleReady && projectReady && aiAvailable;
 
-  if (!canGenerate) {
+  if (!subtitleReady) {
     return (
       <div data-testid="candidates-section" className="border-t border-border pt-4 space-y-2">
         <p className="text-label uppercase tracking-label text-muted-foreground">Candidates</p>
         <p className="text-xs text-muted-foreground">
           Parse the subtitle file first to enable candidate generation.
+        </p>
+      </div>
+    );
+  }
+
+  if (!projectReady) {
+    return (
+      <div data-testid="candidates-section" className="border-t border-border pt-4 space-y-2">
+        <p className="text-label uppercase tracking-label text-muted-foreground">Candidates</p>
+        <p className="text-xs text-muted-foreground">
+          Project inspection must succeed before generating candidates.
         </p>
       </div>
     );
@@ -170,12 +191,18 @@ export const CandidatesSection = ({ project }: CandidatesSectionProps) => {
         <p className="text-xs text-muted-foreground">No candidates returned by the model.</p>
       )}
 
+      {!aiAvailable && !aiConfigQuery.isLoading && (
+        <p className="text-xs text-muted-foreground" data-testid="ai-not-configured-message">
+          Configure and test an AI provider to enable candidate generation.
+        </p>
+      )}
+
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           data-testid="generate-candidates-button"
           className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-foreground bg-foreground px-3 text-sm font-medium text-background disabled:opacity-50"
-          disabled={isGenerating}
+          disabled={!canGenerate || isGenerating}
           onClick={() => void generate.mutateAsync(project.id)}
         >
           {isGenerating ? 'Generating…' : 'Generate candidates'}

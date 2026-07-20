@@ -304,7 +304,8 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
     },
     ai: {
       getConfigurationStatus: async () => {
-        if (fixture.name === 'ai-provider-available') {
+        const aiAvailableFixtures = ['ai-provider-available', 'candidates-not-ready', 'candidates-generating', 'candidates-ready'];
+        if (aiAvailableFixtures.includes(fixture.name)) {
           return {
             configurationStatus: 'available' as const,
             maskedEndpoint: 'https://api',

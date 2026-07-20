@@ -65,13 +65,17 @@ export const updateCandidateStatusOutputSchema = z.object({
 });
 
 // Schema for AI raw output validation (used by structuredOutputParser)
-export const aiCandidateItemSchema = z.object({
-  startMs: z.number().int().nonnegative(),
-  endMs: z.number().int().positive(),
-  title: z.string().max(120),
-  reason: z.string().max(500),
-  score: z.number().min(0).max(1),
-});
+export const aiCandidateItemSchema = z
+  .object({
+    startMs: z.number().int().nonnegative(),
+    endMs: z.number().int().positive(),
+    title: z.string().max(120),
+    reason: z.string().max(500),
+    score: z.number().min(0).max(1),
+  })
+  .refine((c) => c.startMs < c.endMs, { message: 'startMs must be less than endMs' })
+  .refine((c) => c.endMs - c.startMs >= 5_000, { message: 'Clip duration must be >= 5000ms' })
+  .refine((c) => c.endMs - c.startMs <= 180_000, { message: 'Clip duration must be <= 180000ms' });
 
 export const aiCandidatesOutputSchema = z.object({
   candidates: z.array(aiCandidateItemSchema).min(1).max(20),

@@ -3,14 +3,18 @@ import { AppError } from '@main/utils/errors';
 import type { DatabaseService } from '@main/services/database/databaseService';
 import type { AiService } from './aiService';
 import type { AiConfigurationService } from './aiConfigurationService';
+import { transcriptService } from '@main/services/transcript/transcriptService';
 import { PROMPT_REGISTRY } from '@shared/prompts/registry';
+import { AI_ERROR_MESSAGES } from '@shared/schemas/ai';
 import type {
   GenerateCandidatesOutput,
   ListCandidatesOutput,
+  AiCandidateItem,
 } from '@shared/schemas/candidates';
 import type { SubtitleCue } from '@shared/schemas/subtitle';
 
 const MAX_TRANSCRIPT_CHARS = 28_000;
+const TRANSCRIPT_GAP_THRESHOLD_MS = 500;
 
 function msToTimestamp(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
@@ -22,10 +26,24 @@ function msToTimestamp(ms: number): string {
 }
 
 function buildTranscriptText(cues: SubtitleCue[]): string {
-  const lines = cues.map((c) => `[${msToTimestamp(c.startMs)} - ${msToTimestamp(c.endMs)}] ${c.text}`);
+  const entries = transcriptService.generateTranscript(cues, { gapThresholdMs: TRANSCRIPT_GAP_THRESHOLD_MS });
+  const lines = entries.map((e) => `[${msToTimestamp(e.startMs)} - ${msToTimestamp(e.endMs)}] ${e.text}`);
   const full = lines.join('\n');
   if (full.length <= MAX_TRANSCRIPT_CHARS) return full;
   return full.slice(0, MAX_TRANSCRIPT_CHARS) + '\n[truncated]';
+}
+
+function deduplicateCandidates(candidates: AiCandidateItem[]): AiCandidateItem[] {
+  const kept: AiCandidateItem[] = [];
+  for (const candidate of candidates) {
+    const overlapsWith = kept.some((k) => {
+      const overlap = Math.max(0, Math.min(k.endMs, candidate.endMs) - Math.max(k.startMs, candidate.startMs));
+      const minDuration = Math.min(k.endMs - k.startMs, candidate.endMs - candidate.startMs);
+      return minDuration > 0 && overlap / minDuration > 0.5;
+    });
+    if (!overlapsWith) kept.push(candidate);
+  }
+  return kept;
 }
 
 function requestIdForProject(projectId: string): string {
@@ -56,6 +74,14 @@ export class ClipCandidateService {
     const doc = this.db.getSubtitleDocument(projectId);
     if (!doc || doc.cues.length === 0) {
       throw new AppError('SUBTITLE_NOT_READY', 'No subtitle cues available.');
+    }
+
+    const configStatus = this.ai.getConfigurationStatus();
+    if (configStatus === 'unconfigured') {
+      throw new AppError('AI_NOT_CONFIGURED', AI_ERROR_MESSAGES.AI_NOT_CONFIGURED);
+    }
+    if (configStatus !== 'available') {
+      throw new AppError('AI_PROVIDER_UNAVAILABLE', AI_ERROR_MESSAGES.AI_PROVIDER_UNAVAILABLE);
     }
 
     if (this.activeProjectIds.has(projectId)) {
@@ -93,7 +119,13 @@ export class ClipCandidateService {
       );
 
       const now = Date.now();
-      const candidateRows = result.data.candidates.map((item, idx) => ({
+      const validatedCandidates = deduplicateCandidates(
+        result.data.candidates
+          .sort((a, b) => b.score - a.score)
+          .filter((c) => c.endMs <= videoDurationMs),
+      );
+
+      const candidateRows = validatedCandidates.map((item, idx) => ({
         id: randomUUID(),
         projectId,
         generationId,
@@ -117,7 +149,7 @@ export class ClipCandidateService {
         candidateGeneratedAt: now,
       });
 
-      return { ok: true, candidateCount: candidateRows.length, generationId };
+      return { ok: true, candidateCount: validatedCandidates.length, generationId };
     } catch (err) {
       const isCancel = err instanceof Error && err.name === 'AbortError';
       const status = isCancel ? 'cancelled' : 'failed';

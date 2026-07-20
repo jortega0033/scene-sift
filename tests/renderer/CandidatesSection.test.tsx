@@ -59,8 +59,10 @@ const makeListOutput = (overrides: Partial<ListCandidatesOutput> = {}): ListCand
   ...overrides,
 });
 
+const AVAILABLE_CONFIG = { configurationStatus: 'available', maskedEndpoint: null, model: null, providerType: 'openai_compatible', lastTestedAt: null, lastTestError: null, consentRecordedAt: null };
+
 const makeAiApi = (overrides: Record<string, unknown> = {}) => ({
-  getConfigurationStatus: vi.fn(),
+  getConfigurationStatus: vi.fn().mockResolvedValue(AVAILABLE_CONFIG),
   setApiKey: vi.fn(),
   testConnection: vi.fn(),
   cancelTest: vi.fn(),
@@ -110,6 +112,27 @@ describe('CandidatesSection', () => {
     it('shows placeholder for status=parse_failed', async () => {
       renderSection(makeProject({ subtitleStatus: 'parse_failed' }));
       expect(screen.getByText(/parse the subtitle file first/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('project not ready', () => {
+    it('shows placeholder when project status is not ready', () => {
+      renderSection(makeProject({ status: 'inspection_failed' }));
+      expect(screen.getByTestId('candidates-section')).toBeInTheDocument();
+      expect(screen.getByText(/inspection must succeed/i)).toBeInTheDocument();
+      expect(screen.queryByTestId('generate-candidates-button')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('AI not configured', () => {
+    it('disables generate button and shows message when AI not available', async () => {
+      renderSection(makeProject(), {
+        getConfigurationStatus: vi.fn().mockResolvedValue({ ...AVAILABLE_CONFIG, configurationStatus: 'unconfigured' }),
+      });
+
+      await screen.findByTestId('generate-candidates-button');
+      expect(screen.getByTestId('generate-candidates-button')).toBeDisabled();
+      expect(await screen.findByTestId('ai-not-configured-message')).toBeInTheDocument();
     });
   });
 
