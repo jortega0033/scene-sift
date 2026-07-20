@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type AppRoute = 'projects' | 'queue' | 'settings';
+export type AppRoute = 'projects' | 'queue' | 'settings' | 'preview';
 
 type UiState = {
   route: AppRoute;
