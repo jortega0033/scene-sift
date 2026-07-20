@@ -159,6 +159,47 @@ const sceneSiftApi: SceneSiftApi = {
         return Promise.reject(new TypeError('endMs must be greater than startMs'));
       return ipcRenderer.invoke(IPC_CHANNELS.AI_UPDATE_CANDIDATE_TIMING, { candidateId, startMs, endMs });
     },
+    generateClipCues: (candidateId: string) => {
+      if (!UUID_RE.test(candidateId))
+        return Promise.reject(new TypeError('candidateId must be a UUID'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_GENERATE_CLIP_CUES, { candidateId });
+    },
+    listClipCues: (candidateId: string) => {
+      if (!UUID_RE.test(candidateId))
+        return Promise.reject(new TypeError('candidateId must be a UUID'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_LIST_CLIP_CUES, { candidateId });
+    },
+    updateClipCue: (cueId: string, startMs: number, endMs: number, text: string) => {
+      if (!UUID_RE.test(cueId))
+        return Promise.reject(new TypeError('cueId must be a UUID'));
+      if (!Number.isInteger(startMs) || startMs < 0)
+        return Promise.reject(new TypeError('startMs must be a non-negative integer'));
+      if (!Number.isInteger(endMs) || endMs <= 0 || endMs > 86_400_000)
+        return Promise.reject(new TypeError('endMs must be a positive integer <= 86400000'));
+      if (endMs <= startMs)
+        return Promise.reject(new TypeError('endMs must be greater than startMs'));
+      if (typeof text !== 'string' || text.length < 1 || text.length > 500)
+        return Promise.reject(new TypeError('text must be a non-empty string (max 500 chars)'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_UPDATE_CLIP_CUE, { cueId, startMs, endMs, text });
+    },
+    deleteClipCue: (cueId: string) => {
+      if (!UUID_RE.test(cueId))
+        return Promise.reject(new TypeError('cueId must be a UUID'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_DELETE_CLIP_CUE, { cueId });
+    },
+    addClipCue: (candidateId: string, startMs: number, endMs: number, text: string) => {
+      if (!UUID_RE.test(candidateId))
+        return Promise.reject(new TypeError('candidateId must be a UUID'));
+      if (!Number.isInteger(startMs) || startMs < 0)
+        return Promise.reject(new TypeError('startMs must be a non-negative integer'));
+      if (!Number.isInteger(endMs) || endMs <= 0 || endMs > 86_400_000)
+        return Promise.reject(new TypeError('endMs must be a positive integer <= 86400000'));
+      if (endMs <= startMs)
+        return Promise.reject(new TypeError('endMs must be greater than startMs'));
+      if (typeof text !== 'string' || text.length < 1 || text.length > 500)
+        return Promise.reject(new TypeError('text must be a non-empty string (max 500 chars)'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_ADD_CLIP_CUE, { candidateId, startMs, endMs, text });
+    },
   },
 };
 

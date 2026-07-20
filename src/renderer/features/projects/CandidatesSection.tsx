@@ -10,6 +10,7 @@ import {
   useUpdateCandidateNotes,
 } from '@renderer/hooks/useCandidates';
 import { TimingEditorModal } from './TimingEditorModal';
+import { ClipCuesSection } from './ClipCuesSection';
 
 type CandidatesSectionProps = {
   project: ProjectRecord;
@@ -73,6 +74,7 @@ function CandidateRow({
   const updateStatus = useUpdateCandidateStatus();
   const updateNotes = useUpdateCandidateNotes();
   const [localNotes, setLocalNotes] = useState(candidate.notes ?? '');
+  const [showCues, setShowCues] = useState(false);
 
   const handleApprove = () =>
     void updateStatus.mutateAsync({ candidateId: candidate.id, projectId, status: 'approved' });
@@ -118,6 +120,13 @@ function CandidateRow({
         aria-label="Candidate notes"
       />
 
+      {showCues && candidate.candidateStatus === 'approved' && (
+        <ClipCuesSection
+          candidateId={candidate.id}
+          candidateDurationMs={candidate.endMs - candidate.startMs}
+        />
+      )}
+
       {candidate.candidateStatus !== 'rejected' && (
         <div className="flex gap-2 pt-1">
           {candidate.candidateStatus !== 'approved' && (
@@ -132,14 +141,24 @@ function CandidateRow({
             </button>
           )}
           {candidate.candidateStatus === 'approved' && (
-            <button
-              type="button"
-              data-testid="edit-timing-button"
-              className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-border px-2 text-xs hover:bg-muted"
-              onClick={() => onEditTiming(candidate)}
-            >
-              Edit timing
-            </button>
+            <>
+              <button
+                type="button"
+                data-testid="edit-timing-button"
+                className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-border px-2 text-xs hover:bg-muted"
+                onClick={() => onEditTiming(candidate)}
+              >
+                Edit timing
+              </button>
+              <button
+                type="button"
+                data-testid="edit-cues-button"
+                className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-border px-2 text-xs hover:bg-muted"
+                onClick={() => setShowCues((v) => !v)}
+              >
+                {showCues ? 'Hide cues' : 'Edit cues'}
+              </button>
+            </>
           )}
           {candidate.candidateStatus !== 'skipped' && (
             <button

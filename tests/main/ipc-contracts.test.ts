@@ -24,6 +24,13 @@ import {
   updateCandidateNotesInputSchema,
   updateCandidateTimingInputSchema,
 } from '@shared/schemas/candidates';
+import {
+  generateClipCuesInputSchema,
+  listClipCuesInputSchema,
+  updateClipCueInputSchema,
+  deleteClipCueInputSchema,
+  addClipCueInputSchema,
+} from '@shared/schemas/clipCues';
 
 describe('ipc contracts', () => {
   it('registers explicit channels only', () => {
@@ -257,7 +264,7 @@ describe('transcript ipc contracts', () => {
 });
 
 describe('ai ipc contracts', () => {
-  it('registers all 12 ai:* channels', () => {
+  it('registers all 17 ai:* channels', () => {
     expect(ALL_IPC_CHANNELS).toContain('ai:getConfigurationStatus');
     expect(ALL_IPC_CHANNELS).toContain('ai:setApiKey');
     expect(ALL_IPC_CHANNELS).toContain('ai:testConnection');
@@ -270,6 +277,11 @@ describe('ai ipc contracts', () => {
     expect(ALL_IPC_CHANNELS).toContain('ai:updateCandidateStatus');
     expect(ALL_IPC_CHANNELS).toContain('ai:updateCandidateNotes');
     expect(ALL_IPC_CHANNELS).toContain('ai:updateCandidateTiming');
+    expect(ALL_IPC_CHANNELS).toContain('ai:generateClipCues');
+    expect(ALL_IPC_CHANNELS).toContain('ai:listClipCues');
+    expect(ALL_IPC_CHANNELS).toContain('ai:updateClipCue');
+    expect(ALL_IPC_CHANNELS).toContain('ai:deleteClipCue');
+    expect(ALL_IPC_CHANNELS).toContain('ai:addClipCue');
   });
 
   it('no generic ai:invoke channel exists', () => {
@@ -281,7 +293,7 @@ describe('ai ipc contracts', () => {
   it('ai channels are unique (no duplicates)', () => {
     const aiChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('ai:'));
     expect(new Set(aiChannels).size).toBe(aiChannels.length);
-    expect(aiChannels.length).toBe(12);
+    expect(aiChannels.length).toBe(17);
   });
 
   it('rejects empty apiKey in aiSetApiKeyInputSchema', () => {
@@ -444,6 +456,71 @@ describe('ai candidate ipc contracts', () => {
   it('accepts valid timing input in updateCandidateTimingInputSchema', () => {
     expect(
       updateCandidateTimingInputSchema.safeParse({ candidateId: VALID_UUID, startMs: 1000, endMs: 5000 }).success,
+    ).toBe(true);
+  });
+});
+
+describe('ai clip cue ipc contracts', () => {
+  const VALID_UUID = '11111111-1111-4111-8111-111111111111';
+  const CUE_UUID = '22222222-2222-4222-8222-222222222222';
+
+  it('rejects non-uuid candidateId in generateClipCuesInputSchema', () => {
+    expect(generateClipCuesInputSchema.safeParse({ candidateId: 'bad' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in generateClipCuesInputSchema', () => {
+    expect(generateClipCuesInputSchema.safeParse({ candidateId: VALID_UUID }).success).toBe(true);
+  });
+
+  it('rejects non-uuid candidateId in listClipCuesInputSchema', () => {
+    expect(listClipCuesInputSchema.safeParse({ candidateId: 'bad' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in listClipCuesInputSchema', () => {
+    expect(listClipCuesInputSchema.safeParse({ candidateId: VALID_UUID }).success).toBe(true);
+  });
+
+  it('rejects endMs <= startMs in updateClipCueInputSchema', () => {
+    expect(
+      updateClipCueInputSchema.safeParse({ cueId: CUE_UUID, startMs: 5000, endMs: 5000, text: 'Hi' }).success,
+    ).toBe(false);
+  });
+
+  it('rejects empty text in updateClipCueInputSchema', () => {
+    expect(
+      updateClipCueInputSchema.safeParse({ cueId: CUE_UUID, startMs: 0, endMs: 1000, text: '' }).success,
+    ).toBe(false);
+  });
+
+  it('rejects text exceeding 500 chars in updateClipCueInputSchema', () => {
+    expect(
+      updateClipCueInputSchema.safeParse({ cueId: CUE_UUID, startMs: 0, endMs: 1000, text: 'a'.repeat(501) }).success,
+    ).toBe(false);
+  });
+
+  it('accepts valid updateClipCueInputSchema', () => {
+    expect(
+      updateClipCueInputSchema.safeParse({ cueId: CUE_UUID, startMs: 0, endMs: 5000, text: 'Hello' }).success,
+    ).toBe(true);
+  });
+
+  it('rejects non-uuid cueId in deleteClipCueInputSchema', () => {
+    expect(deleteClipCueInputSchema.safeParse({ cueId: 'bad' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in deleteClipCueInputSchema', () => {
+    expect(deleteClipCueInputSchema.safeParse({ cueId: CUE_UUID }).success).toBe(true);
+  });
+
+  it('rejects endMs <= startMs in addClipCueInputSchema', () => {
+    expect(
+      addClipCueInputSchema.safeParse({ candidateId: VALID_UUID, startMs: 1000, endMs: 1000, text: 'Hi' }).success,
+    ).toBe(false);
+  });
+
+  it('accepts valid addClipCueInputSchema', () => {
+    expect(
+      addClipCueInputSchema.safeParse({ candidateId: VALID_UUID, startMs: 0, endMs: 3000, text: 'New cue' }).success,
     ).toBe(true);
   });
 });

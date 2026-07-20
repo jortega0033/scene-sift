@@ -6,11 +6,22 @@ defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-m7-implementation
+- milestone: M7 Clip Candidate Generation — Implementation
+- branch: feature/m7-clip-candidates (from overnight/m3-plus-2026-07-20)
+- risk_level: 3 (main/IPC/migrations, AI output validation)
+- status: in_progress
+- started: 2026-07-20
+- governance_decision: GD-005
+- parent_run: 2026-07-20T-autonomous-roadmap-completion
+
+## Previous active run (complete — M6 ACCEPTED AND INTEGRATED)
+
 - run_id: 2026-07-20T-m6-implementation
 - milestone: M6 AI Provider Infrastructure — Implementation
 - branch: feature/m6-ai-provider (from overnight/m3-plus-2026-07-20 a43a82b)
 - risk_level: 3 (main/preload/IPC/migrations risk paths)
-- status: acceptance_audit_ACCEPTED — awaiting human merge review
+- status: ACCEPTED AND INTEGRATED — owner override 2026-07-20
 - started: 2026-07-20
 - governance_decision: GD-005
 - phase_0: COMPLETE — all 4 contradictions resolved, validators pass (governance:validate, architecture:validate, typecheck, lint, 419/419 tests)

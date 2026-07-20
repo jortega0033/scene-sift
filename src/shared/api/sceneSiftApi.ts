@@ -18,6 +18,11 @@ import type {
   GenerateCandidatesOutput,
   ListCandidatesOutput,
 } from '@shared/schemas/candidates';
+import type {
+  GenerateClipCuesOutput,
+  ListClipCuesOutput,
+  ClipCue,
+} from '@shared/schemas/clipCues';
 
 export type DatabaseHealth = {
   ok: boolean;
@@ -128,6 +133,21 @@ export type SceneSiftApi = {
       startMs: number,
       endMs: number,
     ) => Promise<{ ok: true }>;
+    generateClipCues: (candidateId: string) => Promise<GenerateClipCuesOutput>;
+    listClipCues: (candidateId: string) => Promise<ListClipCuesOutput>;
+    updateClipCue: (
+      cueId: string,
+      startMs: number,
+      endMs: number,
+      text: string,
+    ) => Promise<{ ok: true }>;
+    deleteClipCue: (cueId: string) => Promise<{ ok: true }>;
+    addClipCue: (
+      candidateId: string,
+      startMs: number,
+      endMs: number,
+      text: string,
+    ) => Promise<{ cue: ClipCue }>;
   };
 };
 
