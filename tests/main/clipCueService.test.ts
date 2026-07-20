@@ -218,6 +218,44 @@ describe('extractCuesForClip (via generateClipCues)', () => {
     }
   });
 
+  it('clamps cue spanning entire clip (both boundaries clamped)', async () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    try {
+      const { db, projectId } = await buildDb(dbPath, migrationsFolder);
+      const candidateId = randomUUID();
+      buildCandidateRow(db, projectId, candidateId, 10_000, 30_000);
+      buildSubtitleDoc(db, projectId, [{ index: 0, startMs: 5_000, endMs: 35_000, text: 'Spans clip' }]);
+      const svc = new ClipCueService(db);
+      svc.generateClipCues(candidateId);
+      const { cues } = svc.listClipCues(candidateId);
+      expect(cues).toHaveLength(1);
+      expect(cues[0]!.startMs).toBe(0);       // clamped to clipStart, rebased to 0
+      expect(cues[0]!.endMs).toBe(20_000);    // clamped to clipEnd, rebased to duration
+      db.close();
+    } finally {
+      rmSync(dir, { recursive: true });
+    }
+  });
+
+  it('excludes cue that becomes zero-duration after clamping', async () => {
+    const { dir, dbPath, migrationsFolder } = createDbPath();
+    try {
+      const { db, projectId } = await buildDb(dbPath, migrationsFolder);
+      const candidateId = randomUUID();
+      // Clip: 10000–30000. Point-cue (startMs === endMs) inside clip.
+      // Passes both boundary checks but clampedEnd === clampedStart → excluded.
+      buildCandidateRow(db, projectId, candidateId, 10_000, 30_000);
+      buildSubtitleDoc(db, projectId, [{ index: 0, startMs: 15_000, endMs: 15_000, text: 'Point cue' }]);
+      const svc = new ClipCueService(db);
+      svc.generateClipCues(candidateId);
+      const { cues } = svc.listClipCues(candidateId);
+      expect(cues).toHaveLength(0);
+      db.close();
+    } finally {
+      rmSync(dir, { recursive: true });
+    }
+  });
+
   it('generateClipCues is idempotent — second call replaces first', async () => {
     const { dir, dbPath, migrationsFolder } = createDbPath();
     try {
