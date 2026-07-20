@@ -725,6 +725,15 @@ export class DatabaseService {
       .run();
   }
 
+  public updateCandidateTiming(candidateId: string, startMs: number, endMs: number): void {
+    const orm = this.ensureOrm();
+    orm
+      .update(clipCandidatesTable)
+      .set({ startMs, endMs, updatedAt: Date.now() })
+      .where(eq(clipCandidatesTable.id, candidateId))
+      .run();
+  }
+
   private ensureDb(): Database.Database {
     if (!this.db) {
       throw new AppError('DATABASE_NOT_INITIALIZED', 'Database service is not initialized.');

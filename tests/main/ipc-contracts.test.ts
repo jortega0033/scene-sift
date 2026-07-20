@@ -22,6 +22,7 @@ import {
   listCandidatesInputSchema,
   updateCandidateStatusInputSchema,
   updateCandidateNotesInputSchema,
+  updateCandidateTimingInputSchema,
 } from '@shared/schemas/candidates';
 
 describe('ipc contracts', () => {
@@ -256,7 +257,7 @@ describe('transcript ipc contracts', () => {
 });
 
 describe('ai ipc contracts', () => {
-  it('registers all 11 ai:* channels', () => {
+  it('registers all 12 ai:* channels', () => {
     expect(ALL_IPC_CHANNELS).toContain('ai:getConfigurationStatus');
     expect(ALL_IPC_CHANNELS).toContain('ai:setApiKey');
     expect(ALL_IPC_CHANNELS).toContain('ai:testConnection');
@@ -268,6 +269,7 @@ describe('ai ipc contracts', () => {
     expect(ALL_IPC_CHANNELS).toContain('ai:listCandidates');
     expect(ALL_IPC_CHANNELS).toContain('ai:updateCandidateStatus');
     expect(ALL_IPC_CHANNELS).toContain('ai:updateCandidateNotes');
+    expect(ALL_IPC_CHANNELS).toContain('ai:updateCandidateTiming');
   });
 
   it('no generic ai:invoke channel exists', () => {
@@ -279,7 +281,7 @@ describe('ai ipc contracts', () => {
   it('ai channels are unique (no duplicates)', () => {
     const aiChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('ai:'));
     expect(new Set(aiChannels).size).toBe(aiChannels.length);
-    expect(aiChannels.length).toBe(11);
+    expect(aiChannels.length).toBe(12);
   });
 
   it('rejects empty apiKey in aiSetApiKeyInputSchema', () => {
@@ -410,5 +412,38 @@ describe('ai candidate ipc contracts', () => {
     expect(
       updateCandidateNotesInputSchema.safeParse({ candidateId: VALID_UUID, notes: 'a'.repeat(1001) }).success,
     ).toBe(false);
+  });
+
+  it('rejects non-uuid candidateId in updateCandidateTimingInputSchema', () => {
+    expect(
+      updateCandidateTimingInputSchema.safeParse({ candidateId: 'bad', startMs: 0, endMs: 1000 }).success,
+    ).toBe(false);
+  });
+
+  it('rejects endMs <= startMs in updateCandidateTimingInputSchema', () => {
+    expect(
+      updateCandidateTimingInputSchema.safeParse({ candidateId: VALID_UUID, startMs: 5000, endMs: 5000 }).success,
+    ).toBe(false);
+    expect(
+      updateCandidateTimingInputSchema.safeParse({ candidateId: VALID_UUID, startMs: 5000, endMs: 4999 }).success,
+    ).toBe(false);
+  });
+
+  it('rejects negative startMs in updateCandidateTimingInputSchema', () => {
+    expect(
+      updateCandidateTimingInputSchema.safeParse({ candidateId: VALID_UUID, startMs: -1, endMs: 1000 }).success,
+    ).toBe(false);
+  });
+
+  it('rejects endMs exceeding 86400000 in updateCandidateTimingInputSchema', () => {
+    expect(
+      updateCandidateTimingInputSchema.safeParse({ candidateId: VALID_UUID, startMs: 0, endMs: 86_400_001 }).success,
+    ).toBe(false);
+  });
+
+  it('accepts valid timing input in updateCandidateTimingInputSchema', () => {
+    expect(
+      updateCandidateTimingInputSchema.safeParse({ candidateId: VALID_UUID, startMs: 1000, endMs: 5000 }).success,
+    ).toBe(true);
   });
 });

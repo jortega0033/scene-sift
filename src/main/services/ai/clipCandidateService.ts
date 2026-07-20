@@ -197,4 +197,9 @@ export class ClipCandidateService {
     this.db.updateCandidateNotes(candidateId, notes);
     return { ok: true };
   }
+
+  updateCandidateTiming(candidateId: string, startMs: number, endMs: number): { ok: true } {
+    this.db.updateCandidateTiming(candidateId, startMs, endMs);
+    return { ok: true };
+  }
 }

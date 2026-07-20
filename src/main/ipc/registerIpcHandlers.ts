@@ -75,6 +75,8 @@ import {
   updateCandidateStatusOutputSchema,
   updateCandidateNotesInputSchema,
   updateCandidateNotesOutputSchema,
+  updateCandidateTimingInputSchema,
+  updateCandidateTimingOutputSchema,
 } from '@shared/schemas/candidates';
 import {
   subtitleSelectInputSchema,
@@ -458,6 +460,14 @@ export const registerIpcHandlers = ({ databaseService, videoService, aiService, 
     updateCandidateNotesInputSchema,
     updateCandidateNotesOutputSchema,
     ({ candidateId, notes }) => clipCandidateService.updateCandidateNotes(candidateId, notes),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_UPDATE_CANDIDATE_TIMING,
+    updateCandidateTimingInputSchema,
+    updateCandidateTimingOutputSchema,
+    ({ candidateId, startMs, endMs }) =>
+      clipCandidateService.updateCandidateTiming(candidateId, startMs, endMs),
   );
 
   registerValidatedHandler(

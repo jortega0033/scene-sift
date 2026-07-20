@@ -123,6 +123,11 @@ export type SceneSiftApi = {
       candidateId: string,
       notes: string | null,
     ) => Promise<{ ok: true }>;
+    updateCandidateTiming: (
+      candidateId: string,
+      startMs: number,
+      endMs: number,
+    ) => Promise<{ ok: true }>;
   };
 };
 
