@@ -1,13 +1,13 @@
 # SceneSift — Current Product State
 
 Date: 2026-07-20
-Status: M3 CLOSED. M4 planning pending.
+Status: M4 CLOSED. Merged overnight branch 2026-07-20. M5 planning next.
 
 ---
 
 ## Summary
 
-SceneSift is an Electron desktop app with a working shell, navigation, project CRUD, queue visibility, settings, media inspection, and subtitle parsing. No clip workflow capability exists. The gap between "parse a subtitle" and "produce a clip" is entirely unimplemented.
+SceneSift is an Electron desktop app with a working shell, navigation, project CRUD, queue visibility, settings, media inspection, subtitle parsing, subtitle synchronization checking, and an in-app video preview workspace. Clip generation, AI selection, and publishing are not yet implemented.
 
 ---
 
@@ -110,14 +110,31 @@ SceneSift is an Electron desktop app with a working shell, navigation, project C
 | SyncPanel renderer | ✅ Complete | 6-state display, relative timestamps, warning list |
 | Stale detection | ✅ Complete | Computed from syncCheckedAt vs inspectedAt/subtitleParsedAt |
 
+### Video preview workspace (M4 — CLOSED)
+
+| Feature | Status | Notes |
+|---|---|---|
+| Local video protocol (`local:///video/{uuid}`) | ✅ Complete | `registerSchemesAsPrivileged` + `protocol.handle`, range support, lstat symlink check |
+| VideoService | ✅ Complete | `resolveVideoPath`, `getPlaybackUrl`, `getCues` |
+| IPC channels | ✅ Complete | `video:getPlaybackUrl`, `video:getCues` |
+| Preload bridge (video namespace) | ✅ Complete | Input validation, narrow typed API |
+| CSP update | ✅ Complete | `media-src 'self' local:` added |
+| `useVideoPlayer` hook | ✅ Complete | State machine: `not_ready/loading/paused/playing/error` |
+| VideoPlayer component | ✅ Complete | Purely presentational, video-bg/video-fg tokens |
+| CueList component | ✅ Complete | Scrollable, active-cue highlighting, auto-scroll |
+| SubtitleOverlay component | ✅ Complete | Centered overlay, token-based colors |
+| PreviewPage | ✅ Complete | Lifted state, canPreview gate, two-column layout |
+| Design tokens | ✅ Complete | `--video-bg`, `--video-fg` with opacity modifier support |
+| Component usage docs | ✅ Complete | `docs/design/components/{VideoPlayer,CueList,SubtitleOverlay,PreviewPage}.md` |
+
 ### Governance and QA
 
 | Component | Status | Notes |
 |---|---|---|
 | `pnpm validate` (full composite) | ✅ Green | governance + typecheck + lint + test + build |
-| 299 unit tests | ✅ Pass | 23 test files |
-| 19 visual regression tests | ✅ Pass | Light + dark |
-| 37 E2E (Playwright browser QA) | ✅ Pass | |
+| 353 unit tests | ✅ Pass | 27 test files |
+| 22 visual regression tests | ✅ Pass | Light + dark; all pages including preview |
+| 41 E2E (Playwright browser QA) | ✅ Pass | |
 | Architecture boundary enforcement | ✅ Active | `pnpm architecture:validate` |
 | Dependency policy enforcement | ✅ Active | `pnpm dependencies:validate` |
 | CI SHA pinning | ✅ Active | All 4 workflows pinned |
@@ -126,16 +143,15 @@ SceneSift is an Electron desktop app with a working shell, navigation, project C
 
 ## What is NOT implemented
 
-### Clip selection (gap — target of M4+)
+### Clip selection (gap — target of M7+)
 
 | Missing Feature | Impact |
 |---|---|
 | Subtitle segment selection | No UI for selecting segments to clip |
 | Clip time bounds review | No timeline visualization |
-| Video preview workspace | No preview |
 | Clip metadata (title, note) | No clip-level metadata |
 
-### Clip generation (gap — target of M5+)
+### Clip generation (gap — target of M12+)
 
 | Missing Feature | Impact |
 |---|---|

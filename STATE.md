@@ -6,11 +6,22 @@ defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-m5-planning
+- milestone: M5 Transcript Preparation — Planning and Specification
+- branch: overnight/m3-plus-2026-07-20
+- risk_level: 0 (planning and documentation only — no product code)
+- status: in_progress
+- started: 2026-07-20
+- governance_decision: GD-005
+- next_step: Milestone intake + dependency check → parallel specialist reviews → reconcile findings → record CONDITIONALLY READY or READY
+
+## Previous active run (complete — M4 implemented + integrated)
+
 - run_id: 2026-07-20T-m4-implementation
 - milestone: M4 Video Preview Workspace — Implementation
-- branch: feature/m4-video-preview (base: overnight/m3-plus-2026-07-20)
+- branch: feature/m4-video-preview → overnight/m3-plus-2026-07-20
 - risk_level: 3 (VideoService, protocol handler, preload, CSP — main/preload/IPC risk)
-- status: awaiting-human-merge-review
+- status: complete
 - started: 2026-07-20
 - governance_decision: GD-005
 - acceptance_audit_verdict: M4 ACCEPTED — 0 critical, 0 high findings across 2 independent reviewers
@@ -18,7 +29,8 @@ defaultMode: L2
 - acceptance_audit_design: ACCEPTED (design-system-reviewer, 3 rounds) — all findings resolved: docs/design/components/ created (4 files), video-bg/video-fg tokens added, bg-black/text-white/rgb() replaced with token classes
 - all_validators: typecheck exit 0, lint exit 0, 353/353 unit, governance:validate exit 0, architecture:validate exit 0, design:validate exit 0, test:e2e 41/41, test:visual 22/22
 - electron_smoke: SKIPPED per GD-005 owner override
-- next_step: HUMAN MERGE REVIEW — merge feature/m4-video-preview into overnight/m3-plus-2026-07-20
+- merge_commit: 5edd634 (feat(m4): merge M4 Video Preview Workspace — ACCEPTED)
+- completed: 2026-07-20
 
 ## Previous active run (complete — M4 planning reconciled)
 

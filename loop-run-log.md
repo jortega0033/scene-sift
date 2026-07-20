@@ -1199,3 +1199,40 @@ Append one JSON line per material run.
   "notes": "Test count: 299/299 (pre-M4) → 353/353 (+54: 41 E2E + 3 visual new + existing). Visual snapshot cascade: adding Preview nav item to Layout.tsx broke all 19 existing snapshots — deleted and regenerated all 22 (including 3 new preview scenarios). Design token additions: --video-bg, --video-fg with opacity modifier support for bg-video-bg/60, border-video-fg/30, border-t-video-fg."
 }
 ```
+
+---
+
+## Run: 2026-07-20T-m4-integrate — M4 Integration into overnight branch
+
+```json
+{
+  "run_id": "2026-07-20T-m4-integrate",
+  "task": "m4-video-preview-workspace-integration",
+  "risk_level": 0,
+  "status": "complete",
+  "branch": "overnight/m3-plus-2026-07-20",
+  "governance_decision": "GD-005",
+  "models": {
+    "orchestrator": "claude-sonnet-4-6"
+  },
+  "deliverables": [
+    "feat(m4): merge M4 Video Preview Workspace — ACCEPTED (5edd634) — 62 files, 1610 insertions, 7 deletions",
+    "docs/product/ROADMAP.md — M4 marked CLOSED, Next updated to M5",
+    "docs/product/CURRENT_PRODUCT_STATE.md — M4 section added to implemented, M4 removed from gap, test counts updated to 353/41/22",
+    "STATE.md — M4 implementation run closed (complete), M5 planning run opened"
+  ],
+  "checks": [
+    "pnpm typecheck — exit 0 (post-merge)",
+    "pnpm lint — exit 0 (post-merge)",
+    "pnpm test — exit 0, 353/353 (post-merge)",
+    "pnpm governance:validate — exit 0 (post-merge)",
+    "pnpm architecture:validate — exit 0 (post-merge)",
+    "pnpm design:validate — exit 0 (post-merge)",
+    "pnpm test:e2e — exit 0, 41/41 (post-merge)",
+    "pnpm test:visual — exit 0, 22/22 (post-merge)"
+  ],
+  "completed": "2026-07-20",
+  "outcome": "pass",
+  "verdict": "M4 integrated into overnight/m3-plus-2026-07-20. All post-merge validators exit 0. Product state docs updated. Proceeding to M5 planning."
+}
+```

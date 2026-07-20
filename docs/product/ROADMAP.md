@@ -5,8 +5,8 @@ Source: GPT AI as PO/PM, provided by user 2026-07-19 for future reference.
 **Rule**: One milestone at a time. Every milestone follows:
 Plan/spec → implement on feature branch → targeted specialist review → full validation → acceptance audit → human merge.
 
-**Current status**: M1 CLOSED. M2 CLOSED. M3 CLOSED (overnight branch 2026-07-20).
-**Next**: M4 planning → implementation-readiness verdict → governed implementation on feature branch.
+**Current status**: M1 CLOSED. M2 CLOSED. M3 CLOSED. M4 CLOSED (overnight branch 2026-07-20).
+**Next**: M5 Transcript Preparation — planning → implementation → acceptance audit.
 
 ---
 
@@ -56,13 +56,15 @@ Load a video source file into a project and verify it is a valid video using FFp
 
 **Goal**: In-app video preview player synchronized with subtitle cue display.
 
+**Status: CLOSED** — implemented + audited + merged to overnight branch 2026-07-20. Dual independent audit ACCEPTED (electron-security-reviewer + design-system-reviewer, 3 rounds). Merge commit: 5edd634.
+
 **Key features**:
-- Embedded video player (HTMLVideoElement or mpv via IPC)
+- Embedded video player (HTMLVideoElement via local:///video/{uuid} custom protocol)
 - Subtitle cue overlay synchronized to playback position
 - Playback controls: play/pause, seek, speed
 - Jump-to-cue navigation from subtitle list
 
-**Exit criteria**: Open project with ready+subtitle → preview workspace loads → subtitle cues display during playback.
+**Exit criteria met**: Open project with ready video + ready subtitle → Preview nav → cue list displayed → cues highlight at playback position. 353/353 unit, 41/41 E2E, 22/22 visual tests pass.
 
 ---
 
