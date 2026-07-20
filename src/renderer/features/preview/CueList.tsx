@@ -42,7 +42,7 @@ export const CueList = ({ cues, currentTimeMs, onCueClick }: Props) => {
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
-            <span className="block text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+            <span className="block text-label uppercase tracking-label text-muted-foreground">
               {formatCueTime(cue.startMs)}
             </span>
             <span className="line-clamp-2">{cue.text}</span>
