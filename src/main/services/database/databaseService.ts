@@ -8,9 +8,10 @@ import { asc, desc, eq } from 'drizzle-orm';
 import type { AppSettings } from '@shared/schemas/settings';
 import type { ProjectRecord, MediaMetadata } from '@shared/schemas/project';
 import type { CreateProjectInput } from '@shared/schemas/project';
-import { appSettingsTable, projectsTable, renderJobsTable, subtitleDocumentsTable, aiProviderConfigTable, clipCandidatesTable, clipCuesTable } from '@database/schema';
+import { appSettingsTable, projectsTable, renderJobsTable, subtitleDocumentsTable, aiProviderConfigTable, clipCandidatesTable, clipCuesTable, projectCompositionSettingsTable } from '@database/schema';
 import type { CandidateGenerationStatus, CandidateStatus, ClipCandidate } from '@shared/schemas/candidates';
 import type { ClipCue } from '@shared/schemas/clipCues';
+import type { CompositionSettings, CompositionSettingsPatch } from '@shared/schemas/composition';
 import { AppError } from '@main/utils/errors';
 import type { QueueStatus } from '@shared/types/common';
 import type { InspectionOutcome } from '@main/services/ffmpeg/ffmpegService';
@@ -82,6 +83,7 @@ export class DatabaseService {
     mkdirSync(dirname(this.dbPath), { recursive: true });
 
     this.db = new Database(this.dbPath);
+    this.db.pragma('foreign_keys = ON');
     this.orm = drizzle(this.db);
     migrate(this.orm, {
       migrationsFolder: this.migrationsFolder,
@@ -832,6 +834,96 @@ export class DatabaseService {
     }
 
     return this.orm;
+  }
+
+  public getProjectCompositionSettings(projectId: string): CompositionSettings {
+    const orm = this.ensureOrm();
+    const existing = orm
+      .select()
+      .from(projectCompositionSettingsTable)
+      .where(eq(projectCompositionSettingsTable.projectId, projectId))
+      .get();
+
+    if (existing) {
+      return this.mapCompositionSettings(existing);
+    }
+
+    const now = Date.now();
+    try {
+      orm
+        .insert(projectCompositionSettingsTable)
+        .values({
+          projectId,
+          resolution: '1080x1920',
+          backgroundStyle: 'blur',
+          subtitlePosition: 'bottom',
+          fontFamily: 'Arial',
+          fontSize: 32,
+          fontColor: '#FFFFFF',
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+    } catch {
+      throw new AppError('COMPOSITION_SETTINGS_NOT_FOUND', 'Project not found or composition settings could not be created.');
+    }
+
+    const inserted = orm
+      .select()
+      .from(projectCompositionSettingsTable)
+      .where(eq(projectCompositionSettingsTable.projectId, projectId))
+      .get();
+
+    if (!inserted) {
+      throw new AppError('COMPOSITION_SETTINGS_NOT_FOUND', 'Project not found or composition settings could not be created.');
+    }
+
+    return this.mapCompositionSettings(inserted);
+  }
+
+  public upsertProjectCompositionSettings(
+    projectId: string,
+    patch: CompositionSettingsPatch,
+  ): CompositionSettings {
+    const orm = this.ensureOrm();
+    this.getProjectCompositionSettings(projectId);
+
+    const now = Date.now();
+    try {
+      orm
+        .update(projectCompositionSettingsTable)
+        .set({ ...patch, updatedAt: now })
+        .where(eq(projectCompositionSettingsTable.projectId, projectId))
+        .run();
+    } catch {
+      throw new AppError('COMPOSITION_SETTINGS_WRITE_FAILED', 'Failed to update composition settings.');
+    }
+
+    const updated = orm
+      .select()
+      .from(projectCompositionSettingsTable)
+      .where(eq(projectCompositionSettingsTable.projectId, projectId))
+      .get();
+
+    if (!updated) {
+      throw new AppError('COMPOSITION_SETTINGS_WRITE_FAILED', 'Failed to update composition settings.');
+    }
+
+    return this.mapCompositionSettings(updated);
+  }
+
+  private mapCompositionSettings(row: typeof projectCompositionSettingsTable.$inferSelect): CompositionSettings {
+    return {
+      projectId: row.projectId,
+      resolution: row.resolution as CompositionSettings['resolution'],
+      backgroundStyle: row.backgroundStyle as CompositionSettings['backgroundStyle'],
+      subtitlePosition: row.subtitlePosition as CompositionSettings['subtitlePosition'],
+      fontFamily: row.fontFamily as CompositionSettings['fontFamily'],
+      fontSize: row.fontSize,
+      fontColor: row.fontColor,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
   }
 
   private ensureDefaultSettings(): void {

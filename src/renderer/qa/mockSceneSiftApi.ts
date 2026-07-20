@@ -439,5 +439,36 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
         },
       }),
     },
+    composition: {
+      getForProject: async (projectId) => ({
+        settings: {
+          projectId,
+          resolution: '1080x1920' as const,
+          backgroundStyle: 'blur' as const,
+          subtitlePosition: 'bottom' as const,
+          fontFamily: 'Arial' as const,
+          fontSize: 32,
+          fontColor: '#FFFFFF',
+          createdAt: 1_753_000_000_000,
+          updatedAt: 1_753_000_000_000,
+        },
+      }),
+      updateForProject: async (projectId, patch) => {
+        const defaults = {
+          projectId,
+          resolution: '1080x1920' as const,
+          backgroundStyle: 'blur' as const,
+          subtitlePosition: 'bottom' as const,
+          fontFamily: 'Arial' as const,
+          fontSize: 32,
+          fontColor: '#FFFFFF',
+          createdAt: 1_753_000_000_000,
+          updatedAt: Date.now(),
+        };
+        return {
+          settings: { ...defaults, ...patch } as typeof defaults,
+        };
+      },
+    },
   };
 };

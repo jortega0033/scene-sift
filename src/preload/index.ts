@@ -2,6 +2,12 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '@shared/ipc/channels';
 import type { SceneSiftApi } from './api';
 import type { AiSetApiKeyInput } from '@shared/schemas/ai';
+import {
+  ALLOWED_RESOLUTIONS,
+  ALLOWED_BACKGROUND_STYLES,
+  ALLOWED_SUBTITLE_POSITIONS,
+  ALLOWED_FONT_FAMILIES,
+} from '@shared/schemas/composition';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -199,6 +205,33 @@ const sceneSiftApi: SceneSiftApi = {
       if (typeof text !== 'string' || text.length < 1 || text.length > 500)
         return Promise.reject(new TypeError('text must be a non-empty string (max 500 chars)'));
       return ipcRenderer.invoke(IPC_CHANNELS.AI_ADD_CLIP_CUE, { candidateId, startMs, endMs, text });
+    },
+  },
+  composition: {
+    getForProject: (projectId: string) => {
+      if (!UUID_RE.test(projectId))
+        return Promise.reject(new TypeError('projectId must be a UUID'));
+      return ipcRenderer.invoke(IPC_CHANNELS.COMPOSITION_GET_FOR_PROJECT, { projectId });
+    },
+    updateForProject: (projectId: string, patch: Record<string, unknown>) => {
+      if (!UUID_RE.test(projectId))
+        return Promise.reject(new TypeError('projectId must be a UUID'));
+      if (patch.resolution !== undefined && !(ALLOWED_RESOLUTIONS as readonly string[]).includes(patch.resolution as string))
+        return Promise.reject(new TypeError('resolution must be 1080x1920 or 720x1280'));
+      if (patch.backgroundStyle !== undefined && !(ALLOWED_BACKGROUND_STYLES as readonly string[]).includes(patch.backgroundStyle as string))
+        return Promise.reject(new TypeError('backgroundStyle must be blur or crop'));
+      if (patch.subtitlePosition !== undefined && !(ALLOWED_SUBTITLE_POSITIONS as readonly string[]).includes(patch.subtitlePosition as string))
+        return Promise.reject(new TypeError('subtitlePosition must be bottom or center'));
+      if (patch.fontFamily !== undefined && !(ALLOWED_FONT_FAMILIES as readonly string[]).includes(patch.fontFamily as string))
+        return Promise.reject(new TypeError('fontFamily must be one of the allowed values'));
+      if (patch.fontSize !== undefined && (!Number.isInteger(patch.fontSize) || (patch.fontSize as number) < 16 || (patch.fontSize as number) > 72))
+        return Promise.reject(new TypeError('fontSize must be an integer in [16, 72]'));
+      if (patch.fontColor !== undefined && !/^#[0-9A-Fa-f]{6}$/.test(patch.fontColor as string))
+        return Promise.reject(new TypeError('fontColor must be #RRGGBB'));
+      const patchKeys = Object.keys(patch).filter(k => patch[k] !== undefined);
+      if (patchKeys.length === 0)
+        return Promise.reject(new TypeError('at least one settings field must be provided'));
+      return ipcRenderer.invoke(IPC_CHANNELS.COMPOSITION_UPDATE_FOR_PROJECT, { projectId, ...patch });
     },
   },
 };

@@ -113,3 +113,15 @@ export const clipCuesTable = sqliteTable('clip_cues', {
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 });
+
+export const projectCompositionSettingsTable = sqliteTable('project_composition_settings', {
+  projectId: text('project_id').primaryKey().references(() => projectsTable.id, { onDelete: 'cascade' }),
+  resolution: text('resolution').notNull().default('1080x1920'),
+  backgroundStyle: text('background_style').notNull().default('blur'),
+  subtitlePosition: text('subtitle_position').notNull().default('bottom'),
+  fontFamily: text('font_family').notNull().default('Arial'),
+  fontSize: integer('font_size').notNull().default(32),
+  fontColor: text('font_color').notNull().default('#FFFFFF'),
+  createdAt: integer('created_at', { mode: 'number' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
+});
