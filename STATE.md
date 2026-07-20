@@ -6,14 +6,29 @@ defaultMode: L2
 
 ## Active run
 
-- run_id: 2026-07-20T-m11-planning
-- milestone: M11 Vertical Composition Settings — Planning and Specification
-- branch: overnight/m3-plus-2026-07-20
-- risk_level: 0 (planning and documentation only — no product code)
+- run_id: 2026-07-20T-m11-implementation
+- milestone: M11 Vertical Composition Settings — Implementation
+- branch: feature/m11-composition-settings (from overnight/m3-plus-2026-07-20 @ 066fd56)
+- risk_level: 3 (databaseService.ts + main/preload/IPC changes; also 2 for renderer/service)
 - status: in_progress
 - started: 2026-07-20
 - governance_decision: GD-005
 - parent_run: 2026-07-20T-autonomous-roadmap-completion
+
+## Previous active run (complete — M11 planning done)
+
+- run_id: 2026-07-20T-m11-planning
+- milestone: M11 Vertical Composition Settings — Planning and Specification
+- branch: overnight/m3-plus-2026-07-20
+- risk_level: 0 (planning and documentation only — no product code)
+- status: complete
+- started: 2026-07-20
+- governance_decision: GD-005
+- commits: 1703c4d (9 planning docs), 066fd56 (specialist review reconciliation)
+- specialist_review_security: CONDITIONALLY ACCEPTED (electron-security-reviewer) — HIGH: PRAGMA foreign_keys absent; MEDIUM: error wrapping not shown; LOW: import path wrong
+- specialist_review_architecture: CONDITIONALLY APPROVED (architecture-reviewer) — CRITICAL: import path; CRITICAL: handler signature; MAJOR: DB boundary; MODERATE: PRAGMA cascade regression; MINOR: ADR determination
+- reconciliation: all findings resolved — import path fixed, handler sig fixed, DB boundary resolved (DatabaseService public methods), PRAGMA upgraded to mandatory, error wrapping specified (AppError required), cascade regression tests added (12 total), ADR determination documented
+- verdict: READY FOR IMPLEMENTATION
 
 ## Previous active run (complete — M10 ACCEPTED AND INTEGRATED)
 
