@@ -6,6 +6,22 @@ defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-external-reference-audit
+- milestone: YouTube Clipper Skill External Reference Adoption Audit
+- branch: overnight/m3-plus-2026-07-20
+- risk_level: 0 (documentation and research only — no product code)
+- status: complete
+- started: 2026-07-20
+- governance_decision: GD-005
+- audit_target: https://github.com/op7418/Youtube-clipper-skill commit f31f077ee0905c95a510a6f34bbd0c3c85b15129
+- verdict: USE SELECT PATTERNS ONLY
+- deliverables: docs/research/YOUTUBE_CLIPPER_SKILL_ADOPTION_AUDIT.md, FEATURE_MAP.md, SECURITY_REVIEW.md, FFMPEG_REVIEW.md, LICENSE_AND_DEPENDENCIES.md, MILESTONE_IMPACT.md, DECISION_LOG.md
+- milestone_amendments: M7 (MINOR), M9 (MINOR), M10 (SIGNIFICANT), M11 (MINOR), M12 (SIGNIFICANT), M14 (MINOR); M6/M8/M13 NO CHANGE
+- validation: typecheck exit 0, lint exit 0, 419/419 tests, governance:validate pass, architecture:validate pass
+- next: M6 AI Provider Infrastructure planning
+
+## Previous active run (complete — M5 ACCEPTED)
+
 - run_id: 2026-07-20T-m5-implementation
 - milestone: M5 Transcript Preparation — Implementation
 - branch: overnight/m3-plus-2026-07-20

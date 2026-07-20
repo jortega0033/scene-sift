@@ -1381,3 +1381,65 @@ Append one JSON line per material run.
   "completed": "2026-07-20"
 }
 ```
+
+```json
+{
+  "run_id": "2026-07-20T-external-reference-audit",
+  "task": "YouTube Clipper Skill External Reference Adoption Audit",
+  "risk_level": 0,
+  "governance_decision": "GD-005",
+  "audit_target": "https://github.com/op7418/Youtube-clipper-skill",
+  "audit_commit": "f31f077ee0905c95a510a6f34bbd0c3c85b15129",
+  "audit_commit_date": "2026-01-22T04:56:19Z",
+  "license": "MIT — Copyright (c) 2026 op7418",
+  "verdict": "USE SELECT PATTERNS ONLY",
+  "adopted_patterns": [
+    "subtitle cue range-filter algorithm (ADAPT for M10 — add boundary overlap)",
+    "timestamp rebase to clip-relative zero (ADAPT for M10)",
+    "VTT->SRT timestamp format conversion (ADAPT for M10)",
+    "SRT sequential index regeneration (ADAPT for M10)",
+    "time_to_seconds and seconds_to_time pure functions (ADAPT for M9)",
+    "sanitize_filename with illegal-char removal + length cap (ADAPT for M14)",
+    "libass detection via ffmpeg -filters (ADAPT for M12)",
+    "ffmpeg-full path priority on macOS for libass (ADAPT for M12)",
+    "subtitle burn-in FFmpeg filter concept (ADAPT for M12)",
+    "chapter semantic analysis prompt concept (REFERENCE ONLY for M7)"
+  ],
+  "rejected_patterns": [
+    "Python as runtime",
+    "yt-dlp downloading",
+    "unbounded f.read()",
+    "stream-copy as frame-accurate strategy",
+    "-y unconditional overwrite",
+    "no FFmpeg timeout",
+    "full-video tempdir copy",
+    "transcript content in logs",
+    "no structured AI output schema",
+    "global skill installation"
+  ],
+  "deferred_patterns": ["translation (M19)", "social media summary (M15+)", "yt-dlp (post-M14)"],
+  "milestone_amendments": {
+    "M6": "NO CHANGE",
+    "M7": "MINOR — structured JSON schema, timestamp validation, grounding requirement",
+    "M8": "NO CHANGE",
+    "M9": "MINOR — timestamp test cases from utils.py",
+    "M10": "SIGNIFICANT — boundary overlap ACs, rebase ACs, SRT serialization ACs",
+    "M11": "MINOR — libass detection UI, force_style defaults",
+    "M12": "SIGNIFICANT — libass detection, subtitle staging, render command design, stream-copy prohibition",
+    "M13": "NO CHANGE",
+    "M14": "MINOR — filename sanitization, output structure"
+  },
+  "deliverables": [
+    "docs/research/YOUTUBE_CLIPPER_SKILL_ADOPTION_AUDIT.md",
+    "docs/research/YOUTUBE_CLIPPER_SKILL_FEATURE_MAP.md",
+    "docs/research/YOUTUBE_CLIPPER_SKILL_SECURITY_REVIEW.md",
+    "docs/research/YOUTUBE_CLIPPER_SKILL_FFMPEG_REVIEW.md",
+    "docs/research/YOUTUBE_CLIPPER_SKILL_LICENSE_AND_DEPENDENCIES.md",
+    "docs/research/YOUTUBE_CLIPPER_SKILL_MILESTONE_IMPACT.md",
+    "docs/research/YOUTUBE_CLIPPER_SKILL_DECISION_LOG.md"
+  ],
+  "validation": "typecheck exit 0, lint exit 0, 419/419 tests pass, governance:validate pass, architecture:validate pass",
+  "notes": "No runtime source code changed. ROADMAP.md updated to mark M5 closed and add research reference. STATE.md updated.",
+  "completed": "2026-07-20"
+}
+```

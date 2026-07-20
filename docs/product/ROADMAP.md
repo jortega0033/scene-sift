@@ -5,8 +5,9 @@ Source: GPT AI as PO/PM, provided by user 2026-07-19 for future reference.
 **Rule**: One milestone at a time. Every milestone follows:
 Plan/spec → implement on feature branch → targeted specialist review → full validation → acceptance audit → human merge.
 
-**Current status**: M1 CLOSED. M2 CLOSED. M3 CLOSED. M4 CLOSED (overnight branch 2026-07-20).
-**Next**: M5 Transcript Preparation — planning → implementation → acceptance audit.
+**Current status**: M1 CLOSED. M2 CLOSED. M3 CLOSED. M4 CLOSED. M5 CLOSED (overnight branch 2026-07-20, commit 575ccdb).
+**External reference**: `docs/research/YOUTUBE_CLIPPER_SKILL_ADOPTION_AUDIT.md` — USE SELECT PATTERNS ONLY verdict. Amendments to M7, M9, M10, M11, M12, M14 planning recorded in `docs/research/YOUTUBE_CLIPPER_SKILL_MILESTONE_IMPACT.md`.
+**Next**: M6 AI Provider Infrastructure — planning → implementation → acceptance audit.
 
 ---
 
@@ -72,13 +73,15 @@ Load a video source file into a project and verify it is a valid video using FFp
 
 **Goal**: Export a clean transcript from subtitle cues for downstream processing.
 
+**Status: CLOSED** — implemented + audited + merged to overnight branch 2026-07-20. Commit 575ccdb. 41/41 ACs pass. Security re-verification PASS.
+
 **Key features**:
 - Strip formatting tags from subtitle text
 - Merge adjacent cues (configurable gap threshold)
 - Export as plain text or structured JSON
 - Preview transcript in-app before export
 
-**Exit criteria**: Project with parsed subtitles → generate transcript → export as .txt or .json.
+**Exit criteria met**: Project with parsed subtitles → generate transcript → export as .txt or .json.
 
 ---
 
