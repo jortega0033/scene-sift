@@ -1,10 +1,17 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol } from 'electron';
 import { join } from 'node:path';
 import { createMainWindow } from '@main/windows/createMainWindow';
 import { registerIpcHandlers } from '@main/ipc/registerIpcHandlers';
 import { registerSmokeIpcHandlers } from '@main/ipc/registerSmokeIpcHandlers';
 import { DatabaseService } from '@main/services/database/databaseService';
+import { VideoService } from '@main/services/video/videoService';
+import { registerLocalVideoProtocol } from '@main/services/video/localVideoProtocol';
 import { applyCsp } from '@main/security/csp';
+
+// Must run before app.ready
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'local', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } },
+]);
 
 let dbService: DatabaseService | null = null;
 
@@ -29,7 +36,9 @@ const initializeApp = async (): Promise<void> => {
       const migrationsFolder = join(app.getAppPath(), 'src', 'database', 'migrations');
       dbService = new DatabaseService(databasePath, migrationsFolder);
       dbService.initialize();
-      registerIpcHandlers({ databaseService: dbService });
+      const videoService = new VideoService(dbService);
+      registerLocalVideoProtocol(videoService);
+      registerIpcHandlers({ databaseService: dbService, videoService });
     }
 
     await createMainWindow();
