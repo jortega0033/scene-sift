@@ -15,7 +15,7 @@ Export a clean, readable transcript from subtitle cues attached to a project. St
 | Feature | Details |
 |---|---|
 | Tag stripping | Remove HTML tags (`<i>`, `<b>`, `<u>`, `<font ...>`, `</...>`, `<v ...>`, `<c.class>`), ASS/SSA curly-brace blocks (`{...}`), any remaining angle-bracket tokens |
-| Cue merging | Merge consecutive cues where gap ≤ gapThresholdMs. Default: 500 ms. Configurable via UI slider (100–2000 ms). |
+| Cue merging | Merge consecutive cues where gap ≤ gapThresholdMs. Default: 500 ms. UI slider range: 0–2000 ms (step 100). Schema validation range: 0–10000 ms. Overlapping cues (negative gap) are merged. |
 | Transcript generation | IPC handler reads subtitle_documents from DB, strips tags, merges cues, returns `TranscriptEntry[]` |
 | In-app preview | Scrollable list of `{ startMs, endMs, text }` entries with formatted timestamps |
 | Export as .txt | One paragraph per entry, separated by blank lines; optional timestamp prefix |
@@ -59,4 +59,6 @@ Export a clean, readable transcript from subtitle cues attached to a project. St
 - Tag regex must handle malformed tags without catastrophic backtracking (ReDoS guard)
 - Export file write must use atomic temp-file + rename pattern
 - Max transcript text: 10 MB (input subtitle document already capped at 2 MB, stripped text will be smaller)
-- gapThresholdMs range: 0–10000 ms (validated in shared schema)
+- gapThresholdMs range: 0–10000 ms (validated in shared schema); UI slider restricted to 0–2000 ms
+- Tag regex requires first char after `<` to be a letter or `/` — avoids stripping bare `<` and `>` inequality operators in technical subtitles
+- ADR: No new ADR required. TranscriptService is a pure CPU computation service; new IPC channels follow the identical `registerValidatedHandler` pattern already established.

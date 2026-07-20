@@ -1,5 +1,5 @@
 import { basename, extname } from 'node:path';
-import { BrowserWindow, dialog, type OpenDialogOptions } from 'electron';
+import { BrowserWindow, dialog, type OpenDialogOptions, type SaveDialogOptions } from 'electron';
 import {
   selectedDirectorySchema,
   selectedSubtitleSchema,
@@ -132,4 +132,19 @@ export const selectBinaryPath = async (title: string): Promise<string | null> =>
 
   const [selectedPath] = result.filePaths;
   return selectedPath ?? null;
+};
+
+export const showTranscriptExportDialog = async (
+  format: 'txt' | 'json',
+): Promise<{ canceled: boolean; filePath?: string }> => {
+  const browserWindow = BrowserWindow.getFocusedWindow();
+  const options: SaveDialogOptions = {
+    title: 'Export Transcript',
+    defaultPath: `transcript.${format}`,
+    filters: [{ name: format === 'json' ? 'JSON' : 'Text', extensions: [format] }],
+  };
+  const result = browserWindow
+    ? await dialog.showSaveDialog(browserWindow, options)
+    : await dialog.showSaveDialog(options);
+  return { canceled: result.canceled, filePath: result.filePath };
 };

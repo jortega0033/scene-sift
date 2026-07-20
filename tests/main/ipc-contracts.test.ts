@@ -11,6 +11,10 @@ import {
   videoGetPlaybackUrlInputSchema,
   videoGetCuesInputSchema,
 } from '@shared/schemas/video';
+import {
+  transcriptGenerateInputSchema,
+  transcriptExportInputSchema,
+} from '@shared/schemas/transcript';
 
 describe('ipc contracts', () => {
   it('registers explicit channels only', () => {
@@ -168,5 +172,77 @@ describe('video ipc contracts', () => {
     const videoChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('video:'));
     expect(new Set(videoChannels).size).toBe(videoChannels.length);
     expect(videoChannels.length).toBe(2);
+  });
+});
+
+describe('transcript ipc contracts', () => {
+  it('registers transcript:generateForProject channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('transcript:generateForProject');
+  });
+
+  it('registers transcript:exportForProject channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('transcript:exportForProject');
+  });
+
+  it('rejects non-uuid projectId in transcriptGenerateInputSchema', () => {
+    expect(
+      transcriptGenerateInputSchema.safeParse({ projectId: 'not-a-uuid' }).success,
+    ).toBe(false);
+  });
+
+  it('accepts valid uuid with defaults in transcriptGenerateInputSchema', () => {
+    const result = transcriptGenerateInputSchema.safeParse({
+      projectId: '11111111-1111-4111-8111-111111111111',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.gapThresholdMs).toBe(500);
+  });
+
+  it('rejects gapThresholdMs above 10000', () => {
+    expect(
+      transcriptGenerateInputSchema.safeParse({
+        projectId: '11111111-1111-4111-8111-111111111111',
+        gapThresholdMs: 10001,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects non-uuid projectId in transcriptExportInputSchema', () => {
+    expect(
+      transcriptExportInputSchema.safeParse({ projectId: 'bad', format: 'txt' }).success,
+    ).toBe(false);
+  });
+
+  it('rejects invalid format in transcriptExportInputSchema', () => {
+    expect(
+      transcriptExportInputSchema.safeParse({
+        projectId: '11111111-1111-4111-8111-111111111111',
+        format: 'csv',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('accepts txt format in transcriptExportInputSchema', () => {
+    expect(
+      transcriptExportInputSchema.safeParse({
+        projectId: '11111111-1111-4111-8111-111111111111',
+        format: 'txt',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('accepts json format in transcriptExportInputSchema', () => {
+    expect(
+      transcriptExportInputSchema.safeParse({
+        projectId: '11111111-1111-4111-8111-111111111111',
+        format: 'json',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('transcript channels are unique (no duplicates)', () => {
+    const tChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('transcript:'));
+    expect(new Set(tChannels).size).toBe(tChannels.length);
+    expect(tChannels.length).toBe(2);
   });
 });

@@ -1236,3 +1236,147 @@ Append one JSON line per material run.
   "verdict": "M4 integrated into overnight/m3-plus-2026-07-20. All post-merge validators exit 0. Product state docs updated. Proceeding to M5 planning."
 }
 ```
+
+```json
+{
+  "run_id": "2026-07-20T-m5-implementation",
+  "task": "M5 Transcript Preparation — Implementation (Phases 1-6)",
+  "risk_level": 3,
+  "branch": "overnight/m3-plus-2026-07-20",
+  "governance_decision": "GD-005",
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "implementer": "claude-sonnet-4-6",
+    "architecture_verifier": "claude-sonnet-5 (architecture-reviewer)",
+    "security_verifier": "claude-sonnet-5 (electron-security-reviewer)"
+  },
+  "phases": [
+    "Phase 1a — shared Zod schemas (src/shared/schemas/transcript.ts) — Risk 1",
+    "Phase 1b — IPC channels (src/shared/ipc/channels.ts) — Risk 3",
+    "Phase 2 — TranscriptService (src/main/services/transcript/transcriptService.ts) — Risk 3",
+    "Phase 3 — IPC handlers + dialogService (src/main/ipc/registerIpcHandlers.ts, src/main/services/files/dialogService.ts) — Risk 3",
+    "Phase 4 — preload bridge (src/preload/index.ts) — Risk 3",
+    "Phase 5 — renderer + QA fixtures (TranscriptPage/Preview/GapThresholdSlider/formatters, qa fixtures) — Risk 2",
+    "Phase 6 — tests (27+9+~10+6+3+7 tests across 6 test files) — Risk 1"
+  ],
+  "new_files": [
+    "src/shared/schemas/transcript.ts",
+    "src/main/services/transcript/transcriptService.ts",
+    "src/renderer/features/transcript/transcriptFormatters.ts",
+    "src/renderer/features/transcript/GapThresholdSlider.tsx",
+    "src/renderer/features/transcript/TranscriptPreview.tsx",
+    "src/renderer/features/transcript/TranscriptPage.tsx",
+    "tests/main/transcriptService.test.ts",
+    "tests/main/ipc-transcript.test.ts",
+    "tests/renderer/transcriptFormatters.test.ts",
+    "tests/governance/transcript-security.test.ts",
+    "tests/visual/transcript.visual.spec.ts",
+    "tests/e2e/transcript.spec.ts",
+    "docs/design/components/TranscriptPage.md",
+    "docs/design/components/TranscriptPreview.md",
+    "docs/design/components/GapThresholdSlider.md"
+  ],
+  "modified_files": [
+    "src/shared/ipc/channels.ts",
+    "src/main/ipc/registerIpcHandlers.ts",
+    "src/main/services/files/dialogService.ts",
+    "src/preload/index.ts",
+    "src/shared/api/sceneSiftApi.ts",
+    "src/renderer/stores/uiStore.ts",
+    "src/renderer/app/App.tsx",
+    "src/renderer/components/Layout.tsx",
+    "src/renderer/qa/fixtures.ts",
+    "src/renderer/qa/mockSceneSiftApi.ts",
+    "tests/fixtures/sceneSiftApi.ts",
+    "tests/main/ipc-contracts.test.ts"
+  ],
+  "specialist_verification": {
+    "architecture": {
+      "verifier": "architecture-reviewer (claude-sonnet-5, independent)",
+      "verdict": "PASS",
+      "checks": [
+        "pnpm typecheck — exit 0",
+        "pnpm architecture:validate — exit 0",
+        "renderer forbidden imports — no matches",
+        "src/shared/** boundary — zod + sibling schema only",
+        "src/main/** → renderer — no @renderer imports",
+        "native process / SQLite boundary — no spawn/exec, databaseService only",
+        "registerValidatedHandler — both new handlers use it, no raw ipcMain.handle",
+        "IPC naming convention — TRANSCRIPT_GENERATE_FOR_PROJECT: transcript:generateForProject matches pattern",
+        "QA bridge guard — unaffected, src/renderer/main.tsx unchanged",
+        "preload — narrow typed contextBridge API only",
+        "ADR requirement — no new layer boundary, no new ADR needed"
+      ]
+    },
+    "security": {
+      "verifier": "electron-security-reviewer (claude-sonnet-5, independent)",
+      "verdict": "PASS",
+      "checks": [
+        "pnpm typecheck — exit 0",
+        "pnpm lint — exit 0",
+        "pnpm test — exit 0, 409/409 tests, 31 files",
+        "transcriptService coverage — 100% statements/branches/functions/lines",
+        "shell:true — no matches in src/",
+        "nodeIntegration/contextIsolation/webSecurity — only at createMainWindow.ts:20-23 with correct values (unchanged)",
+        "TAG_PATTERN bounded quantifiers — {0,255} + {0,256}, first-char constraint, linear-time match",
+        "writeExport atomic write — path.dirname(filePath) same-dir tmp, writeFileSync+renameSync+finally unlinkSync",
+        "preload transcript namespace — projectId+format validated before invoke, no raw ipcRenderer exposed",
+        "IPC handlers — registerValidatedHandler for both channels",
+        "dialogService.showTranscriptExportDialog — BrowserWindow.getFocusedWindow() pattern, dialog.showSaveDialog, no shell:true"
+      ],
+      "no_critical_high_medium_violations": true
+    }
+  },
+  "checks": [
+    "pnpm validate — exit 0, 409/409 unit tests, 31 test files",
+    "pnpm typecheck — exit 0",
+    "pnpm lint — exit 0",
+    "pnpm test — exit 0, 409/409",
+    "pnpm build — exit 0",
+    "pnpm governance:validate — exit 0",
+    "pnpm architecture:validate — exit 0",
+    "pnpm design:validate — exit 0",
+    "pnpm dependencies:validate — exit 0"
+  ],
+  "known_issues": [
+    "noUncheckedIndexedAccess (electron tsconfig): fixed by destructuring [firstCue, ...restCues] and for...of loop",
+    "ESLint unused-param: fixed by removing parameter name entirely (async () =>)",
+    "architecture:validate missing-visual-page-coverage: fixed by creating tests/visual/transcript.visual.spec.ts",
+    "Transient test timeout (adversarial-scenarios.test.ts:644): pre-existing flaky test, passed on second run"
+  ],
+  "status": "acceptance_audit_pending",
+  "completed": "2026-07-20 (pending acceptance audit)"
+}
+```
+
+```json
+{
+  "run_id": "2026-07-20T-m5-acceptance-remediation",
+  "task": "m5-acceptance-criteria-remediation",
+  "parent_run_id": "2026-07-20T-m5-implementation",
+  "risk_level": 3,
+  "governance_decision": "GD-005",
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "verifier": "electron-security-reviewer (independent)"
+  },
+  "trigger": "acceptance audit NOT ACCEPTED — 11 of 41 ACs lacked test coverage",
+  "checks": [
+    "pnpm validate exit 0, 419/419 tests (was 409)",
+    "pnpm test:visual:update 25/25, 3 new transcript baselines",
+    "electron-security-reviewer PASS — UUID_RE linear-time, both handlers validated, no CRITICAL/HIGH/MEDIUM"
+  ],
+  "changes": [
+    "tests/main/transcriptService.test.ts: added 5 stripTags tests (<u>, <font color>, <v Name>, <c.class>, malformed)",
+    "src/preload/index.ts: added UUID_RE regex + UUID check to both transcript handlers",
+    "tests/main/ipc-transcript.test.ts: added gapThresholdMs out-of-range, default, success-path export tests; removed duplicate getProject key",
+    "tests/governance/transcript-security.test.ts: added UUID grep test, shell:true grep test"
+  ],
+  "findings": [
+    "LOW (electron-security-reviewer): .trim() after UUID regex is redundant but harmless — regex anchored, UUID chars exclude whitespace"
+  ],
+  "status": "complete",
+  "acceptance_audit_verdict": "ACCEPTED — all 11/11 previously-failed ACs now PASS; 41/41 total ACs PASS (independent re-auditor, 2026-07-20)",
+  "completed": "2026-07-20"
+}
+```

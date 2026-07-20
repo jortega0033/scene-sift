@@ -4,6 +4,7 @@ import { ProjectsPage } from '@renderer/features/projects/ProjectsPage';
 import { QueuePage } from '@renderer/features/queue/QueuePage';
 import { SettingsPage } from '@renderer/features/settings/SettingsPage';
 import { PreviewPage } from '@renderer/features/preview/PreviewPage';
+import { TranscriptPage } from '@renderer/features/transcript/TranscriptPage';
 import { useSettings } from '@renderer/hooks/useSettings';
 import { useUiStore, type AppRoute } from '@renderer/stores/uiStore';
 
@@ -17,6 +18,8 @@ const renderRoute = (route: AppRoute) => {
       return <SettingsPage />;
     case 'preview':
       return <PreviewPage />;
+    case 'transcript':
+      return <TranscriptPage />;
     default:
       return <ProjectsPage />;
   }

@@ -1,4 +1,4 @@
-import { Film, ListChecks, PlayCircle, Settings2 } from 'lucide-react';
+import { Film, ListChecks, PlayCircle, Settings2, FileText } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useCapabilities } from '@renderer/hooks/useCapabilities';
 import { useUiStore, type AppRoute } from '@renderer/stores/uiStore';
@@ -17,6 +17,7 @@ const navItems: Array<{
   { route: 'projects', label: 'Projects', icon: Film },
   { route: 'queue', label: 'Queue', icon: ListChecks },
   { route: 'preview', label: 'Preview', icon: PlayCircle },
+  { route: 'transcript', label: 'Transcript', icon: FileText },
   { route: 'settings', label: 'Settings', icon: Settings2 },
 ];
 

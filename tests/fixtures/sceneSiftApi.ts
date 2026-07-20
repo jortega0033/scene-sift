@@ -31,4 +31,7 @@ export const FIXTURES = {
   previewNotAvailable: 'preview-not-available',
   previewReady: 'preview-ready',
   previewNoCues: 'preview-no-cues',
+  transcriptNotAvailable: 'transcript-not-available',
+  transcriptReady: 'transcript-ready',
+  transcriptReadyWithWarnings: 'transcript-ready-with-warnings',
 } as const;

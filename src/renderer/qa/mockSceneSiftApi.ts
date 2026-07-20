@@ -227,6 +227,31 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
         return { cues: [] };
       },
     },
+    transcript: {
+      generateForProject: async () => {
+        if (
+          fixture.name === 'transcript-ready' ||
+          fixture.name === 'transcript-ready-with-warnings'
+        ) {
+          return {
+            entries: [
+              { startMs: 1_000, endMs: 3_000, text: 'Previously on SceneSift…' },
+              {
+                startMs: 5_000,
+                endMs: 12_000,
+                text: 'The quick brown fox jumped over the lazy dog.',
+              },
+            ],
+            subtitleStatus:
+              fixture.name === 'transcript-ready-with-warnings'
+                ? ('ready_with_warnings' as const)
+                : ('ready' as const),
+          };
+        }
+        return { entries: [], subtitleStatus: null };
+      },
+      exportForProject: async () => ({ exported: true, path: '/mock/transcript.txt' }),
+    },
     sync: {
       checkForProject: async (projectId: string): Promise<SyncCheckResult> => {
         await delay(200);

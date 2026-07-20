@@ -35,6 +35,9 @@ export const qaFixtureNames = [
   'preview-not-available',
   'preview-ready',
   'preview-no-cues',
+  'transcript-not-available',
+  'transcript-ready',
+  'transcript-ready-with-warnings',
 ] as const;
 
 export type QaFixtureName = (typeof qaFixtureNames)[number];
@@ -674,6 +677,46 @@ export const fixtureMap: Record<QaFixtureName, QaFixtureState> = {
         subtitleCueCount: null,
         subtitleLastCueEndMs: null,
         subtitleParsedAt: null,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'transcript-not-available': {
+    name: 'transcript-not-available',
+    projects: [{ ...projectB }],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'transcript-ready': {
+    name: 'transcript-ready',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready',
+        subtitleCueCount: 842,
+        subtitleLastCueEndMs: 2_844_100,
+        subtitleParsedAt: now - 5_000,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'transcript-ready-with-warnings': {
+    name: 'transcript-ready-with-warnings',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready_with_warnings',
+        subtitleCueCount: 317,
+        subtitleLastCueEndMs: 1_620_000,
+        subtitleParsedAt: now - 8_000,
       },
     ],
     queue: [],

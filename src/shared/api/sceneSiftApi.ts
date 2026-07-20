@@ -6,6 +6,10 @@ import type { SafeError } from '@shared/types/common';
 import type { QueueStatus } from '@shared/types/common';
 import type { SyncCheckResult } from '@shared/schemas/sync';
 import type { VideoCueItem } from '@shared/schemas/video';
+import type {
+  TranscriptGenerateOutput,
+  TranscriptExportOutput,
+} from '@shared/schemas/transcript';
 
 export type DatabaseHealth = {
   ok: boolean;
@@ -81,6 +85,17 @@ export type SceneSiftApi = {
   video: {
     getPlaybackUrl: (projectId: string) => Promise<{ url: string }>;
     getCues: (projectId: string) => Promise<{ cues: VideoCueItem[] }>;
+  };
+  transcript: {
+    generateForProject: (input: {
+      projectId: string;
+      gapThresholdMs?: number;
+    }) => Promise<TranscriptGenerateOutput>;
+    exportForProject: (input: {
+      projectId: string;
+      gapThresholdMs?: number;
+      format: 'txt' | 'json';
+    }) => Promise<TranscriptExportOutput>;
   };
 };
 

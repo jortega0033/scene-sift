@@ -6,14 +6,33 @@ defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-m5-implementation
+- milestone: M5 Transcript Preparation — Implementation
+- branch: overnight/m3-plus-2026-07-20
+- risk_level: 3 (TranscriptService, dialogService, IPC channels, preload bridge — main/preload/IPC risk)
+- status: complete — M5 ACCEPTED
+- started: 2026-07-20
+- governance_decision: GD-005
+- phases_complete: 1a (schemas), 1b (channels), 2 (TranscriptService), 3 (IPC+dialog), 4 (preload), 5 (renderer), 6 (tests)
+- specialist_review_architecture: PASS (architecture-reviewer, 2026-07-20) — all 11 checks, pnpm typecheck exit 0, pnpm architecture:validate exit 0, no forbidden imports, registerValidatedHandler used, channels follow naming convention, no new ADR required
+- specialist_review_security: PASS (electron-security-reviewer, 2026-07-20) — all 9 checks, pnpm typecheck exit 0, pnpm lint exit 0, 409 tests pass, no shell:true, no nodeIntegration/contextIsolation/webSecurity changes, atomic write verified, TAG_PATTERN bounded quantifiers verified, preload validates projectId+format
+- specialist_review_security_2: PASS (electron-security-reviewer, 2026-07-20) — preload UUID change re-verified, UUID_RE linear-time regex, applied to both transcript handlers, no CRITICAL/HIGH/MEDIUM; LOW: redundant .trim() after UUID regex (non-blocking)
+- validation_full: pnpm validate exit 0, 419/419 tests (+10 from remediation), 31 test files
+- validation_visual: pnpm test:visual:update 25/25, 3 new transcript baselines generated
+- remediation: 11 AC failures addressed — 5 stripTags tests, UUID preload check, 4 IPC tests, 2 governance grep tests, visual baselines
+- acceptance_audit_verdict: M5 ACCEPTED — all 41/41 ACs PASS (independent re-auditor, 2026-07-20); 11 previously-failed ACs all confirmed PASS after remediation
+
+## Previous active run (complete — M5 planning reconciled)
+
 - run_id: 2026-07-20T-m5-planning
 - milestone: M5 Transcript Preparation — Planning and Specification
 - branch: overnight/m3-plus-2026-07-20
 - risk_level: 0 (planning and documentation only — no product code)
-- status: in_progress
-- started: 2026-07-20
+- status: complete
+- verdict: M5 PLANNING COMPLETE — 5 specialist reviews (parallel), all CRITICAL/HIGH findings resolved across 6 planning docs; 41 ACs defined; implementation ready
+- critical_fixes: (1) writeExport tmp path same-directory (path.dirname) not os.tmpdir (2) tag regex letter/slash first-char constraint (3) IPC handlers use registerValidatedHandler (4) dialog via dialogService.showTranscriptExportDialog (5) Risk 2 label for renderer/features (6) AC count 41 (not 28)
+- completed: 2026-07-20
 - governance_decision: GD-005
-- next_step: Milestone intake + dependency check → parallel specialist reviews → reconcile findings → record CONDITIONALLY READY or READY
 
 ## Previous active run (complete — M4 implemented + integrated)
 

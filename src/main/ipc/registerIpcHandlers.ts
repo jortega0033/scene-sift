@@ -33,11 +33,19 @@ import {
   videoGetCuesOutputSchema,
 } from '@shared/schemas/video';
 import {
+  transcriptGenerateInputSchema,
+  transcriptGenerateOutputSchema,
+  transcriptExportInputSchema,
+  transcriptExportOutputSchema,
+} from '@shared/schemas/transcript';
+import {
   selectOutputDirectory,
   selectSubtitleFile,
   selectVideoFile,
   selectBinaryPath,
+  showTranscriptExportDialog,
 } from '@main/services/files/dialogService';
+import { transcriptService } from '@main/services/transcript/transcriptService';
 import { checkFfmpegAvailability, inspectMediaFile } from '@main/services/ffmpeg/ffmpegService';
 import { AppError } from '@main/utils/errors';
 import { JobService } from '@main/services/jobs/jobService';
@@ -305,5 +313,54 @@ export const registerIpcHandlers = ({ databaseService, videoService }: RegisterI
     videoGetCuesInputSchema,
     videoGetCuesOutputSchema,
     ({ projectId }) => videoService.getCues(projectId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.TRANSCRIPT_GENERATE_FOR_PROJECT,
+    transcriptGenerateInputSchema,
+    transcriptGenerateOutputSchema,
+    async (input) => {
+      const { projectId, gapThresholdMs } = input;
+      const project = databaseService.getProject(projectId);
+      if (!project) return { entries: [], subtitleStatus: null };
+      if (
+        project.subtitleStatus !== 'ready' &&
+        project.subtitleStatus !== 'ready_with_warnings'
+      ) {
+        return { entries: [], subtitleStatus: project.subtitleStatus };
+      }
+      const document = databaseService.getSubtitleDocument(projectId);
+      if (!document) return { entries: [], subtitleStatus: null };
+      const entries = transcriptService.generateTranscript(document.cues, { gapThresholdMs });
+      return { entries, subtitleStatus: project.subtitleStatus };
+    },
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.TRANSCRIPT_EXPORT_FOR_PROJECT,
+    transcriptExportInputSchema,
+    transcriptExportOutputSchema,
+    async (input) => {
+      const { projectId, gapThresholdMs, format } = input;
+      const project = databaseService.getProject(projectId);
+      if (!project) return { exported: false, path: null };
+      if (
+        project.subtitleStatus !== 'ready' &&
+        project.subtitleStatus !== 'ready_with_warnings'
+      ) {
+        return { exported: false, path: null };
+      }
+      const document = databaseService.getSubtitleDocument(projectId);
+      if (!document) return { exported: false, path: null };
+      const entries = transcriptService.generateTranscript(document.cues, { gapThresholdMs });
+      const dialogResult = await showTranscriptExportDialog(format);
+      if (dialogResult.canceled || !dialogResult.filePath) return { exported: false, path: null };
+      try {
+        transcriptService.writeExport(entries, format, dialogResult.filePath);
+        return { exported: true, path: dialogResult.filePath };
+      } catch {
+        return { exported: false, path: null };
+      }
+    },
   );
 };

@@ -1,6 +1,6 @@
 # M5 — Transcript Preparation: Acceptance Criteria
 
-**Count**: 28 ACs across 6 groups.
+**Count**: 41 ACs across 6 groups.
 
 ---
 
@@ -16,8 +16,8 @@
 | AC-M5-001.6 | WebVTT class tags stripped | `<c.loud>hello</c>` → `hello` |
 | AC-M5-001.7 | ASS/SSA curly-brace overrides stripped | `{\an8}hello` → `hello` |
 | AC-M5-001.8 | Whitespace normalized after stripping | `hello  world` → `hello world` |
-| AC-M5-001.9 | Malformed tag (no closing >) does not hang | `<i without closing` → stripped bounded portion or left intact within timeout |
-| AC-M5-001.10 | Empty text after stripping returned as empty string | `<i></i>` → `''` |
+| AC-M5-001.9 | Malformed tag (no closing `>`) returns correct output | `<i without closing` → stripped portion absent from output; result does not contain `<i without closing` as-is; verified by asserting output value, not execution time |
+| AC-M5-001.10 | Tags that strip to empty return empty string | `<i></i>` → `''` |
 
 ## AC-M5-002: Cue Merging
 
@@ -31,16 +31,18 @@
 | AC-M5-002.6 | gapThresholdMs=0 merges only exactly-adjacent cues | gap=0ms merged; gap=1ms not merged |
 | AC-M5-002.7 | Single cue input returns single entry | No crash on 1-cue input |
 | AC-M5-002.8 | Empty cue array returns empty array | No crash on 0-cue input |
+| AC-M5-002.9 | Overlapping cues (negative gap) are merged | cue A endMs=5000, cue B startMs=3000 → merged; endMs = max(5000, cue B endMs) |
 
 ## AC-M5-003: Transcript Generation IPC
 
 | AC | Criterion | Pass condition |
 |---|---|---|
 | AC-M5-003.1 | Non-UUID projectId rejected by preload | Returns error before IPC invoke |
-| AC-M5-003.2 | Project with no subtitle returns empty entries + subtitleStatus | `{ entries: [], subtitleStatus: 'not_selected' }` |
+| AC-M5-003.2 | Project with no subtitle returns empty entries + null subtitleStatus | `{ entries: [], subtitleStatus: null }` |
 | AC-M5-003.3 | Project with ready subtitle returns entries | At least 1 entry for subtitle with 1+ cues |
-| AC-M5-003.4 | gapThresholdMs out of range rejected in main | Input `gapThresholdMs: 99999` → Zod error, structured response |
+| AC-M5-003.4 | gapThresholdMs out of range rejected in main | Input `gapThresholdMs: 99999` → AppError thrown; renderer gets typed error |
 | AC-M5-003.5 | gapThresholdMs=500 used when not provided | Default applied |
+| AC-M5-003.6 | Project with `ready_with_warnings` subtitle returns entries with that status | `{ entries: [...], subtitleStatus: 'ready_with_warnings' }`; renderer shows warning banner |
 
 ## AC-M5-004: Export IPC
 
@@ -48,8 +50,8 @@
 |---|---|---|
 | AC-M5-004.1 | User cancels dialog → `{ exported: false, path: null }` | No error thrown |
 | AC-M5-004.2 | Export .txt creates file with cue text | File contains stripped cue text, readable as plain text |
-| AC-M5-004.3 | Export .json creates valid JSON array | `JSON.parse(content)` succeeds; each entry has `startMs`, `endMs`, `text` |
-| AC-M5-004.4 | Invalid format rejected in main | `format: 'pdf'` → Zod error |
+| AC-M5-004.3 | Export .json creates valid JSON array with pretty-printing | `JSON.parse(content)` succeeds; file is indented (2 spaces); each entry has `startMs`, `endMs`, `text` |
+| AC-M5-004.4 | Invalid format rejected in main | `format: 'pdf'` → AppError thrown |
 | AC-M5-004.5 | Exported path returned in output | `{ exported: true, path: '/Users/.../transcript.txt' }` |
 
 ## AC-M5-005: In-app preview
@@ -61,13 +63,14 @@
 | AC-M5-005.3 | Ready state generates and shows entries | `data-testid="transcript-entry"` elements visible after generation |
 | AC-M5-005.4 | Gap threshold slider updates preview | Change slider → entries update |
 | AC-M5-005.5 | Export .txt button triggers export flow | Button visible, click → export IPC called |
+| AC-M5-005.6 | Export .json button triggers export flow | Button visible, click → export IPC called with `format: 'json'` |
 
 ## AC-M5-006: Cross-cutting
 
 | AC | Criterion | Pass condition |
 |---|---|---|
 | AC-M5-006.1 | All validators exit 0 | `pnpm validate` exits 0 |
-| AC-M5-006.2 | No hardcoded file paths | grep for absolute paths in transcript code → 0 matches |
-| AC-M5-006.3 | No `shell: true` | grep → 0 matches |
-| AC-M5-006.4 | Transcript page persists across navigation | Navigate away and back → page loads correctly |
+| AC-M5-006.2 | No hardcoded file paths in transcript code | `tests/governance/transcript-security.test.ts` grep passes |
+| AC-M5-006.3 | No `shell: true` in transcript code | `tests/governance/transcript-security.test.ts` grep passes |
+| AC-M5-006.4 | Transcript page persists across navigation | Navigate away and back → page loads correctly (E2E test) |
 | AC-M5-006.5 | Visual regression tests pass | 3 new snapshot scenarios pass |

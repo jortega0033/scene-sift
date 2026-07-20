@@ -27,7 +27,7 @@ No DB schema change. Transcript is generated on demand from existing `subtitle_d
 
 ## New AC count
 
-28 ACs across AC-M5-001 through AC-M5-006.
+41 ACs across AC-M5-001 through AC-M5-006.
 
 ---
 
@@ -43,6 +43,8 @@ No DB schema change. Transcript is generated on demand from existing `subtitle_d
 | `src/renderer/features/transcript/GapThresholdSlider.tsx` | Gap control |
 | `tests/main/transcriptService.test.ts` | Service unit tests |
 | `tests/main/ipc-transcript.test.ts` | IPC handler tests |
+| `tests/renderer/transcriptFormatters.test.ts` | Formatter unit tests |
+| `tests/governance/transcript-security.test.ts` | Static security grep assertions |
 | `tests/e2e/transcript.e2e.spec.ts` | E2E scenarios |
 | `tests/visual/transcript.visual.spec.ts` | Visual regression |
 | `docs/design/components/TranscriptPage.md` | Usage doc |
@@ -56,6 +58,7 @@ No DB schema change. Transcript is generated on demand from existing `subtitle_d
 | File | Change |
 |---|---|
 | `src/shared/ipc/channels.ts` | +2 channels |
+| `src/main/services/files/dialogService.ts` | +showTranscriptExportDialog |
 | `src/main/ipc/registerIpcHandlers.ts` | +2 handlers |
 | `src/preload/index.ts` | +transcript namespace |
 | `src/shared/api/sceneSiftApi.ts` | +transcript type |

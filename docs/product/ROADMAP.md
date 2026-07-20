@@ -74,7 +74,7 @@ Load a video source file into a project and verify it is a valid video using FFp
 
 **Key features**:
 - Strip formatting tags from subtitle text
-- Merge adjacent cues from same speaker (configurable gap threshold)
+- Merge adjacent cues (configurable gap threshold)
 - Export as plain text or structured JSON
 - Preview transcript in-app before export
 
