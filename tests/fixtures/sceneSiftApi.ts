@@ -28,4 +28,7 @@ export const FIXTURES = {
   syncNeedsReview: 'sync-needs-review',
   syncCheckFailed: 'sync-check-failed',
   syncStale: 'sync-stale',
+  previewNotAvailable: 'preview-not-available',
+  previewReady: 'preview-ready',
+  previewNoCues: 'preview-no-cues',
 } as const;
