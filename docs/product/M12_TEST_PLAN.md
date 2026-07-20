@@ -98,13 +98,6 @@ Component tests with mocked `window.sceneSift.render`.
 | failed status shows human-readable error | AC-M12-008.5 |
 | Open in Finder calls openOutputFile | AC-M12-008.6 |
 
-### tests/main/ipc-contracts.test.ts additions
-
-New describe block `render ipc contracts`:
-- `render:startForCandidate`: input schema accepts uuid, output schema has `jobId` uuid
-- `render:getJob`: input schema accepts uuid, output schema has `job` with status enum
-- `render:openOutputFile`: input schema accepts string, output schema has `opened` boolean
-
 ### tests/main/database-service.test.ts additions
 
 New describe block for render job DB methods:

@@ -49,10 +49,7 @@ Subtitle text from `clip_cues.text` column. Before writing to temp SRT:
 
 ### Output file open (shell.openPath)
 
-`shell.openPath(path)` does NOT execute arbitrary code — it opens a path in the OS default handler. Still:
-- Validate `outputPath` against known safe prefix (project's output directory)
-- Resolve and check `isFile()` before calling
-- Reject if path contains `..` after resolve
+`shell.openPath(path)` does NOT execute arbitrary code — it opens a path in the OS default handler. `render:openOutputFile` receives only a `jobId` (UUID) from the renderer — no path string crosses the IPC boundary from renderer to main. Handler: `db.getRenderJob(jobId)` → reads `outputPath` from DB row → validates file exists using the `path.relative` containment algorithm (see below) → calls `shell.openPath(resolvedPath)`.
 
 ## IPC payload validation
 
@@ -60,7 +57,7 @@ Subtitle text from `clip_cues.text` column. Before writing to temp SRT:
 |---|---|---|
 | render:startForCandidate | candidateId: uuid | candidateId: uuid via registerValidatedHandler schema |
 | render:getJob | jobId: uuid | jobId: uuid |
-| render:openOutputFile | outputPath: string.min(1).max(4096) | resolved path prefix check |
+| render:openOutputFile | jobId: uuid | server reads outputPath from DB; renderer passes no path string |
 
 ## Electron security invariants (unchanged)
 

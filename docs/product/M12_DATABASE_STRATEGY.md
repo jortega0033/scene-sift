@@ -65,7 +65,7 @@ No direct `.db` or `.orm` access outside `DatabaseService`. `ClipRenderService` 
 
 ## Startup reconciliation
 
-On `DatabaseService.initialize()` (before migrate, after pragma), run:
+On `DatabaseService.initialize()` (after migrate, after pragma), run:
 ```sql
 UPDATE render_jobs SET status = 'failed', render_error_code = 'INTERRUPTED_BY_RESTART',
   updated_at = unixepoch() * 1000
@@ -75,8 +75,9 @@ This ensures any jobs left in an active state from a prior crash do not permanen
 
 ## Migration dry-run requirement
 
-Before merging, migration 0009 must be tested against a non-empty fixture database (one that has existing `render_jobs` rows from M0 demo jobs) to verify:
+Before merging, migration 0009 must be tested against both a fresh database and a non-empty fixture database (one that has existing `render_jobs` rows from M0 demo jobs) to verify:
 1. `ALTER TABLE ... ADD COLUMN` succeeds with pre-existing NULL-default rows
 2. Partial index creation succeeds
-3. Startup reconciliation UPDATE runs without error
+3. Startup reconciliation UPDATE runs without error (post-migration, so `render_error_code` column exists)
 4. No data is lost from pre-existing demo job rows
+5. On a fresh install (no pre-existing `render_jobs` rows), reconciliation UPDATE runs without error and affects 0 rows
