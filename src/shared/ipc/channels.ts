@@ -36,6 +36,7 @@ export const IPC_CHANNELS = {
   AI_CANCEL_GENERATION: 'ai:cancelGeneration',
   AI_LIST_CANDIDATES: 'ai:listCandidates',
   AI_UPDATE_CANDIDATE_STATUS: 'ai:updateCandidateStatus',
+  AI_UPDATE_CANDIDATE_NOTES: 'ai:updateCandidateNotes',
 } as const;
 
 export const ALL_IPC_CHANNELS = Object.values(IPC_CHANNELS);

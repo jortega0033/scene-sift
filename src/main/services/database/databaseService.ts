@@ -694,6 +694,7 @@ export class DatabaseService {
       sortOrder: r.sortOrder,
       modelId: r.modelId,
       promptVersion: r.promptVersion,
+      notes: r.notes ?? null,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
     }));
@@ -711,6 +712,15 @@ export class DatabaseService {
     orm
       .update(clipCandidatesTable)
       .set({ candidateStatus: status, updatedAt: Date.now() })
+      .where(eq(clipCandidatesTable.id, candidateId))
+      .run();
+  }
+
+  public updateCandidateNotes(candidateId: string, notes: string | null): void {
+    const orm = this.ensureOrm();
+    orm
+      .update(clipCandidatesTable)
+      .set({ notes: notes ?? null, updatedAt: Date.now() })
       .where(eq(clipCandidatesTable.id, candidateId))
       .run();
   }

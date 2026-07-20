@@ -354,6 +354,7 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
                 sortOrder: 0,
                 modelId: 'gpt-4o-mini',
                 promptVersion: '1',
+                notes: null,
                 createdAt: 1_753_000_000_000,
                 updatedAt: 1_753_000_000_000,
               },
@@ -370,6 +371,7 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
                 sortOrder: 1,
                 modelId: 'gpt-4o-mini',
                 promptVersion: '1',
+                notes: null,
                 createdAt: 1_753_000_000_000,
                 updatedAt: 1_753_000_100_000,
               },
@@ -386,6 +388,7 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
                 sortOrder: 2,
                 modelId: 'gpt-4o-mini',
                 promptVersion: '1',
+                notes: null,
                 createdAt: 1_753_000_000_000,
                 updatedAt: 1_753_000_200_000,
               },
@@ -411,6 +414,9 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
         };
       },
       updateCandidateStatus: async () => ({
+        ok: true as const,
+      }),
+      updateCandidateNotes: async () => ({
         ok: true as const,
       }),
     },

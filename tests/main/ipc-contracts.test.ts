@@ -21,6 +21,7 @@ import {
   cancelGenerationInputSchema,
   listCandidatesInputSchema,
   updateCandidateStatusInputSchema,
+  updateCandidateNotesInputSchema,
 } from '@shared/schemas/candidates';
 
 describe('ipc contracts', () => {
@@ -255,7 +256,7 @@ describe('transcript ipc contracts', () => {
 });
 
 describe('ai ipc contracts', () => {
-  it('registers all 10 ai:* channels', () => {
+  it('registers all 11 ai:* channels', () => {
     expect(ALL_IPC_CHANNELS).toContain('ai:getConfigurationStatus');
     expect(ALL_IPC_CHANNELS).toContain('ai:setApiKey');
     expect(ALL_IPC_CHANNELS).toContain('ai:testConnection');
@@ -266,6 +267,7 @@ describe('ai ipc contracts', () => {
     expect(ALL_IPC_CHANNELS).toContain('ai:cancelGeneration');
     expect(ALL_IPC_CHANNELS).toContain('ai:listCandidates');
     expect(ALL_IPC_CHANNELS).toContain('ai:updateCandidateStatus');
+    expect(ALL_IPC_CHANNELS).toContain('ai:updateCandidateNotes');
   });
 
   it('no generic ai:invoke channel exists', () => {
@@ -277,7 +279,7 @@ describe('ai ipc contracts', () => {
   it('ai channels are unique (no duplicates)', () => {
     const aiChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('ai:'));
     expect(new Set(aiChannels).size).toBe(aiChannels.length);
-    expect(aiChannels.length).toBe(10);
+    expect(aiChannels.length).toBe(11);
   });
 
   it('rejects empty apiKey in aiSetApiKeyInputSchema', () => {
@@ -378,5 +380,35 @@ describe('ai candidate ipc contracts', () => {
     expect(
       updateCandidateStatusInputSchema.safeParse({ candidateId: VALID_UUID, status: 'rejected' }).success,
     ).toBe(true);
+  });
+
+  it('accepts skipped status in updateCandidateStatusInputSchema', () => {
+    expect(
+      updateCandidateStatusInputSchema.safeParse({ candidateId: VALID_UUID, status: 'skipped' }).success,
+    ).toBe(true);
+  });
+
+  it('rejects non-uuid candidateId in updateCandidateNotesInputSchema', () => {
+    expect(
+      updateCandidateNotesInputSchema.safeParse({ candidateId: 'bad', notes: 'hello' }).success,
+    ).toBe(false);
+  });
+
+  it('accepts null notes in updateCandidateNotesInputSchema', () => {
+    expect(
+      updateCandidateNotesInputSchema.safeParse({ candidateId: VALID_UUID, notes: null }).success,
+    ).toBe(true);
+  });
+
+  it('accepts string notes in updateCandidateNotesInputSchema', () => {
+    expect(
+      updateCandidateNotesInputSchema.safeParse({ candidateId: VALID_UUID, notes: 'Great moment' }).success,
+    ).toBe(true);
+  });
+
+  it('rejects notes exceeding 1000 chars in updateCandidateNotesInputSchema', () => {
+    expect(
+      updateCandidateNotesInputSchema.safeParse({ candidateId: VALID_UUID, notes: 'a'.repeat(1001) }).success,
+    ).toBe(false);
   });
 });

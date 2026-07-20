@@ -46,6 +46,7 @@ const makeCandidate = (overrides: Partial<ClipCandidate> = {}): ClipCandidate =>
   sortOrder: 0,
   modelId: 'gpt-4o-mini',
   promptVersion: '1',
+  notes: null,
   createdAt: NOW,
   updatedAt: NOW,
   ...overrides,
@@ -76,6 +77,7 @@ const makeAiApi = (overrides: Record<string, unknown> = {}) => ({
   cancelGeneration: vi.fn().mockResolvedValue({ cancelled: false }),
   listCandidates: vi.fn<[], Promise<ListCandidatesOutput>>().mockResolvedValue(makeListOutput()),
   updateCandidateStatus: vi.fn().mockResolvedValue({ ok: true }),
+  updateCandidateNotes: vi.fn().mockResolvedValue({ ok: true }),
   ...overrides,
 });
 
@@ -312,6 +314,183 @@ describe('CandidatesSection', () => {
       await user.click(await screen.findByTestId('cancel-generation-button'));
       await waitFor(() => expect(cancelGeneration).toHaveBeenCalledOnce());
       expect(cancelGeneration).toHaveBeenCalledWith(TEST_ID);
+    });
+  });
+
+  describe('skip interaction (M8)', () => {
+    it('skip button calls updateCandidateStatus with skipped', async () => {
+      const user = userEvent.setup();
+      const updateCandidateStatus = vi.fn().mockResolvedValue({ ok: true });
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [makeCandidate()],
+          generationStatus: 'done',
+        })),
+        updateCandidateStatus,
+      });
+
+      await user.click(await screen.findByTestId('skip-candidate-button'));
+      await waitFor(() => expect(updateCandidateStatus).toHaveBeenCalledOnce());
+      expect(updateCandidateStatus).toHaveBeenCalledWith(CANDIDATE_ID, 'skipped');
+    });
+
+    it('skipped candidate shows no skip button', async () => {
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [makeCandidate({ candidateStatus: 'skipped' })],
+          generationStatus: 'done',
+        })),
+      });
+
+      await screen.findByTestId('candidate-item');
+      expect(screen.queryByTestId('skip-candidate-button')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('review summary (M8)', () => {
+    it('shows review summary when candidates exist', async () => {
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [
+            makeCandidate({ candidateStatus: 'suggested' }),
+            makeCandidate({ id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab', candidateStatus: 'approved' }),
+          ],
+          generationStatus: 'done',
+        })),
+      });
+
+      const summary = await screen.findByTestId('review-summary');
+      expect(summary).toBeInTheDocument();
+      expect(summary).toHaveTextContent('Suggested: 1');
+      expect(summary).toHaveTextContent('Approved: 1');
+    });
+
+    it('does not show review summary when no candidates', async () => {
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [],
+          generationStatus: 'done',
+        })),
+      });
+
+      await screen.findByTestId('generation-status');
+      expect(screen.queryByTestId('review-summary')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('score filter (M8)', () => {
+    it('shows score threshold input when candidates exist', async () => {
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [makeCandidate()],
+          generationStatus: 'done',
+        })),
+      });
+
+      expect(await screen.findByTestId('score-threshold-input')).toBeInTheDocument();
+    });
+
+    it('hides candidates below score threshold', async () => {
+      const user = userEvent.setup();
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [
+            makeCandidate({ id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', scoreRaw: 0.9 }),
+            makeCandidate({ id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab', scoreRaw: 0.3 }),
+          ],
+          generationStatus: 'done',
+        })),
+      });
+
+      const thresholdInput = await screen.findByTestId('score-threshold-input');
+      await user.clear(thresholdInput);
+      await user.type(thresholdInput, '0.5');
+
+      await waitFor(() => expect(screen.getAllByTestId('candidate-item')).toHaveLength(1));
+    });
+  });
+
+  describe('batch actions (M8)', () => {
+    it('approve-all button calls updateCandidateStatus for all suggested in view', async () => {
+      const user = userEvent.setup();
+      const updateCandidateStatus = vi.fn().mockResolvedValue({ ok: true });
+      const C2_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab';
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [
+            makeCandidate({ candidateStatus: 'suggested' }),
+            makeCandidate({ id: C2_ID, candidateStatus: 'suggested' }),
+          ],
+          generationStatus: 'done',
+        })),
+        updateCandidateStatus,
+      });
+
+      await user.click(await screen.findByTestId('approve-all-button'));
+      await waitFor(() => expect(updateCandidateStatus).toHaveBeenCalledTimes(2));
+      expect(updateCandidateStatus).toHaveBeenCalledWith(CANDIDATE_ID, 'approved');
+      expect(updateCandidateStatus).toHaveBeenCalledWith(C2_ID, 'approved');
+    });
+
+    it('reject-all button calls updateCandidateStatus for all suggested in view', async () => {
+      const user = userEvent.setup();
+      const updateCandidateStatus = vi.fn().mockResolvedValue({ ok: true });
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [makeCandidate({ candidateStatus: 'suggested' })],
+          generationStatus: 'done',
+        })),
+        updateCandidateStatus,
+      });
+
+      await user.click(await screen.findByTestId('reject-all-button'));
+      await waitFor(() => expect(updateCandidateStatus).toHaveBeenCalledOnce());
+      expect(updateCandidateStatus).toHaveBeenCalledWith(CANDIDATE_ID, 'rejected');
+    });
+
+    it('batch buttons absent when no suggested candidates', async () => {
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [makeCandidate({ candidateStatus: 'approved' })],
+          generationStatus: 'done',
+        })),
+      });
+
+      await screen.findByTestId('candidate-item');
+      expect(screen.queryByTestId('approve-all-button')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('reject-all-button')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('notes (M8)', () => {
+    it('renders notes textarea for each candidate', async () => {
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [makeCandidate()],
+          generationStatus: 'done',
+        })),
+      });
+
+      expect(await screen.findByTestId('candidate-notes-input')).toBeInTheDocument();
+    });
+
+    it('calls updateCandidateNotes on blur with current value', async () => {
+      const user = userEvent.setup();
+      const updateCandidateNotes = vi.fn().mockResolvedValue({ ok: true });
+      renderSection(makeProject(), {
+        listCandidates: vi.fn().mockResolvedValue(makeListOutput({
+          candidates: [makeCandidate()],
+          generationStatus: 'done',
+        })),
+        updateCandidateNotes,
+      });
+
+      const notesInput = await screen.findByTestId('candidate-notes-input');
+      await user.click(notesInput);
+      await user.type(notesInput, 'Great clip for intro');
+      await user.tab();
+      await waitFor(() => expect(updateCandidateNotes).toHaveBeenCalledOnce());
+      expect(updateCandidateNotes).toHaveBeenCalledWith(CANDIDATE_ID, 'Great clip for intro');
     });
   });
 });

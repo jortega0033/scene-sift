@@ -311,6 +311,86 @@ describe('ClipCandidateService', () => {
       db.close();
       rmSync(dir, { recursive: true, force: true });
     });
+
+    it('updates candidate status to skipped', async () => {
+      const { db, dir } = setupDb();
+      const project = createProjectWithSubtitle(db);
+      const svc = new ClipCandidateService(db, makeAiServiceMock());
+
+      await svc.generateCandidates(project.id);
+      const { candidates } = svc.listCandidates(project.id);
+
+      svc.updateCandidateStatus(candidates[0].id, 'skipped');
+
+      const updated = svc.listCandidates(project.id);
+      expect(updated.candidates[0].candidateStatus).toBe('skipped');
+
+      db.close();
+      rmSync(dir, { recursive: true, force: true });
+    });
+  });
+
+  describe('updateCandidateNotes', () => {
+    it('sets notes on a candidate', async () => {
+      const { db, dir } = setupDb();
+      const project = createProjectWithSubtitle(db);
+      const svc = new ClipCandidateService(db, makeAiServiceMock());
+
+      await svc.generateCandidates(project.id);
+      const { candidates } = svc.listCandidates(project.id);
+      const candidateId = candidates[0].id;
+
+      svc.updateCandidateNotes(candidateId, 'Great moment');
+
+      const updated = svc.listCandidates(project.id);
+      expect(updated.candidates[0].notes).toBe('Great moment');
+
+      db.close();
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('clears notes when set to null', async () => {
+      const { db, dir } = setupDb();
+      const project = createProjectWithSubtitle(db);
+      const svc = new ClipCandidateService(db, makeAiServiceMock());
+
+      await svc.generateCandidates(project.id);
+      const { candidates } = svc.listCandidates(project.id);
+      const candidateId = candidates[0].id;
+
+      svc.updateCandidateNotes(candidateId, 'temp');
+      svc.updateCandidateNotes(candidateId, null);
+
+      const updated = svc.listCandidates(project.id);
+      expect(updated.candidates[0].notes).toBeNull();
+
+      db.close();
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('notes persist across service restart', async () => {
+      const { dir, dbPath, migrationsFolder } = createDbPath();
+      const db = new DatabaseService(dbPath, migrationsFolder);
+      db.initialize();
+
+      const project = createProjectWithSubtitle(db);
+      const svc = new ClipCandidateService(db, makeAiServiceMock());
+      await svc.generateCandidates(project.id);
+      const { candidates } = svc.listCandidates(project.id);
+      const candidateId = candidates[0].id;
+
+      svc.updateCandidateNotes(candidateId, 'Persistent note');
+      db.close();
+
+      const db2 = new DatabaseService(dbPath, migrationsFolder);
+      db2.initialize();
+      const svc2 = new ClipCandidateService(db2, makeAiServiceMock());
+      const updated = svc2.listCandidates(project.id);
+      expect(updated.candidates[0].notes).toBe('Persistent note');
+
+      db2.close();
+      rmSync(dir, { recursive: true, force: true });
+    });
   });
 
   describe('listCandidates', () => {

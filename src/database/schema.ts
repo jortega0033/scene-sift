@@ -98,6 +98,7 @@ export const clipCandidatesTable = sqliteTable('clip_candidates', {
   sortOrder: integer('sort_order').notNull(),
   modelId: text('model_id').notNull(),
   promptVersion: text('prompt_version').notNull(),
+  notes: text('notes'),
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 });

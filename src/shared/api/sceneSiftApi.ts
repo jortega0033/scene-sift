@@ -117,7 +117,11 @@ export type SceneSiftApi = {
     listCandidates: (projectId: string) => Promise<ListCandidatesOutput>;
     updateCandidateStatus: (
       candidateId: string,
-      status: 'approved' | 'rejected',
+      status: 'approved' | 'rejected' | 'skipped',
+    ) => Promise<{ ok: true }>;
+    updateCandidateNotes: (
+      candidateId: string,
+      notes: string | null,
     ) => Promise<{ ok: true }>;
   };
 };

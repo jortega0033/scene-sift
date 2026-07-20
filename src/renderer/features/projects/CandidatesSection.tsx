@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ProjectRecord } from '@shared/schemas/project';
 import type { ClipCandidate } from '@shared/schemas/candidates';
@@ -6,10 +7,20 @@ import {
   useGenerateCandidates,
   useCancelGeneration,
   useUpdateCandidateStatus,
+  useUpdateCandidateNotes,
 } from '@renderer/hooks/useCandidates';
 
 type CandidatesSectionProps = {
   project: ProjectRecord;
+};
+
+type SortKey = 'score' | 'startMs' | 'status';
+
+const STATUS_SORT_ORDER: Record<string, number> = {
+  approved: 0,
+  suggested: 1,
+  skipped: 2,
+  rejected: 3,
 };
 
 const msToTimestamp = (ms: number): string => {
@@ -39,12 +50,14 @@ const candidateStatusBadge: Record<string, string> = {
   suggested: 'border border-border text-muted-foreground',
   approved: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
   rejected: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
+  skipped: 'bg-muted text-muted-foreground',
 };
 
 const candidateStatusLabel: Record<string, string> = {
   suggested: 'Suggested',
   approved: 'Approved',
   rejected: 'Rejected',
+  skipped: 'Skipped',
 };
 
 function CandidateRow({
@@ -55,11 +68,19 @@ function CandidateRow({
   projectId: string;
 }) {
   const updateStatus = useUpdateCandidateStatus();
+  const updateNotes = useUpdateCandidateNotes();
+  const [localNotes, setLocalNotes] = useState(candidate.notes ?? '');
 
   const handleApprove = () =>
     void updateStatus.mutateAsync({ candidateId: candidate.id, projectId, status: 'approved' });
   const handleReject = () =>
     void updateStatus.mutateAsync({ candidateId: candidate.id, projectId, status: 'rejected' });
+  const handleSkip = () =>
+    void updateStatus.mutateAsync({ candidateId: candidate.id, projectId, status: 'skipped' });
+  const handleNotesBlur = () => {
+    const notes = localNotes.trim() === '' ? null : localNotes;
+    void updateNotes.mutateAsync({ candidateId: candidate.id, projectId, notes });
+  };
 
   return (
     <li
@@ -82,6 +103,18 @@ function CandidateRow({
 
       <p className="text-xs text-muted-foreground">{candidate.reason}</p>
 
+      <textarea
+        data-testid="candidate-notes-input"
+        className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+        rows={2}
+        maxLength={1000}
+        placeholder="Add a note…"
+        value={localNotes}
+        onChange={(e) => setLocalNotes(e.target.value)}
+        onBlur={handleNotesBlur}
+        aria-label="Candidate notes"
+      />
+
       {candidate.candidateStatus !== 'rejected' && (
         <div className="flex gap-2 pt-1">
           {candidate.candidateStatus !== 'approved' && (
@@ -93,6 +126,17 @@ function CandidateRow({
               onClick={handleApprove}
             >
               Approve
+            </button>
+          )}
+          {candidate.candidateStatus !== 'skipped' && (
+            <button
+              type="button"
+              data-testid="skip-candidate-button"
+              className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-border px-2 text-xs hover:bg-muted disabled:opacity-50"
+              disabled={updateStatus.isPending}
+              onClick={handleSkip}
+            >
+              Skip
             </button>
           )}
           <button
@@ -115,6 +159,18 @@ export const CandidatesSection = ({ project }: CandidatesSectionProps) => {
     project.subtitleStatus === 'ready' || project.subtitleStatus === 'ready_with_warnings';
   const projectReady = project.status === 'ready';
 
+  const [scoreThreshold, setScoreThreshold] = useState(0);
+  const [sortKey, setSortKey] = useState<SortKey>('score');
+
+  const projectId = project.id;
+  const handleScoreThresholdChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = parseFloat(e.target.value);
+      if (!isNaN(v)) setScoreThreshold(Math.max(0, Math.min(1, v)));
+    },
+    [],
+  );
+
   const aiConfigQuery = useQuery({
     queryKey: ['ai-config-status'],
     queryFn: () => window.sceneSift.ai.getConfigurationStatus(),
@@ -122,9 +178,10 @@ export const CandidatesSection = ({ project }: CandidatesSectionProps) => {
   });
   const aiAvailable = aiConfigQuery.data?.configurationStatus === 'available';
 
-  const candidatesQuery = useCandidates(subtitleReady && projectReady ? project.id : null);
+  const candidatesQuery = useCandidates(subtitleReady && projectReady ? projectId : null);
   const generate = useGenerateCandidates();
   const cancel = useCancelGeneration();
+  const updateStatus = useUpdateCandidateStatus();
 
   const data = candidatesQuery.data;
   const isGenerating = data?.generationStatus === 'generating' || generate.isPending;
@@ -151,6 +208,39 @@ export const CandidatesSection = ({ project }: CandidatesSectionProps) => {
       </div>
     );
   }
+
+  const allCandidates = data?.candidates ?? [];
+
+  const filteredCandidates = allCandidates
+    .filter((c) => c.scoreRaw >= scoreThreshold)
+    .slice()
+    .sort((a, b) => {
+      if (sortKey === 'score') return b.scoreRaw - a.scoreRaw;
+      if (sortKey === 'startMs') return a.startMs - b.startMs;
+      return (STATUS_SORT_ORDER[a.candidateStatus] ?? 99) - (STATUS_SORT_ORDER[b.candidateStatus] ?? 99);
+    });
+
+  const suggestedInView = filteredCandidates.filter((c) => c.candidateStatus === 'suggested');
+  const hasCandidates = allCandidates.length > 0;
+
+  const summaryCounts = {
+    suggested: allCandidates.filter((c) => c.candidateStatus === 'suggested').length,
+    approved: allCandidates.filter((c) => c.candidateStatus === 'approved').length,
+    rejected: allCandidates.filter((c) => c.candidateStatus === 'rejected').length,
+    skipped: allCandidates.filter((c) => c.candidateStatus === 'skipped').length,
+  };
+
+  const handleApproveAll = () => {
+    for (const c of suggestedInView) {
+      void updateStatus.mutateAsync({ candidateId: c.id, projectId, status: 'approved' });
+    }
+  };
+
+  const handleRejectAll = () => {
+    for (const c of suggestedInView) {
+      void updateStatus.mutateAsync({ candidateId: c.id, projectId, status: 'rejected' });
+    }
+  };
 
   return (
     <div data-testid="candidates-section" className="border-t border-border pt-4 space-y-3">
@@ -179,10 +269,73 @@ export const CandidatesSection = ({ project }: CandidatesSectionProps) => {
         <p className="text-xs text-muted-foreground">Loading…</p>
       )}
 
-      {data && data.candidates.length > 0 && (
+      {hasCandidates && (
+        <div data-testid="review-summary" className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+          <span>Suggested: {summaryCounts.suggested}</span>
+          <span>Approved: {summaryCounts.approved}</span>
+          <span>Rejected: {summaryCounts.rejected}</span>
+          <span>Skipped: {summaryCounts.skipped}</span>
+        </div>
+      )}
+
+      {hasCandidates && (
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            Min score:
+            <input
+              data-testid="score-threshold-input"
+              type="number"
+              min={0}
+              max={1}
+              step={0.05}
+              value={scoreThreshold}
+              onChange={handleScoreThresholdChange}
+              className="w-16 rounded border border-border bg-background px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </label>
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            Sort:
+            <select
+              data-testid="sort-select"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+              className="rounded border border-border bg-background px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="score">Score ↓</option>
+              <option value="startMs">Start time ↑</option>
+              <option value="status">Status group</option>
+            </select>
+          </label>
+        </div>
+      )}
+
+      {hasCandidates && suggestedInView.length > 0 && (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            data-testid="approve-all-button"
+            className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-foreground px-2 text-xs hover:bg-muted disabled:opacity-50"
+            disabled={updateStatus.isPending}
+            onClick={handleApproveAll}
+          >
+            Approve all ({suggestedInView.length})
+          </button>
+          <button
+            type="button"
+            data-testid="reject-all-button"
+            className="h-[var(--control-height)] rounded-[var(--radius-sm)] border border-border px-2 text-xs hover:bg-muted disabled:opacity-50"
+            disabled={updateStatus.isPending}
+            onClick={handleRejectAll}
+          >
+            Reject all ({suggestedInView.length})
+          </button>
+        </div>
+      )}
+
+      {filteredCandidates.length > 0 && (
         <ul data-testid="candidates-list" className="space-y-2">
-          {data.candidates.map((candidate) => (
-            <CandidateRow key={candidate.id} candidate={candidate} projectId={project.id} />
+          {filteredCandidates.map((candidate) => (
+            <CandidateRow key={candidate.id} candidate={candidate} projectId={projectId} />
           ))}
         </ul>
       )}

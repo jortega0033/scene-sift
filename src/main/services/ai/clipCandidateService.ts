@@ -188,8 +188,13 @@ export class ClipCandidateService {
     return this.db.listCandidatesForProject(projectId);
   }
 
-  updateCandidateStatus(candidateId: string, status: 'approved' | 'rejected'): { ok: true } {
+  updateCandidateStatus(candidateId: string, status: 'approved' | 'rejected' | 'skipped'): { ok: true } {
     this.db.updateCandidateStatus(candidateId, status);
+    return { ok: true };
+  }
+
+  updateCandidateNotes(candidateId: string, notes: string | null): { ok: true } {
+    this.db.updateCandidateNotes(candidateId, notes);
     return { ok: true };
   }
 }

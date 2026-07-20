@@ -30,8 +30,19 @@ export const useCancelGeneration = () => {
 export const useUpdateCandidateStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ candidateId, status }: { candidateId: string; projectId: string; status: 'approved' | 'rejected' }) =>
+    mutationFn: ({ candidateId, status }: { candidateId: string; projectId: string; status: 'approved' | 'rejected' | 'skipped' }) =>
       window.sceneSift.ai.updateCandidateStatus(candidateId, status),
+    onSuccess: async (_data, { projectId }) => {
+      await queryClient.invalidateQueries({ queryKey: ['candidates', projectId] });
+    },
+  });
+};
+
+export const useUpdateCandidateNotes = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ candidateId, notes }: { candidateId: string; projectId: string; notes: string | null }) =>
+      window.sceneSift.ai.updateCandidateNotes(candidateId, notes),
     onSuccess: async (_data, { projectId }) => {
       await queryClient.invalidateQueries({ queryKey: ['candidates', projectId] });
     },
