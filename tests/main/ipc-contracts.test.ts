@@ -7,6 +7,10 @@ import {
   subtitleClearInputSchema,
 } from '@shared/schemas/subtitle';
 import { syncCheckForProjectInputSchema } from '@shared/schemas/sync';
+import {
+  videoGetPlaybackUrlInputSchema,
+  videoGetCuesInputSchema,
+} from '@shared/schemas/video';
 
 describe('ipc contracts', () => {
   it('registers explicit channels only', () => {
@@ -120,5 +124,49 @@ describe('sync ipc contracts', () => {
     const syncChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('sync:'));
     expect(new Set(syncChannels).size).toBe(syncChannels.length);
     expect(syncChannels.length).toBe(1);
+  });
+});
+
+describe('video ipc contracts', () => {
+  it('registers video:getPlaybackUrl channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('video:getPlaybackUrl');
+  });
+
+  it('registers video:getCues channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('video:getCues');
+  });
+
+  it('rejects non-uuid projectId in videoGetPlaybackUrlInputSchema', () => {
+    expect(videoGetPlaybackUrlInputSchema.safeParse({ projectId: 'not-a-uuid' }).success).toBe(false);
+  });
+
+  it('rejects missing projectId in videoGetPlaybackUrlInputSchema', () => {
+    expect(videoGetPlaybackUrlInputSchema.safeParse({}).success).toBe(false);
+  });
+
+  it('accepts valid uuid in videoGetPlaybackUrlInputSchema', () => {
+    expect(
+      videoGetPlaybackUrlInputSchema.safeParse({
+        projectId: '11111111-1111-4111-8111-111111111111',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('rejects non-uuid projectId in videoGetCuesInputSchema', () => {
+    expect(videoGetCuesInputSchema.safeParse({ projectId: 'not-a-uuid' }).success).toBe(false);
+  });
+
+  it('accepts valid uuid in videoGetCuesInputSchema', () => {
+    expect(
+      videoGetCuesInputSchema.safeParse({
+        projectId: '11111111-1111-4111-8111-111111111111',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('video channels are unique (no duplicates)', () => {
+    const videoChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('video:'));
+    expect(new Set(videoChannels).size).toBe(videoChannels.length);
+    expect(videoChannels.length).toBe(2);
   });
 });

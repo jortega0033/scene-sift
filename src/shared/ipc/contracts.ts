@@ -22,6 +22,12 @@ import {
   syncCheckForProjectInputSchema,
   syncCheckForProjectOutputSchema,
 } from '@shared/schemas/sync';
+import {
+  videoGetPlaybackUrlInputSchema,
+  videoGetPlaybackUrlOutputSchema,
+  videoGetCuesInputSchema,
+  videoGetCuesOutputSchema,
+} from '@shared/schemas/video';
 
 export const databaseHealthSchema = z.object({
   ok: z.boolean(),
@@ -146,6 +152,16 @@ export const ipcContracts = {
     checkForProject: {
       input: syncCheckForProjectInputSchema,
       output: syncCheckForProjectOutputSchema,
+    },
+  },
+  video: {
+    getPlaybackUrl: {
+      input: videoGetPlaybackUrlInputSchema,
+      output: videoGetPlaybackUrlOutputSchema,
+    },
+    getCues: {
+      input: videoGetCuesInputSchema,
+      output: videoGetCuesOutputSchema,
     },
   },
 };
