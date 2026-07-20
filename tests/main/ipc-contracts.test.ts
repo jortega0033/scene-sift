@@ -249,10 +249,11 @@ describe('transcript ipc contracts', () => {
 });
 
 describe('ai ipc contracts', () => {
-  it('registers all 5 ai:* channels', () => {
+  it('registers all 6 ai:* channels', () => {
     expect(ALL_IPC_CHANNELS).toContain('ai:getConfigurationStatus');
     expect(ALL_IPC_CHANNELS).toContain('ai:setApiKey');
     expect(ALL_IPC_CHANNELS).toContain('ai:testConnection');
+    expect(ALL_IPC_CHANNELS).toContain('ai:cancelTest');
     expect(ALL_IPC_CHANNELS).toContain('ai:clearConfiguration');
     expect(ALL_IPC_CHANNELS).toContain('ai:recordConsent');
   });
@@ -266,7 +267,7 @@ describe('ai ipc contracts', () => {
   it('ai channels are unique (no duplicates)', () => {
     const aiChannels = ALL_IPC_CHANNELS.filter((c) => c.startsWith('ai:'));
     expect(new Set(aiChannels).size).toBe(aiChannels.length);
-    expect(aiChannels.length).toBe(5);
+    expect(aiChannels.length).toBe(6);
   });
 
   it('rejects empty apiKey in aiSetApiKeyInputSchema', () => {

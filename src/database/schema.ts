@@ -1,4 +1,4 @@
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { blob, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const projectsTable = sqliteTable('projects', {
   id: text('id').primaryKey(),
@@ -60,5 +60,24 @@ export const renderJobsTable = sqliteTable('render_jobs', {
   outputPath: text('output_path'),
   errorMessage: text('error_message'),
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
+});
+
+export const aiProviderConfigTable = sqliteTable('ai_provider_config', {
+  id: text('id').primaryKey().default('default'),
+  providerType: text('provider_type').notNull().default('openai_compatible'),
+  baseUrl: text('base_url').notNull().default('https://api.openai.com'),
+  model: text('model').notNull().default('gpt-4o-mini'),
+  isConfigured: integer('is_configured', { mode: 'boolean' }).notNull().default(false),
+  consentRecordedAt: integer('consent_recorded_at', { mode: 'number' }),
+  lastTestStatus: text('last_test_status'),
+  lastTestAt: integer('last_test_at', { mode: 'number' }),
+  createdAt: integer('created_at', { mode: 'number' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
+});
+
+export const aiSecretsTable = sqliteTable('ai_secrets', {
+  id: text('id').primaryKey().default('ai_provider'),
+  encryptedKey: blob('encrypted_key'),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 });

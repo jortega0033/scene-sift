@@ -8,7 +8,7 @@ import { desc, eq } from 'drizzle-orm';
 import type { AppSettings } from '@shared/schemas/settings';
 import type { ProjectRecord, MediaMetadata } from '@shared/schemas/project';
 import type { CreateProjectInput } from '@shared/schemas/project';
-import { appSettingsTable, projectsTable, renderJobsTable, subtitleDocumentsTable } from '@database/schema';
+import { appSettingsTable, projectsTable, renderJobsTable, subtitleDocumentsTable, aiProviderConfigTable } from '@database/schema';
 import { AppError } from '@main/utils/errors';
 import type { QueueStatus } from '@shared/types/common';
 import type { InspectionOutcome } from '@main/services/ffmpeg/ffmpegService';
@@ -23,6 +23,31 @@ type SyncStatusUpdate = {
 };
 
 const SETTINGS_ID = 'default';
+const AI_CONFIG_ID = 'default';
+const AI_SECRETS_ID = 'ai_provider';
+
+export type AiProviderConfigRow = {
+  id: string;
+  providerType: string;
+  baseUrl: string;
+  model: string;
+  isConfigured: boolean;
+  consentRecordedAt: number | null;
+  lastTestStatus: string | null;
+  lastTestAt: number | null;
+  createdAt: number;
+  updatedAt: number;
+};
+
+type AiProviderConfigUpdate = Partial<{
+  baseUrl: string;
+  model: string;
+  isConfigured: boolean;
+  consentRecordedAt: number | null;
+  lastTestStatus: string | null;
+  lastTestAt: number | null;
+  updatedAt: number;
+}>;
 
 type DbHealth = {
   ok: boolean;
@@ -62,6 +87,8 @@ export class DatabaseService {
     this.migrationsApplied = true;
 
     this.ensureDefaultSettings();
+    this.ensureAiProviderConfigRow();
+    this.ensureAiSecretsRow();
   }
 
   public close(): void {
@@ -483,6 +510,111 @@ export class DatabaseService {
       JSON.stringify(doc.warnings),
       doc.parsedAt,
     );
+  }
+
+  public ensureAiProviderConfigRow(): void {
+    const orm = this.ensureOrm();
+    const existing = orm
+      .select({ id: aiProviderConfigTable.id })
+      .from(aiProviderConfigTable)
+      .where(eq(aiProviderConfigTable.id, AI_CONFIG_ID))
+      .get();
+    if (existing) return;
+    const now = Date.now();
+    orm
+      .insert(aiProviderConfigTable)
+      .values({
+        id: AI_CONFIG_ID,
+        providerType: 'openai_compatible',
+        baseUrl: 'https://api.openai.com',
+        model: 'gpt-4o-mini',
+        isConfigured: false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+  }
+
+  public ensureAiSecretsRow(): void {
+    const db = this.ensureDb();
+    const now = Date.now();
+    db.prepare(
+      `INSERT OR IGNORE INTO ai_secrets (id, encrypted_key, updated_at) VALUES (?, NULL, ?)`,
+    ).run(AI_SECRETS_ID, now);
+  }
+
+  public getAiProviderConfig(): AiProviderConfigRow {
+    const orm = this.ensureOrm();
+    const row = orm
+      .select()
+      .from(aiProviderConfigTable)
+      .where(eq(aiProviderConfigTable.id, AI_CONFIG_ID))
+      .get();
+    if (!row) {
+      throw new AppError('AI_CONFIG_NOT_FOUND', 'AI provider config row not found.');
+    }
+    return {
+      id: row.id,
+      providerType: row.providerType,
+      baseUrl: row.baseUrl,
+      model: row.model,
+      isConfigured: Boolean(row.isConfigured),
+      consentRecordedAt: row.consentRecordedAt ?? null,
+      lastTestStatus: row.lastTestStatus ?? null,
+      lastTestAt: row.lastTestAt ?? null,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
+  }
+
+  public updateAiProviderConfig(update: AiProviderConfigUpdate): void {
+    const orm = this.ensureOrm();
+    orm
+      .update(aiProviderConfigTable)
+      .set({ ...update, updatedAt: update.updatedAt ?? Date.now() })
+      .where(eq(aiProviderConfigTable.id, AI_CONFIG_ID))
+      .run();
+  }
+
+  public getAiSecretBlob(): Buffer | null {
+    const db = this.ensureDb();
+    const row = db
+      .prepare(`SELECT encrypted_key FROM ai_secrets WHERE id = ?`)
+      .get(AI_SECRETS_ID) as { encrypted_key: Buffer | null } | undefined;
+    return row?.encrypted_key ?? null;
+  }
+
+  public setAiSecretBlob(
+    blob: Buffer,
+    config: { baseUrl: string; model: string },
+    now: number,
+  ): void {
+    const db = this.ensureDb();
+    db.transaction(() => {
+      db.prepare(
+        `INSERT INTO ai_secrets (id, encrypted_key, updated_at) VALUES (?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET encrypted_key = excluded.encrypted_key, updated_at = excluded.updated_at`,
+      ).run(AI_SECRETS_ID, blob, now);
+      db.prepare(
+        `UPDATE ai_provider_config SET base_url = ?, model = ?, is_configured = 1,
+         last_test_status = NULL, last_test_at = NULL, updated_at = ? WHERE id = ?`,
+      ).run(config.baseUrl, config.model, now, AI_CONFIG_ID);
+    })();
+  }
+
+  public clearAiSecretBlob(): void {
+    const db = this.ensureDb();
+    const now = Date.now();
+    db.transaction(() => {
+      db.prepare(`UPDATE ai_secrets SET encrypted_key = NULL, updated_at = ? WHERE id = ?`).run(
+        now,
+        AI_SECRETS_ID,
+      );
+      db.prepare(
+        `UPDATE ai_provider_config SET is_configured = 0, last_test_status = NULL,
+         last_test_at = NULL, consent_recorded_at = NULL, updated_at = ? WHERE id = ?`,
+      ).run(now, AI_CONFIG_ID);
+    })();
   }
 
   private ensureDb(): Database.Database {

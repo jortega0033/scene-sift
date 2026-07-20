@@ -1495,3 +1495,108 @@ Append one JSON line per material run.
   "completed": "2026-07-20"
 }
 ```
+
+```json
+{
+  "run_id": "2026-07-20T-m6-implementation-phases-11-15",
+  "milestone": "M6 AI Provider Infrastructure — Implementation (Phases 11–15)",
+  "branch": "feature/m6-ai-provider",
+  "risk_level": 2,
+  "status": "complete",
+  "started": "2026-07-20",
+  "completed": "2026-07-20",
+  "phases": {
+    "phase_11": {
+      "status": "COMPLETE",
+      "risk": 2,
+      "description": "AiProviderSection React component + SettingsPage integration",
+      "files_created": ["src/renderer/features/settings/AiProviderSection.tsx"],
+      "files_modified": ["src/renderer/features/settings/SettingsPage.tsx"],
+      "key_decisions": [
+        "AiProviderSection placed outside main settings <form> (between </form> and System Status) — nested <form> is invalid HTML",
+        "isTesting local state drives testing UI (not server configurationStatus) — avoids race condition",
+        "cancelledRef.current guard prevents query invalidation when user cancels test",
+        "window.confirm() for Clear configuration (per spec)",
+        "type=password + autocomplete=new-password on API key input",
+        "role=region + aria-label on section, aria-live=polite on status, role=alert on errors"
+      ]
+    },
+    "phase_12": {
+      "status": "COMPLETE",
+      "risk": 1,
+      "description": "17 unit tests for AiProviderSection",
+      "files_created": ["tests/renderer/AiProviderSection.test.tsx"],
+      "test_count": 17,
+      "key_fix": "State-cycling mock for save+key-not-exposed test — returns unconfigured on first call, configured_untested on subsequent calls"
+    },
+    "phase_13": {
+      "status": "COMPLETE",
+      "risk": 1,
+      "description": "5 E2E tests for AI provider configuration flow",
+      "files_created": ["tests/e2e/ai-provider-config.e2e.spec.ts"],
+      "test_count": 5,
+      "coverage": ["section visible", "privacy notice visible", "save disabled", "consent button enabled", "form inputs present", "apikey type=password + autocomplete=new-password", "ARIA region landmark"]
+    },
+    "phase_14": {
+      "status": "COMPLETE",
+      "risk": 1,
+      "description": "Visual regression tests for AiProviderSection states",
+      "files_created": ["tests/visual/settings.visual.spec.ts (2 new tests)"],
+      "files_modified": ["src/renderer/qa/fixtures.ts", "src/renderer/qa/mockSceneSiftApi.ts", "tests/fixtures/sceneSiftApi.ts", "tests/visual/settings.visual.spec.ts"],
+      "new_fixture": "ai-provider-available — returns available AI status with maskedEndpoint=https://api",
+      "new_snapshots": ["ai-provider-unconfigured-chromium-darwin.png", "ai-provider-available-chromium-darwin.png"],
+      "regenerated_snapshots": ["settings-defaults-chromium-darwin.png", "settings-ffmpeg-unavailable-chromium-darwin.png", "dark-settings-chromium-darwin.png"],
+      "visual_tests_total": "27/27 passing"
+    },
+    "phase_15": {
+      "status": "COMPLETE",
+      "risk": 2,
+      "description": "Adversarial governance tests for M6 AI security constraints",
+      "files_modified": ["gate.yaml", "tests/governance/adversarial-scenarios.test.ts"],
+      "gate_yaml_additions": [
+        "ai-redirect-follow: pattern redirect\\s*:\\s*['\\\"](follow)['\\\"] — SSRF + credential leakage via open redirects — severity: critical"
+      ],
+      "new_adversarial_tests": 8,
+      "adversarial_tests_total": 72,
+      "test_scenarios": [
+        "detects redirect:follow in AI HTTP client code",
+        "detects redirect:follow double-quoted variant",
+        "does NOT flag redirect:manual (correct production setting)",
+        "classifies AI service files as high risk (risk 3)",
+        "classifies AI configuration service as high risk",
+        "detects forbidden change-ai-retention-policy action",
+        "production aiHttpClient.ts does not use redirect:follow",
+        "production AiConfigurationStatusResponse schema does not include apiKey field"
+      ]
+    }
+  },
+  "validation_results": {
+    "typecheck": "exit 0",
+    "lint": "exit 0",
+    "test_unit": "37 files / 561 tests — all passing",
+    "test_e2e": "52/53 passing — 1 pre-existing failure (transcript.spec.ts:12)",
+    "test_visual": "27/27 passing",
+    "governance_validate": "PASS",
+    "architecture_validate": "PASS",
+    "design_validate": "PASS",
+    "dependencies_validate": "PASS",
+    "claude_validate": "PASS",
+    "build": "exit 0",
+    "package_dir": "exit 0",
+    "test_electron": "SKIPPED — pre-existing environment limitation (consistent with M4 GD-005 owner override)"
+  },
+  "pre_existing_failures": {
+    "transcript_spec_12": "transcript.spec.ts:12 'shows prerequisite list when project lacks subtitle' — fixture projectB has subtitleStatus=null but test expects 'Subtitle parsed' text; no M6 files touch transcript; confirmed pre-existing",
+    "test_electron": "Electron launch fails with TypeError: Cannot read properties of undefined (registerSchemesAsPrivileged) when run with Node.js binary; environment limitation, not M6 regression"
+  },
+  "security_constraints_verified": [
+    "redirect: manual enforced in aiHttpClient.ts (line 171)",
+    "apiKey absent from AiConfigurationStatusResponse schema",
+    "ai-redirect-follow pattern added to gate.yaml catches violations",
+    "All AI service paths classified risk-3 by gate.yaml src/main/** rule",
+    "AiProviderSection type=password prevents API key display in browser",
+    "cancelledRef prevents stale query result after test cancellation"
+  ],
+  "next_step": "Independent acceptance audit — verifier must be different role/model than implementer"
+}
+```

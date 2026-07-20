@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import type { PromptDefinition } from '../types';
 
-const connectionTestOutputSchema = z.object({ ok: z.boolean() });
+const connectionTestOutputSchema = z.object({ ok: z.literal(true) });
 
-export const connectionTestPrompt: PromptDefinition<Record<never, never>, { ok: boolean }> = {
+export const connectionTestPrompt: PromptDefinition<Record<never, never>, { ok: true }> = {
   promptId: 'connectionTest',
   version: 1,
   purpose: 'Minimal probe to verify provider authentication and model availability.',

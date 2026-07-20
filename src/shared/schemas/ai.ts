@@ -85,4 +85,6 @@ export const aiClearConfigurationOutputSchema = z.object({ cleared: z.literal(tr
 
 export const aiRecordConsentOutputSchema = z.object({ ok: z.literal(true) });
 
+export const aiCancelTestOutputSchema = z.object({ cancelled: z.literal(true) });
+
 export type AiSetApiKeyInput = z.infer<typeof aiSetApiKeyInputSchema>;

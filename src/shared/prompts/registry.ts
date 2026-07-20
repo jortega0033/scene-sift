@@ -1,7 +1,7 @@
 import { connectionTestPrompt } from './prompts/connectionTest';
 
 export const PROMPT_REGISTRY = {
-  CONNECTION_TEST: connectionTestPrompt,
+  connectionTest: connectionTestPrompt,
 } as const;
 
 export type PromptId = keyof typeof PROMPT_REGISTRY;

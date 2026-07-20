@@ -10,6 +10,10 @@ import type {
   TranscriptGenerateOutput,
   TranscriptExportOutput,
 } from '@shared/schemas/transcript';
+import type {
+  AiConfigurationStatusResponse,
+  AiSetApiKeyInput,
+} from '@shared/schemas/ai';
 
 export type DatabaseHealth = {
   ok: boolean;
@@ -96,6 +100,14 @@ export type SceneSiftApi = {
       gapThresholdMs?: number;
       format: 'txt' | 'json';
     }) => Promise<TranscriptExportOutput>;
+  };
+  ai: {
+    getConfigurationStatus: () => Promise<AiConfigurationStatusResponse>;
+    setApiKey: (input: AiSetApiKeyInput) => Promise<{ ok: true }>;
+    testConnection: () => Promise<{ ok: true }>;
+    cancelTest: () => Promise<{ cancelled: true }>;
+    clearConfiguration: () => Promise<{ cleared: true }>;
+    recordConsent: () => Promise<{ ok: true }>;
   };
 };
 

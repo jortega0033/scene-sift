@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '@shared/ipc/channels';
 import type { SceneSiftApi } from './api';
+import type { AiSetApiKeyInput } from '@shared/schemas/ai';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -93,6 +94,31 @@ const sceneSiftApi: SceneSiftApi = {
         format: input.format,
       });
     },
+  },
+  ai: {
+    getConfigurationStatus: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.AI_GET_CONFIGURATION_STATUS),
+    setApiKey: (input: AiSetApiKeyInput) => {
+      if (typeof input?.apiKey !== 'string' || input.apiKey.length < 1 || input.apiKey.length > 512)
+        return Promise.reject(new TypeError('apiKey must be a non-empty string (max 512 chars)'));
+      if (input.baseUrl !== undefined && (typeof input.baseUrl !== 'string' || input.baseUrl.length > 2048))
+        return Promise.reject(new TypeError('baseUrl must be a string (max 2048 chars)'));
+      if (input.model !== undefined && (typeof input.model !== 'string' || input.model.length < 1 || input.model.length > 128))
+        return Promise.reject(new TypeError('model must be a non-empty string (max 128 chars)'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_SET_API_KEY, {
+        apiKey: input.apiKey,
+        ...(input.baseUrl !== undefined ? { baseUrl: input.baseUrl } : {}),
+        ...(input.model !== undefined ? { model: input.model } : {}),
+      });
+    },
+    testConnection: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.AI_TEST_CONNECTION),
+    cancelTest: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.AI_CANCEL_TEST),
+    clearConfiguration: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.AI_CLEAR_CONFIGURATION),
+    recordConsent: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.AI_RECORD_CONSENT),
   },
 };
 

@@ -302,5 +302,34 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
         return result;
       },
     },
+    ai: {
+      getConfigurationStatus: async () => {
+        if (fixture.name === 'ai-provider-available') {
+          return {
+            configurationStatus: 'available' as const,
+            maskedEndpoint: 'https://api',
+            model: 'gpt-4o-mini',
+            providerType: 'openai_compatible' as const,
+            lastTestedAt: null,
+            lastTestError: null,
+            consentRecordedAt: 1_000_000,
+          };
+        }
+        return {
+          configurationStatus: 'unconfigured' as const,
+          maskedEndpoint: null,
+          model: 'gpt-4o-mini',
+          providerType: 'openai_compatible' as const,
+          lastTestedAt: null,
+          lastTestError: null,
+          consentRecordedAt: null,
+        };
+      },
+      setApiKey: async () => ({ ok: true as const }),
+      testConnection: async () => ({ ok: true as const }),
+      cancelTest: async () => ({ cancelled: true as const }),
+      clearConfiguration: async () => ({ cleared: true as const }),
+      recordConsent: async () => ({ ok: true as const }),
+    },
   };
 };

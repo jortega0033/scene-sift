@@ -29,6 +29,7 @@ export const IPC_CHANNELS = {
   AI_GET_CONFIGURATION_STATUS: 'ai:getConfigurationStatus',
   AI_SET_API_KEY: 'ai:setApiKey',
   AI_TEST_CONNECTION: 'ai:testConnection',
+  AI_CANCEL_TEST: 'ai:cancelTest',
   AI_CLEAR_CONFIGURATION: 'ai:clearConfiguration',
   AI_RECORD_CONSENT: 'ai:recordConsent',
 } as const;
