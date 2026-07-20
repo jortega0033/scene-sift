@@ -6,14 +6,36 @@ defaultMode: L2
 
 ## Active run
 
-- run_id: 2026-07-20T-m7-implementation
-- milestone: M7 Clip Candidate Generation — Implementation
-- branch: feature/m7-clip-candidates (from overnight/m3-plus-2026-07-20)
-- risk_level: 3 (main/IPC/migrations, AI output validation)
+- run_id: 2026-07-20T-m11-planning
+- milestone: M11 Vertical Composition Settings — Planning and Specification
+- branch: overnight/m3-plus-2026-07-20
+- risk_level: 0 (planning and documentation only — no product code)
 - status: in_progress
 - started: 2026-07-20
 - governance_decision: GD-005
 - parent_run: 2026-07-20T-autonomous-roadmap-completion
+
+## Previous active run (complete — M10 ACCEPTED AND INTEGRATED)
+
+- run_id: 2026-07-20T-m10-implementation
+- milestone: M10 Subtitle Editing — Implementation
+- branch: feature/m10-subtitle-editing (from overnight/m3-plus-2026-07-20 @ 189ec52)
+- risk_level: 3 (main/preload/IPC/migrations — clip_cues table, 5 IPC channels)
+- status: ACCEPTED AND INTEGRATED — owner override GD-005 2026-07-20
+- started: 2026-07-20
+- governance_decision: GD-005
+- implementation: clip_cues table (migration 0007), clipCuesTable Drizzle schema, ClipCueService (extractCuesForClip + CRUD), 5 IPC channels (ai:generateClipCues/listClipCues/updateClipCue/deleteClipCue/addClipCue), preload bridge (input validation), ClipCuesSection renderer component, CandidatesSection "Edit cues" button, QA mocks
+- commits: 5849b02 (implementation), 67be692 (test additions AC-M10-003.4 + 003.7)
+- merge_commit: overnight/m3-plus-2026-07-20 merge of feature/m10-subtitle-editing
+- specialist_review_security: ACCEPTED (electron-security-reviewer) — all 7 checkpoints pass; minor non-blocking: cueId ownership not cross-checked (acceptable single-user local-first app)
+- specialist_review_architecture: PASS (architecture-reviewer) — all 12 checks, pnpm architecture:validate exit 0, pnpm typecheck exit 0, no forbidden imports, no new ADR required
+- acceptance_audit_first: REJECTED — AC-M10-003.12 missing tests for 003.4 (span entire clip) and 003.7 (zero-duration exclusion)
+- acceptance_audit_delta: ACCEPTED — all 27 ACs PASS after 2 test cases added (678 tests total)
+- validation_unit: 42 test files / 678 tests — all passing
+- validation_typecheck: exit 0
+- validation_lint: exit 0
+- validation_build: exit 0
+- validation_governance: governance:validate PASS, architecture:validate PASS
 
 ## Previous active run (complete — M6 ACCEPTED AND INTEGRATED)
 

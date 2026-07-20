@@ -1599,4 +1599,39 @@ Append one JSON line per material run.
   ],
   "next_step": "Independent acceptance audit — verifier must be different role/model than implementer"
 }
+```json
+{
+  "run_id": "2026-07-20T-m10-implementation",
+  "task": "M10 Subtitle Editing — Implementation + Review + Acceptance Audit + Integration",
+  "risk_level": 3,
+  "status": "ACCEPTED AND INTEGRATED",
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "implementer": "claude-sonnet-4-6 (governed-implementer)",
+    "verifier_security": "electron-security-reviewer (independent)",
+    "verifier_architecture": "architecture-reviewer (independent)",
+    "verifier_acceptance": "independent acceptance auditor"
+  },
+  "checks": ["pnpm typecheck", "pnpm lint", "pnpm test (678 tests)", "pnpm build", "pnpm governance:validate", "pnpm architecture:validate"],
+  "authorization": "GD-005 (owner override for overnight M3+ run)",
+  "implementation_scope": {
+    "db_migration": "0007_clip_cues.sql — clip_cues table with ON DELETE CASCADE FK to clip_candidates",
+    "schema": "clipCuesTable added to src/database/schema.ts",
+    "service": "ClipCueService — extractCuesForClip (clamp-and-rebase algorithm), generateClipCues, listClipCues, updateClipCue, deleteClipCue, addClipCue",
+    "ipc_channels": "5 new ai:* channels (17 total): ai:generateClipCues, ai:listClipCues, ai:updateClipCue, ai:deleteClipCue, ai:addClipCue",
+    "preload": "5 typed bridge methods with UUID/int/string validation, Promise.reject(TypeError) on invalid input",
+    "renderer": "ClipCuesSection.tsx (generate/list/edit/delete/add cues inline); CandidatesSection.tsx 'Edit cues' toggle for approved candidates",
+    "qa_mocks": "5 stub methods in mockSceneSiftApi.ts ai namespace",
+    "tests": "16 clipCueService.test.ts (extraction algorithm 10 cases + CRUD 6), 9 ClipCuesSection.test.tsx, 12 ipc-contracts schema tests"
+  },
+  "review_outcomes": {
+    "electron_security_review": "ACCEPTED — all 7 checkpoints pass. Non-blocking observation: cueId ownership not cross-checked (acceptable single-user app)",
+    "architecture_review": "PASS — all 12 checks, no forbidden imports, no layer violations, no new ADR required",
+    "acceptance_audit_first": "REJECTED — AC-M10-003.12: missing tests for 003.4 (full-span clamping) and 003.7 (zero-duration exclusion guard)",
+    "acceptance_audit_delta": "ACCEPTED — all 27 ACs pass after adding 2 test cases (678 total tests)"
+  },
+  "commits": ["5849b02 (feat(m10): implementation)", "67be692 (test(m10): AC-M10-003.4 + 003.7 coverage)"],
+  "merge": "feature/m10-subtitle-editing → overnight/m3-plus-2026-07-20 (no-ff merge)",
+  "next_step": "M11 Vertical Composition Settings — planning and specification"
+}
 ```
