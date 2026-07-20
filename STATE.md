@@ -6,14 +6,36 @@ defaultMode: L2
 
 ## Active run
 
-- run_id: 2026-07-20T-m11-implementation
-- milestone: M11 Vertical Composition Settings — Implementation
-- branch: feature/m11-composition-settings (from overnight/m3-plus-2026-07-20 @ 066fd56)
-- risk_level: 3 (databaseService.ts + main/preload/IPC changes; also 2 for renderer/service)
+- run_id: 2026-07-20T-m12-planning
+- milestone: M12 FFmpeg Clip Rendering — Planning and Specification
+- branch: overnight/m3-plus-2026-07-20
+- risk_level: 0 (planning and documentation only — no product code)
 - status: in_progress
 - started: 2026-07-20
 - governance_decision: GD-005
 - parent_run: 2026-07-20T-autonomous-roadmap-completion
+
+## Previous active run (complete — M11 ACCEPTED AND INTEGRATED)
+
+- run_id: 2026-07-20T-m11-implementation
+- milestone: M11 Vertical Composition Settings — Implementation
+- branch: feature/m11-composition-settings (from overnight/m3-plus-2026-07-20 @ 066fd56)
+- risk_level: 3 (databaseService.ts + main/preload/IPC changes; also 2 for renderer/service)
+- status: ACCEPTED AND INTEGRATED — owner override GD-005 2026-07-20
+- started: 2026-07-20
+- governance_decision: GD-005
+- implementation: project_composition_settings DB table (migration 0008), DatabaseService getProjectCompositionSettings+upsertProjectCompositionSettings, CompositionSettingsService, 2 IPC channels (composition:getForProject/updateForProject), preload bridge, CompositionSettingsPanel renderer component with transient save-success, QA mocks
+- commit: 28379e7 (feat(m11): vertical composition settings, 19 files, 1236 insertions)
+- merge_commit: overnight/m3-plus-2026-07-20 merge of feature/m11-composition-settings
+- specialist_review_security: ACCEPTED (electron-security-reviewer) — all checks pass; PRAGMA foreign_keys ON added; AppError wrapping verified; CASCADE delete regression tests added
+- specialist_review_architecture: PASS (architecture-reviewer) — all checks, pnpm architecture:validate exit 0, pnpm typecheck exit 0, no forbidden imports, registerValidatedHandler used, no new ADR required
+- acceptance_audit_first: NOT ACCEPTED — AC-M11-005.1 (composition assertions in wrong describe block, no output schema assertions); AC-M11-008.5 (no transient success indication after save)
+- acceptance_audit_delta: ACCEPTED — both failures remediated: ipc-contracts moved to dedicated describe block + output schema tests added; saveSuccess state + role="status" span + 2000ms timer added
+- validation_unit: 46 test files / 733 tests — all passing
+- validation_typecheck: exit 0
+- validation_lint: exit 0, 0 warnings
+- validation_build: exit 0
+- validation_governance: governance:validate PASS, architecture:validate PASS
 
 ## Previous active run (complete — M11 planning done)
 

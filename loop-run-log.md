@@ -24,6 +24,25 @@ Append one JSON line per material run.
 
 ```json
 {
+  "run_id": "2026-07-20T-m11-implementation",
+  "task": "M11 Vertical Composition Settings — Implementation",
+  "risk_level": 3,
+  "status": "ACCEPTED AND INTEGRATED",
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "implementer": "claude-sonnet-4-6",
+    "security_reviewer": "electron-security-reviewer (independent)",
+    "architecture_reviewer": "architecture-reviewer (independent)",
+    "acceptance_auditors": "2 independent agents (first audit + delta audit)"
+  },
+  "checks": ["pnpm lint (0 warnings)", "pnpm typecheck (exit 0)", "pnpm test (733/733)", "pnpm build (exit 0)", "pnpm governance:validate (PASS)", "pnpm architecture:validate (PASS)"],
+  "outcome": "pass",
+  "notes": "M11 Vertical Composition Settings: per-project DB table (migration 0008, project_composition_settings), DatabaseService getProjectCompositionSettings+upsertProjectCompositionSettings with lazy row creation and PRAGMA foreign_keys ON, CompositionSettingsService (thin delegation), 2 IPC channels (composition:getForProject/updateForProject), preload bridge with Zod validation, CompositionSettingsPanel renderer component with transient save-success feedback (role=status, 2000ms timer), QA mocks. First acceptance audit found 2 failures: AC-M11-005.1 (composition IPC assertions in wrong describe block) and AC-M11-008.5 (no transient success indication). Both remediated. Delta audit confirmed ACCEPTED. Integrated into overnight/m3-plus-2026-07-20 under GD-005."
+}
+```
+
+```json
+{
   "run_id": "2026-07-20T-m6-planning",
   "task": "M6 AI Provider Infrastructure — Planning and Specification",
   "risk_level": 0,
