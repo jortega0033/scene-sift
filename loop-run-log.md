@@ -24,6 +24,58 @@ Append one JSON line per material run.
 
 ```json
 {
+  "run_id": "2026-07-20T-m6-planning",
+  "task": "M6 AI Provider Infrastructure — Planning and Specification",
+  "risk_level": 0,
+  "status": "complete",
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "reviewers": "7 independent specialist agents (electron-security, AI-platform, privacy, database, product-scope, test-plan, architecture)"
+  },
+  "authorization": "M6 planning session — documentation only, no product code. User constraint: do not implement M6, do not begin M7.",
+  "deliverables": [
+    "20 planning documents in docs/product/ — M6_HANDOFF.md through M6_MIGRATION_STRATEGY.md",
+    "docs/product/ROADMAP.md — M6 section updated: PLANNING COMPLETE, implementation notes added",
+    "docs/product/CURRENT_PRODUCT_STATE.md — M5 CLOSED + M6 planning complete",
+    "docs/quality/TECHNICAL_DEBT.md — TD-M6-01 DNS rebinding, TD-M6-02 max_tokens deprecation",
+    "STATE.md — M6 planning run entry",
+    "loop-run-log.md — this entry"
+  ],
+  "critical_findings_resolved": [
+    "Phase 1 risk-1 mis-classification: IPC channels/contracts are risk-3 — split into Phase 1a (risk-1) and 1b (risk-3)",
+    "Phase 6 risk-2 mis-classification: structuredOutputParser is in src/main/ — reclassified risk-3",
+    "Missing required checks (build, package:dir, test:e2e) in all risk-3 phases",
+    "AI_NETWORK_ERROR retry count contradiction: table said once, text said up to 3 — fixed to up to 3",
+    "Unknown-key policy contradiction: M6_STRUCTURED_OUTPUT said strip, M6_TEST_PLAN said reject — fixed both to strip",
+    "finish_reason check: added as step 1 of 7-step validation pipeline (before JSON parsing)",
+    "Redirect detection: opaqueredirect (not 3xx status) is the Node.js/undici signal — documented and fixed",
+    "IPv6 ULA fc00::/7 missing from SSRF blocklist — added to network architecture and risk register",
+    "DNS rebinding documented as residual risk R-M6-011 (not mitigable in user-space Node.js)",
+    "ALLOW_LOCAL_AI_ENDPOINT must be gated on app.isPackaged===false — added to network policy",
+    "Retry-After HTTP-date format: parseInt fallback to exponential backoff — documented",
+    "setApiKey clears last_test_status and last_test_at to prevent stale Connected status",
+    "drizzle-kit generate mandatory for migrations: journal.json update required, hand-written SQL skips silently",
+    "testConnection() must also check consent — not only executeStructuredRequest()",
+    "setApiKey preload: must validate baseUrl (HTTPS, max 2048) and model (non-empty, max 128)",
+    "Phase 11 verifier was self-verifying: fixed to governed-implementer (independent role)",
+    "skipResponseFormat field added to PromptDefinition type for connection test prompt",
+    "maxInputChars: 0 meaning documented: no variable content, check skipped"
+  ],
+  "checks": [
+    "pnpm governance:validate — NOT RUN (docs-only; will verify before implementation begins)",
+    "pnpm architecture:validate — NOT RUN (docs-only)",
+    "pnpm typecheck — NOT RUN (docs-only)",
+    "pnpm lint — NOT RUN (docs-only)",
+    "pnpm test — NOT RUN (419 tests expected; docs-only changes do not affect test suite)"
+  ],
+  "outcome": "pass",
+  "verdict": "M6 PLANNING COMPLETE — READY FOR IMPLEMENTATION. All 20 documents complete. 39 ACs defined. 7 specialist reviews conducted. All critical/high findings resolved. Implementation entry point: docs/product/M6_HANDOFF.md.",
+  "notes": "Planning only — no product code written. Context compaction occurred mid-session; reconciliation continued after resume. No implementation may begin without human approval of feature branch creation."
+}
+```
+
+```json
+{
   "run_id": "2026-07-19T-m1-remediation-sprint",
   "task": "m1-acceptance-remediation-sprint",
   "parent_run_id": "2026-07-19T-m1-acceptance-audit",

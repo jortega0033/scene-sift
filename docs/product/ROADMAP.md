@@ -5,9 +5,9 @@ Source: GPT AI as PO/PM, provided by user 2026-07-19 for future reference.
 **Rule**: One milestone at a time. Every milestone follows:
 Plan/spec → implement on feature branch → targeted specialist review → full validation → acceptance audit → human merge.
 
-**Current status**: M1 CLOSED. M2 CLOSED. M3 CLOSED. M4 CLOSED. M5 CLOSED (overnight branch 2026-07-20, commit 575ccdb).
+**Current status**: M1 CLOSED. M2 CLOSED. M3 CLOSED. M4 CLOSED. M5 CLOSED (overnight branch 2026-07-20, commit 575ccdb). M6 PLANNING COMPLETE (2026-07-20) — 20 spec documents in `docs/product/`, all specialist reviews complete, verdict: CONDITIONALLY READY (conditions cleared). Ready for implementation on feature branch.
 **External reference**: `docs/research/YOUTUBE_CLIPPER_SKILL_ADOPTION_AUDIT.md` — USE SELECT PATTERNS ONLY verdict. Amendments to M7, M9, M10, M11, M12, M14 planning recorded in `docs/research/YOUTUBE_CLIPPER_SKILL_MILESTONE_IMPACT.md`.
-**Next**: M6 AI Provider Infrastructure — planning → implementation → acceptance audit.
+**Next**: M6 AI Provider Infrastructure — implementation on feature branch → specialist review → acceptance audit → human merge.
 
 ---
 
@@ -87,18 +87,26 @@ Load a video source file into a project and verify it is a valid video using FFp
 
 ## M6 — AI Provider Infrastructure
 
-**Goal**: Integrate configurable AI provider (Anthropic/OpenAI) for clip candidate generation.
+**Goal**: Integrate configurable AI provider (OpenAI-compatible) for clip candidate generation.
+
+**Status**: PLANNING COMPLETE — 20 spec documents in `docs/product/`. See `M6_HANDOFF.md` for implementation entry point.
 
 **Key features**:
-- Settings UI for API key entry (stored in OS keychain, never on disk)
-- Provider selection (Anthropic Claude / OpenAI GPT)
-- Model selection per provider
+- Settings UI for API key entry (stored in OS keychain via safeStorage, never on disk)
+- OpenAI-compatible provider interface (supports OpenAI, OpenRouter, local proxies)
+- Model selection (configurable)
 - Connection test / key validation
 - Rate limit and quota enforcement before calls
 - Consent gate: explicit user opt-in before any AI API call
-- Privacy policy display (what data is sent)
+- Privacy notice display (what data is sent now vs. in M7)
 
-**Exit criteria**: Enter and validate API key → connection test passes → provider config persists.
+**Implementation notes** (from planning):
+- No new npm dependencies — uses Node built-in `fetch`
+- 5 IPC channels (ai:getConfigurationStatus, ai:setApiKey, ai:testConnection, ai:clearConfiguration, ai:recordConsent)
+- 7-step structured output validation pipeline established for M7+
+- Risk-3 paths: preload, IPC channels/contracts, main services, migration
+
+**Exit criteria**: Enter and validate API key → connection test passes → provider config persists across restart. 39 ACs in `M6_ACCEPTANCE_CRITERIA.md`.
 
 ---
 

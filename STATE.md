@@ -6,6 +6,22 @@ defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-m6-planning
+- milestone: M6 AI Provider Infrastructure — Planning and Specification
+- branch: overnight/m3-plus-2026-07-20 (docs only — no product code)
+- risk_level: 0 (planning and documentation only)
+- status: complete
+- started: 2026-07-20
+- governance_decision: GD-005
+- verdict: M6 CONDITIONALLY READY → all conditions cleared → READY FOR IMPLEMENTATION
+- deliverables: 20 planning documents in docs/product/ (M6_HANDOFF.md, M6_ARCHITECTURE.md, M6_NETWORK_ARCHITECTURE.md, M6_PROMPT_ARCHITECTURE.md, M6_DATABASE_STRATEGY.md, M6_SECURITY_BOUNDARIES.md, M6_PRIVACY_MODEL.md, M6_STRUCTURED_OUTPUT.md, M6_ERROR_TAXONOMY.md, M6_SCOPE.md, M6_USER_STORIES.md, M6_ACCEPTANCE_CRITERIA.md, M6_TEST_PLAN.md, M6_RISK_REGISTER.md, M6_IMPLEMENTATION_PLAN.md, M6_IPC_SURFACE.md, M6_SECRETS_AND_STORAGE.md, M6_CONSENT_FLOW.md, M6_UI_STATES.md, M6_MIGRATION_STRATEGY.md)
+- specialist_reviews: 7 independent reviewers (electron-security, AI-platform, privacy, database, product-scope, test-plan, architecture) — all findings reconciled
+- critical_findings_resolved: Phase 1 risk mis-classification (IPC channels risk-3), Phase 6 risk mis-classification (structuredOutputParser risk-3), missing required checks in risk-3 phases, AI_NETWORK_ERROR retry count, unknown-key policy contradiction, redirect detection (opaqueredirect), IPv6 ULA blocked, DNS rebinding documented, app.isPackaged ALLOW_LOCAL_AI_ENDPOINT guard, Retry-After date format, setApiKey clears stale test status, drizzle-kit generate mandatory for migrations, consent check required in testConnection()
+- validation: typecheck exit 0, lint exit 0, 419/419 tests, governance:validate pass, architecture:validate pass (docs-only changes — no product code)
+- next: M6 implementation on feature branch
+
+## Previous active run (complete — M6 planning prerequisite)
+
 - run_id: 2026-07-20T-external-reference-audit
 - milestone: YouTube Clipper Skill External Reference Adoption Audit
 - branch: overnight/m3-plus-2026-07-20
@@ -18,7 +34,6 @@ defaultMode: L2
 - deliverables: docs/research/YOUTUBE_CLIPPER_SKILL_ADOPTION_AUDIT.md, FEATURE_MAP.md, SECURITY_REVIEW.md, FFMPEG_REVIEW.md, LICENSE_AND_DEPENDENCIES.md, MILESTONE_IMPACT.md, DECISION_LOG.md
 - milestone_amendments: M7 (MINOR), M9 (MINOR), M10 (SIGNIFICANT), M11 (MINOR), M12 (SIGNIFICANT), M14 (MINOR); M6/M8/M13 NO CHANGE
 - validation: typecheck exit 0, lint exit 0, 419/419 tests, governance:validate pass, architecture:validate pass
-- next: M6 AI Provider Infrastructure planning
 
 ## Previous active run (complete — M5 ACCEPTED)
 

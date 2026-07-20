@@ -1,13 +1,13 @@
 # SceneSift — Current Product State
 
 Date: 2026-07-20
-Status: M4 CLOSED. Merged overnight branch 2026-07-20. M5 planning next.
+Status: M5 CLOSED (commit 575ccdb, overnight branch 2026-07-20). M6 planning COMPLETE — 20 spec documents in `docs/product/`, CONDITIONALLY READY conditions cleared. M6 implementation next.
 
 ---
 
 ## Summary
 
-SceneSift is an Electron desktop app with a working shell, navigation, project CRUD, queue visibility, settings, media inspection, subtitle parsing, subtitle synchronization checking, and an in-app video preview workspace. Clip generation, AI selection, and publishing are not yet implemented.
+SceneSift is an Electron desktop app with a working shell, navigation, project CRUD, queue visibility, settings, media inspection, subtitle parsing, subtitle synchronization checking, in-app video preview, and transcript preparation. Clip generation, AI selection, and publishing are not yet implemented. M6 AI Provider Infrastructure is planned (spec complete) and ready for implementation.
 
 ---
 
@@ -164,6 +164,7 @@ SceneSift is an Electron desktop app with a working shell, navigation, project C
 
 | Feature | Notes |
 |---|---|
+| AI provider configuration UI | Planned in M6 — not yet implemented |
 | AI-assisted clip selection | No AI providers, no model calls |
 | Remote publishing | No cloud APIs |
 | Subtitle translation | No translation services |
