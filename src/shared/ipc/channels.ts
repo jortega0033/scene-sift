@@ -43,6 +43,8 @@ export const IPC_CHANNELS = {
   AI_UPDATE_CLIP_CUE: 'ai:updateClipCue',
   AI_DELETE_CLIP_CUE: 'ai:deleteClipCue',
   AI_ADD_CLIP_CUE: 'ai:addClipCue',
+  COMPOSITION_GET_FOR_PROJECT: 'composition:getForProject',
+  COMPOSITION_UPDATE_FOR_PROJECT: 'composition:updateForProject',
 } as const;
 
 export const ALL_IPC_CHANNELS = Object.values(IPC_CHANNELS);

@@ -23,6 +23,7 @@ import type {
   ListClipCuesOutput,
   ClipCue,
 } from '@shared/schemas/clipCues';
+import type { CompositionSettings, CompositionSettingsPatch } from '@shared/schemas/composition';
 
 export type DatabaseHealth = {
   ok: boolean;
@@ -148,6 +149,13 @@ export type SceneSiftApi = {
       endMs: number,
       text: string,
     ) => Promise<{ cue: ClipCue }>;
+  };
+  composition: {
+    getForProject: (projectId: string) => Promise<{ settings: CompositionSettings }>;
+    updateForProject: (
+      projectId: string,
+      patch: CompositionSettingsPatch,
+    ) => Promise<{ settings: CompositionSettings }>;
   };
 };
 

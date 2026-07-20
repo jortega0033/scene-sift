@@ -24,6 +24,7 @@ import {
 } from './subtitleFormatters';
 import { SyncPanel } from './SyncPanel';
 import { CandidatesSection } from './CandidatesSection';
+import { CompositionSettingsPanel } from './CompositionSettingsPanel';
 
 const statusPillVariant = (
   status: string,
@@ -366,6 +367,8 @@ export const ProjectsPage = () => {
               )}
 
               <CandidatesSection key={selectedProject.id} project={selectedProject} />
+
+              <CompositionSettingsPanel projectId={selectedProject.id} />
 
               <div className="flex flex-wrap gap-2">
                 <button

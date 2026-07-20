@@ -55,6 +55,7 @@ import type { AiService } from '@main/services/ai/aiService';
 import type { AiConfigurationService } from '@main/services/ai/aiConfigurationService';
 import { ClipCandidateService } from '@main/services/ai/clipCandidateService';
 import { ClipCueService } from '@main/services/ai/clipCueService';
+import { registerCompositionHandlers } from '@main/ipc/compositionHandlers';
 import {
   aiConfigurationStatusResponseSchema,
   aiSetApiKeyInputSchema,
@@ -547,4 +548,6 @@ export const registerIpcHandlers = ({ databaseService, videoService, aiService, 
       }
     },
   );
+
+  registerCompositionHandlers(databaseService);
 };

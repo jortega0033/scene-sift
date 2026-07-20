@@ -31,6 +31,12 @@ import {
   deleteClipCueInputSchema,
   addClipCueInputSchema,
 } from '@shared/schemas/clipCues';
+import {
+  getCompositionSettingsInputSchema,
+  getCompositionSettingsOutputSchema,
+  updateCompositionSettingsInputSchema,
+  updateCompositionSettingsOutputSchema,
+} from '@shared/schemas/composition';
 
 describe('ipc contracts', () => {
   it('registers explicit channels only', () => {
@@ -522,5 +528,83 @@ describe('ai clip cue ipc contracts', () => {
     expect(
       addClipCueInputSchema.safeParse({ candidateId: VALID_UUID, startMs: 0, endMs: 3000, text: 'New cue' }).success,
     ).toBe(true);
+  });
+});
+
+describe('composition ipc contracts', () => {
+  const COMP_UUID = '11111111-1111-4111-8111-111111111111';
+
+  it('registers composition:getForProject channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('composition:getForProject');
+  });
+
+  it('registers composition:updateForProject channel', () => {
+    expect(ALL_IPC_CHANNELS).toContain('composition:updateForProject');
+  });
+
+  it('rejects non-uuid in getCompositionSettingsInputSchema', () => {
+    expect(
+      getCompositionSettingsInputSchema.safeParse({ projectId: 'bad' }).success,
+    ).toBe(false);
+  });
+
+  it('accepts valid uuid in getCompositionSettingsInputSchema', () => {
+    const result = getCompositionSettingsInputSchema.safeParse({ projectId: COMP_UUID });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toMatchObject({ projectId: COMP_UUID });
+    }
+  });
+
+  it('rejects updateCompositionSettingsInputSchema with no patch fields', () => {
+    expect(
+      updateCompositionSettingsInputSchema.safeParse({ projectId: COMP_UUID }).success,
+    ).toBe(false);
+  });
+
+  it('accepts valid updateCompositionSettingsInputSchema and preserves all fields', () => {
+    const result = updateCompositionSettingsInputSchema.safeParse({
+      projectId: COMP_UUID,
+      fontSize: 40,
+      fontColor: '#123456',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toMatchObject({ projectId: COMP_UUID, fontSize: 40, fontColor: '#123456' });
+    }
+  });
+
+  it('getCompositionSettingsOutputSchema validates { settings: CompositionSettings } shape', () => {
+    const validOutput = {
+      settings: {
+        projectId: COMP_UUID,
+        resolution: '1080x1920',
+        backgroundStyle: 'blur',
+        subtitlePosition: 'bottom',
+        fontFamily: 'Arial',
+        fontSize: 32,
+        fontColor: '#FFFFFF',
+        createdAt: 1_000_000,
+        updatedAt: 1_000_000,
+      },
+    };
+    expect(getCompositionSettingsOutputSchema.safeParse(validOutput).success).toBe(true);
+  });
+
+  it('updateCompositionSettingsOutputSchema validates { settings: CompositionSettings } shape', () => {
+    const validOutput = {
+      settings: {
+        projectId: COMP_UUID,
+        resolution: '720x1280',
+        backgroundStyle: 'crop',
+        subtitlePosition: 'center',
+        fontFamily: 'Georgia',
+        fontSize: 48,
+        fontColor: '#000000',
+        createdAt: 1_000_000,
+        updatedAt: 2_000_000,
+      },
+    };
+    expect(updateCompositionSettingsOutputSchema.safeParse(validOutput).success).toBe(true);
   });
 });
