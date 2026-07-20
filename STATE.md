@@ -6,14 +6,33 @@ defaultMode: L2
 
 ## Active run
 
+- run_id: 2026-07-20T-m12-implementation
+- milestone: M12 FFmpeg Clip Rendering — Implementation
+- branch: feature/m12-ffmpeg-clip-rendering (from overnight/m3-plus-2026-07-20 @ 1f0a79c)
+- risk_level: 3 (clipRenderService + DatabaseService + IPC + preload + migration)
+- status: ready_to_start (paused — planning PASS, implementation not yet begun)
+- started: 2026-07-20
+- governance_decision: GD-005
+- parent_run: 2026-07-20T-autonomous-roadmap-completion
+- planning_commit: 1f0a79c (docs(m12): resolve specialist review conditions — planning docs now PASS)
+- specialist_review_security: PASS (electron-security-reviewer delta) — all CRITICAL/HIGH/MEDIUM resolved; M-1 ordering fixed (reconciliation now after migrate); C-1/H-1/H-2/M-2/M-3 all RESOLVED
+- specialist_review_architecture: PASS (architecture-reviewer delta) — SECURITY_BOUNDARIES stale outputPath text fixed; TEST_PLAN duplicate block removed
+- next_step: create feature branch, implement migration 0009 → DatabaseService → clipRenderService pure fns → renderHandlers → preload → renderer → tests → validate → acceptance audit
+
+## Previous active run (complete — M12 planning done)
+
 - run_id: 2026-07-20T-m12-planning
 - milestone: M12 FFmpeg Clip Rendering — Planning and Specification
 - branch: overnight/m3-plus-2026-07-20
 - risk_level: 0 (planning and documentation only — no product code)
-- status: in_progress
+- status: complete
 - started: 2026-07-20
 - governance_decision: GD-005
-- parent_run: 2026-07-20T-autonomous-roadmap-completion
+- commits: e5936c2 (9 planning docs, initial), 1f0a79c (3 doc fixes — specialist review conditions resolved)
+- specialist_review_security_initial: CONDITIONALLY PASS — C-1 (renderer path to openOutputFile), H-1 (path containment), H-2 (TOCTOU), M-1 (reconciliation ordering), M-2 (fire-and-forget), M-3 (symlink)
+- specialist_review_architecture_initial: CONDITIONALLY PASS — SECURITY_BOUNDARIES stale text, TEST_PLAN duplicate block
+- all_conditions_resolved: 2026-07-20
+- verdict: PLANNING COMPLETE — READY FOR IMPLEMENTATION
 
 ## Previous active run (complete — M11 ACCEPTED AND INTEGRATED)
 
