@@ -51,6 +51,18 @@ const sceneSiftApi: SceneSiftApi = {
     checkForProject: (projectId: string) =>
       ipcRenderer.invoke(IPC_CHANNELS.SYNC_CHECK_FOR_PROJECT, { projectId }),
   },
+  video: {
+    getPlaybackUrl: (projectId: string) => {
+      if (typeof projectId !== 'string' || !projectId)
+        throw new TypeError('projectId must be a non-empty string');
+      return ipcRenderer.invoke(IPC_CHANNELS.VIDEO_GET_PLAYBACK_URL, { projectId });
+    },
+    getCues: (projectId: string) => {
+      if (typeof projectId !== 'string' || !projectId)
+        throw new TypeError('projectId must be a non-empty string');
+      return ipcRenderer.invoke(IPC_CHANNELS.VIDEO_GET_CUES, { projectId });
+    },
+  },
 };
 
 contextBridge.exposeInMainWorld('sceneSift', sceneSiftApi);

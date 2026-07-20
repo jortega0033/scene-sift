@@ -5,6 +5,7 @@ import type { SelectedDirectory } from '@shared/types/common';
 import type { SafeError } from '@shared/types/common';
 import type { QueueStatus } from '@shared/types/common';
 import type { SyncCheckResult } from '@shared/schemas/sync';
+import type { VideoCueItem } from '@shared/schemas/video';
 
 export type DatabaseHealth = {
   ok: boolean;
@@ -76,6 +77,10 @@ export type SceneSiftApi = {
   };
   sync: {
     checkForProject: (projectId: string) => Promise<SyncCheckResult>;
+  };
+  video: {
+    getPlaybackUrl: (projectId: string) => Promise<{ url: string }>;
+    getCues: (projectId: string) => Promise<{ cues: VideoCueItem[] }>;
   };
 };
 

@@ -210,6 +210,12 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
         return updated;
       },
     },
+    video: {
+      getPlaybackUrl: async () => ({
+        url: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDE=',
+      }),
+      getCues: async () => ({ cues: [] }),
+    },
     sync: {
       checkForProject: async (projectId: string): Promise<SyncCheckResult> => {
         await delay(200);
