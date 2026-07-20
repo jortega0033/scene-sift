@@ -96,17 +96,40 @@ Use `version: "6"` (consistent with migrations 0004–0007 which use version "6"
 
 This avoids a SQL UPSERT (`INSERT OR REPLACE`) which would reset `created_at` on every update.
 
-## PRAGMA foreign_keys
+## PRAGMA foreign_keys — Required Change
 
-**Implementer must verify**: Before writing the service, check
-`src/main/services/database/databaseService.ts` for `PRAGMA foreign_keys = ON`.
-If not found, add it to the database initialization sequence. Without this pragma,
-`ON DELETE CASCADE` is silently ignored by SQLite.
+`PRAGMA foreign_keys = ON` is **not currently set** in
+`src/main/services/database/databaseService.ts`. SQLite defaults this pragma OFF
+per connection, so `ON DELETE CASCADE` declarations on existing tables
+(`clip_candidates` → `projects`, `clip_cues` → `clip_candidates`) are currently
+silently inert.
+
+**Implementer MUST add this pragma** to `DatabaseService.initialize()` immediately
+after `this.db = new Database(this.dbPath)`:
+
+```ts
+this.db.pragma('foreign_keys = ON');
+```
+
+This activates FK enforcement globally for all existing and new FK declarations.
+It is a risk-3 change to `src/main/services/database/databaseService.ts`.
+
+**Cascade side effect**: Enabling the pragma activates `ON DELETE CASCADE` for the
+existing `clip_candidates` and `clip_cues` tables that also declare it. The existing
+`DatabaseService.deleteProject()` already manually deletes `subtitle_documents` and
+`render_jobs` in its transaction. After enabling the pragma, `clip_candidates` and
+`clip_cues` will also cascade-delete when a project is deleted. The manual deletion
+steps in `deleteProject()` for `subtitle_documents`/`render_jobs` remain (they have
+FK declarations too and were relying on explicit deletes). No change to
+`deleteProject()` transaction logic is needed, but regression tests must verify the
+existing cascade paths still work correctly.
 
 ## Migration Verification Checklist
 
 - [ ] Fresh DB (no prior migrations): `pnpm validate` runs end-to-end successfully.
 - [ ] Existing DB (migrations 0000–0007 applied): migration 0008 applies cleanly.
-- [ ] `PRAGMA foreign_keys = ON` is confirmed active in DB init.
-- [ ] Delete a project → confirm composition row deleted (no orphan).
+- [ ] `this.db.pragma('foreign_keys = ON')` added to `DatabaseService.initialize()`.
+- [ ] Delete a project → confirm composition row deleted (no orphan). [New test]
+- [ ] Delete a project → confirm clip_candidates rows deleted (cascade now active). [Regression]
+- [ ] Delete a clip_candidate → confirm clip_cues rows deleted (cascade now active). [Regression]
 - [ ] Drizzle schema type-checks against the SQL (`pnpm typecheck` passes).

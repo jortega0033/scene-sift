@@ -50,28 +50,51 @@ A separate table:
 | `src/shared/ipc/channels.ts` | Add 2 channel constants (total: 46) |
 | `src/preload/index.ts` | Add `composition` namespace |
 | `src/shared/api/sceneSiftApi.ts` | Extend `SceneSiftApi` with `composition` namespace |
+| `src/main/services/database/databaseService.ts` | Add PRAGMA foreign_keys ON; add 2 public composition methods |
 | `src/renderer/features/projects/ProjectsPage.tsx` | Mount `CompositionSettingsPanel` |
 | `src/renderer/qa/mockSceneSiftApi.ts` | Add 2 composition mock methods |
 | `tests/main/ipc-contracts.test.ts` | Add composition namespace describe block + schema assertions |
 
 ## Service Design
 
-`CompositionSettingsService` exposes two public methods:
+**DB access boundary**: `DatabaseService.db` and `DatabaseService.orm` are both
+`private`. `CompositionSettingsService` must NOT access them directly. Following
+the established pattern of `SubtitleService` and `SynchronizationService`, two new
+public methods are added to `DatabaseService`:
+
+```ts
+// New public methods on DatabaseService
+getProjectCompositionSettings(projectId: string): CompositionSettings
+upsertProjectCompositionSettings(projectId: string, patch: CompositionSettingsPatch): CompositionSettings
+```
+
+These methods live inside `databaseService.ts` and have access to `this.orm`.
+
+`CompositionSettingsService` exposes two public methods that delegate to `DatabaseService`:
 
 ```ts
 getForProject(projectId: string): CompositionSettings
 updateForProject(projectId: string, patch: CompositionSettingsPatch): CompositionSettings
 ```
 
-`getForProject` — attempts SELECT; if no row found, inserts defaults, returns
-the resulting row. This is the canonical "get or create defaults" pattern.
+`getForProject` — calls `databaseService.getProjectCompositionSettings(projectId)`.
+`updateForProject` — calls `databaseService.upsertProjectCompositionSettings(projectId, patch)`.
 
-`updateForProject` — calls `getForProject` to ensure a row exists (triggering defaults
-creation if needed), then applies a partial update with `updated_at = Date.now()`,
-returns the full updated row.
+The service wraps all DB calls in try/catch and throws `AppError` with structured
+codes, preventing raw `better-sqlite3` exception messages from reaching the renderer.
 
 All DB access uses Drizzle ORM parameterized queries. No raw SQL string construction.
 Methods are synchronous (better-sqlite3 is sync) — consistent with all other DB services.
+
+## ADR Determination
+
+**No new ADR required.** M11 does not cross existing layer boundaries. It adds a new
+column family to the DB layer (accessed only through `DatabaseService` public methods),
+two new channels in the established IPC pattern, and a new renderer component using
+only `window.sceneSift.*`. The `CompositionSettingsService` placement in
+`src/main/services/compositionSettings/` is consistent with the existing service
+topology without introducing any new architectural seam. Compare: M4 required ADR-014
+because it introduced a new URL protocol scheme. M11 introduces no equivalent.
 
 ## Renderer Component Design
 

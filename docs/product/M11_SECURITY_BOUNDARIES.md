@@ -26,10 +26,13 @@ Renderer (untrusted)
   rejects `{}` with a validation error before any DB call.
 - Access composition settings for a project it has no reference to. The renderer
   passes a `projectId` UUID; the service does a parameterized lookup. If the
-  project does not exist, the SELECT returns null and the INSERT fails on the FK
-  constraint. The error surfaces as a structured IPC error.
+  project does not exist, the SELECT returns null; the INSERT fails on the FK
+  constraint **when `PRAGMA foreign_keys = ON` is active** (see Database Strategy
+  doc — this pragma must be added to `DatabaseService.initialize()`).
 - Cause orphan data. `ON DELETE CASCADE` removes the composition row when the
-  project is deleted, regardless of renderer action.
+  project is deleted — **conditional on `PRAGMA foreign_keys = ON` being enabled**.
+  Without the pragma, SQLite silently ignores the cascade. The pragma addition is
+  a mandatory implementation step, not optional.
 
 ## Preload Validation Rationale
 
@@ -70,8 +73,22 @@ IPC errors returned to renderer are structured:
 ```
 
 Raw Zod error messages are acceptable here (they contain no secrets). Raw DB
-exceptions must NOT be surfaced. The handler wraps DB calls and maps
-`better-sqlite3` errors to generic structured messages before returning.
+exceptions must NOT be surfaced.
+
+**Important**: `toSafeError()` in `src/main/utils/errors.ts` surfaces
+`error.message` verbatim for any non-`AppError` exception. Because
+`better-sqlite3` error messages may contain table names, column names, or
+constraint details, `CompositionSettingsService` and the `DatabaseService`
+public composition methods must catch DB-layer exceptions and throw `AppError`
+with safe, non-revealing messages before they propagate to `toSafeError`.
+
+Required error codes:
+- `COMPOSITION_SETTINGS_NOT_FOUND` — project does not exist
+- `COMPOSITION_SETTINGS_WRITE_FAILED` — any other DB write failure
+
+The `registerValidatedHandler` wrapper in `createIpcHandler.ts` catches all
+thrown errors and converts them via `toSafeError`; `AppError` instances pass
+through with their code+message intact.
 
 ## Threat Table
 
@@ -80,7 +97,7 @@ exceptions must NOT be surfaced. The handler wraps DB calls and maps
 | SQL injection via fontColor | Parameterized query. HEX_COLOR_RE bounds input to `#RRGGBB` (7 chars, no SQL metacharacters). |
 | SQL injection via fontFamily | Zod `.enum()` — only 5 known strings accepted. |
 | XSS via fontColor in renderer | Renderer consumes `CompositionSettings.fontColor` as a CSS value in controlled context. Not rendered as HTML. |
-| Orphan row after project delete | `ON DELETE CASCADE` on `project_id` FK. |
+| Orphan row after project delete | `ON DELETE CASCADE` + `PRAGMA foreign_keys = ON` required in DB init. Verified by cascade regression test. |
 | Empty-patch spam | `.refine()` in Zod schema rejects before DB call. |
 | Over-large fontSize | `z.number().int().min(16).max(72)` — bounded at IPC. |
 | Renderer sends non-UUID projectId | UUID_RE in preload + `z.string().uuid()` in main. |

@@ -99,7 +99,7 @@ import {
   updateCompositionSettingsInputSchema,
   updateCompositionSettingsOutputSchema,
 } from '@shared/schemas/composition';
-import { registerValidatedHandler } from './registerValidatedHandler';
+import { registerValidatedHandler } from './createIpcHandler';
 import { CompositionSettingsService } from '../services/compositionSettings/compositionSettingsService';
 import type { DatabaseService } from '../services/database/databaseService';
 
@@ -110,7 +110,7 @@ export function registerCompositionHandlers(db: DatabaseService): void {
     IPC_CHANNELS.COMPOSITION_GET_FOR_PROJECT,
     getCompositionSettingsInputSchema,
     getCompositionSettingsOutputSchema,
-    (_event, { projectId }) => {
+    ({ projectId }) => {
       const settings = svc.getForProject(projectId);
       return { settings };
     }
@@ -120,7 +120,7 @@ export function registerCompositionHandlers(db: DatabaseService): void {
     IPC_CHANNELS.COMPOSITION_UPDATE_FOR_PROJECT,
     updateCompositionSettingsInputSchema,
     updateCompositionSettingsOutputSchema,
-    (_event, { projectId, ...patch }) => {
+    ({ projectId, ...patch }) => {
       const settings = svc.updateForProject(projectId, patch);
       return { settings };
     }

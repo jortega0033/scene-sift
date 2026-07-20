@@ -61,9 +61,19 @@ Environment: `// @vitest-environment node`. Uses real in-memory DB
    - Delete project row directly
    - Verify composition table has 0 rows for that projectId
 
-10. **getForProject — nonexistent projectId — throws**
+10. **getForProject — nonexistent projectId — throws AppError**
     - Random UUID not in projects table
-    - Expect throw (FK constraint violation on insert)
+    - Expect `AppError` with code `COMPOSITION_SETTINGS_NOT_FOUND`
+    - Raw `better-sqlite3` exception must NOT propagate
+
+11. **CASCADE regression — project deletion removes clip_candidates (pre-existing cascade, now active)**
+    - Create project, create clip_candidate row
+    - Delete project; verify clip_candidates table has 0 rows for that projectId
+    - (Tests that enabling `PRAGMA foreign_keys = ON` does not break existing behavior)
+
+12. **CASCADE regression — clip_candidate deletion removes clip_cues (pre-existing cascade, now active)**
+    - Create project, create clip_candidate, create clip_cue for that candidate
+    - Delete clip_candidate; verify clip_cues table has 0 rows for that candidateId
 
 ---
 
