@@ -54,6 +54,7 @@ import { SynchronizationService } from '@main/services/synchronization/Synchroni
 import type { AiService } from '@main/services/ai/aiService';
 import type { AiConfigurationService } from '@main/services/ai/aiConfigurationService';
 import { ClipCandidateService } from '@main/services/ai/clipCandidateService';
+import { ClipCueService } from '@main/services/ai/clipCueService';
 import {
   aiConfigurationStatusResponseSchema,
   aiSetApiKeyInputSchema,
@@ -79,6 +80,18 @@ import {
   updateCandidateTimingOutputSchema,
 } from '@shared/schemas/candidates';
 import {
+  generateClipCuesInputSchema,
+  generateClipCuesOutputSchema,
+  listClipCuesInputSchema,
+  listClipCuesOutputSchema,
+  updateClipCueInputSchema,
+  updateClipCueOutputSchema,
+  deleteClipCueInputSchema,
+  deleteClipCueOutputSchema,
+  addClipCueInputSchema,
+  addClipCueOutputSchema,
+} from '@shared/schemas/clipCues';
+import {
   subtitleSelectInputSchema,
   subtitleParseInputSchema,
   subtitleClearInputSchema,
@@ -100,6 +113,7 @@ export const registerIpcHandlers = ({ databaseService, videoService, aiService, 
   const subtitleService = new SubtitleService(databaseService);
   const synchronizationService = new SynchronizationService(databaseService);
   const clipCandidateService = new ClipCandidateService(databaseService, aiService, aiConfigurationService);
+  const clipCueService = new ClipCueService(databaseService);
   const sanitizeSettingsUpdate = (payload: {
     ffmpegPathOverride?: string | null | undefined;
     ffprobePathOverride?: string | null | undefined;
@@ -468,6 +482,42 @@ export const registerIpcHandlers = ({ databaseService, videoService, aiService, 
     updateCandidateTimingOutputSchema,
     ({ candidateId, startMs, endMs }) =>
       clipCandidateService.updateCandidateTiming(candidateId, startMs, endMs),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_GENERATE_CLIP_CUES,
+    generateClipCuesInputSchema,
+    generateClipCuesOutputSchema,
+    ({ candidateId }) => clipCueService.generateClipCues(candidateId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_LIST_CLIP_CUES,
+    listClipCuesInputSchema,
+    listClipCuesOutputSchema,
+    ({ candidateId }) => clipCueService.listClipCues(candidateId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_UPDATE_CLIP_CUE,
+    updateClipCueInputSchema,
+    updateClipCueOutputSchema,
+    ({ cueId, startMs, endMs, text }) => clipCueService.updateClipCue(cueId, startMs, endMs, text),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_DELETE_CLIP_CUE,
+    deleteClipCueInputSchema,
+    deleteClipCueOutputSchema,
+    ({ cueId }) => clipCueService.deleteClipCue(cueId),
+  );
+
+  registerValidatedHandler(
+    IPC_CHANNELS.AI_ADD_CLIP_CUE,
+    addClipCueInputSchema,
+    addClipCueOutputSchema,
+    ({ candidateId, startMs, endMs, text }) =>
+      clipCueService.addClipCue(candidateId, startMs, endMs, text),
   );
 
   registerValidatedHandler(

@@ -102,3 +102,14 @@ export const clipCandidatesTable = sqliteTable('clip_candidates', {
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 });
+
+export const clipCuesTable = sqliteTable('clip_cues', {
+  id: text('id').primaryKey(),
+  candidateId: text('candidate_id').notNull().references(() => clipCandidatesTable.id, { onDelete: 'cascade' }),
+  sequenceIndex: integer('sequence_index').notNull(),
+  startMs: integer('start_ms').notNull(),
+  endMs: integer('end_ms').notNull(),
+  text: text('text').notNull(),
+  createdAt: integer('created_at', { mode: 'number' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
+});

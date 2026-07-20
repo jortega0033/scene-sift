@@ -422,6 +422,22 @@ export const createMockSceneSiftApi = (): SceneSiftApi => {
       updateCandidateTiming: async () => ({
         ok: true as const,
       }),
+      generateClipCues: async () => ({ cueCount: 0 }),
+      listClipCues: async () => ({ cues: [] }),
+      updateClipCue: async () => ({ ok: true as const }),
+      deleteClipCue: async () => ({ ok: true as const }),
+      addClipCue: async (_candidateId, startMs, endMs, text) => ({
+        cue: {
+          id: crypto.randomUUID(),
+          candidateId: _candidateId,
+          sequenceIndex: 1,
+          startMs,
+          endMs,
+          text,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      }),
     },
   };
 };

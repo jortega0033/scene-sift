@@ -8,8 +8,9 @@ import { asc, desc, eq } from 'drizzle-orm';
 import type { AppSettings } from '@shared/schemas/settings';
 import type { ProjectRecord, MediaMetadata } from '@shared/schemas/project';
 import type { CreateProjectInput } from '@shared/schemas/project';
-import { appSettingsTable, projectsTable, renderJobsTable, subtitleDocumentsTable, aiProviderConfigTable, clipCandidatesTable } from '@database/schema';
+import { appSettingsTable, projectsTable, renderJobsTable, subtitleDocumentsTable, aiProviderConfigTable, clipCandidatesTable, clipCuesTable } from '@database/schema';
 import type { CandidateGenerationStatus, CandidateStatus, ClipCandidate } from '@shared/schemas/candidates';
+import type { ClipCue } from '@shared/schemas/clipCues';
 import { AppError } from '@main/utils/errors';
 import type { QueueStatus } from '@shared/types/common';
 import type { InspectionOutcome } from '@main/services/ffmpeg/ffmpegService';
@@ -707,6 +708,33 @@ export class DatabaseService {
     };
   }
 
+  public getCandidateById(candidateId: string): ClipCandidate | null {
+    const orm = this.ensureOrm();
+    const row = orm
+      .select()
+      .from(clipCandidatesTable)
+      .where(eq(clipCandidatesTable.id, candidateId))
+      .get();
+    if (!row) return null;
+    return {
+      id: row.id,
+      projectId: row.projectId,
+      generationId: row.generationId,
+      candidateStatus: row.candidateStatus as CandidateStatus,
+      startMs: row.startMs,
+      endMs: row.endMs,
+      title: row.title,
+      reason: row.reason,
+      scoreRaw: row.scoreRaw,
+      sortOrder: row.sortOrder,
+      modelId: row.modelId,
+      promptVersion: row.promptVersion,
+      notes: row.notes ?? null,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
+  }
+
   public updateCandidateStatus(candidateId: string, status: CandidateStatus): void {
     const orm = this.ensureOrm();
     orm
@@ -732,6 +760,63 @@ export class DatabaseService {
       .set({ startMs, endMs, updatedAt: Date.now() })
       .where(eq(clipCandidatesTable.id, candidateId))
       .run();
+  }
+
+  public insertClipCues(cues: Omit<ClipCue, 'createdAt' | 'updatedAt'>[]): void {
+    const orm = this.ensureOrm();
+    const now = Date.now();
+    for (const cue of cues) {
+      orm.insert(clipCuesTable).values({ ...cue, createdAt: now, updatedAt: now }).run();
+    }
+  }
+
+  public deleteClipCuesByCandidate(candidateId: string): void {
+    const orm = this.ensureOrm();
+    orm.delete(clipCuesTable).where(eq(clipCuesTable.candidateId, candidateId)).run();
+  }
+
+  public listClipCues(candidateId: string): ClipCue[] {
+    const orm = this.ensureOrm();
+    return orm
+      .select()
+      .from(clipCuesTable)
+      .where(eq(clipCuesTable.candidateId, candidateId))
+      .orderBy(asc(clipCuesTable.sequenceIndex))
+      .all() as ClipCue[];
+  }
+
+  public updateClipCue(cueId: string, startMs: number, endMs: number, text: string): void {
+    const orm = this.ensureOrm();
+    orm
+      .update(clipCuesTable)
+      .set({ startMs, endMs, text, updatedAt: Date.now() })
+      .where(eq(clipCuesTable.id, cueId))
+      .run();
+  }
+
+  public deleteClipCue(cueId: string): void {
+    const orm = this.ensureOrm();
+    orm.delete(clipCuesTable).where(eq(clipCuesTable.id, cueId)).run();
+  }
+
+  public insertClipCue(cue: Omit<ClipCue, 'createdAt' | 'updatedAt'>): ClipCue {
+    const orm = this.ensureOrm();
+    const now = Date.now();
+    const row = { ...cue, createdAt: now, updatedAt: now };
+    orm.insert(clipCuesTable).values(row).run();
+    return row as ClipCue;
+  }
+
+  public maxClipCueSequenceIndex(candidateId: string): number {
+    const orm = this.ensureOrm();
+    const rows = orm
+      .select({ sequenceIndex: clipCuesTable.sequenceIndex })
+      .from(clipCuesTable)
+      .where(eq(clipCuesTable.candidateId, candidateId))
+      .orderBy(desc(clipCuesTable.sequenceIndex))
+      .limit(1)
+      .all();
+    return rows.length > 0 ? rows[0]!.sequenceIndex : 0;
   }
 
   private ensureDb(): Database.Database {

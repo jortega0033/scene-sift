@@ -38,6 +38,11 @@ export const IPC_CHANNELS = {
   AI_UPDATE_CANDIDATE_STATUS: 'ai:updateCandidateStatus',
   AI_UPDATE_CANDIDATE_NOTES: 'ai:updateCandidateNotes',
   AI_UPDATE_CANDIDATE_TIMING: 'ai:updateCandidateTiming',
+  AI_GENERATE_CLIP_CUES: 'ai:generateClipCues',
+  AI_LIST_CLIP_CUES: 'ai:listClipCues',
+  AI_UPDATE_CLIP_CUE: 'ai:updateClipCue',
+  AI_DELETE_CLIP_CUE: 'ai:deleteClipCue',
+  AI_ADD_CLIP_CUE: 'ai:addClipCue',
 } as const;
 
 export const ALL_IPC_CHANNELS = Object.values(IPC_CHANNELS);
