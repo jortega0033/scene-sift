@@ -23,6 +23,7 @@ import {
   formatSubtitleDuration,
 } from './subtitleFormatters';
 import { SyncPanel } from './SyncPanel';
+import { CandidatesSection } from './CandidatesSection';
 
 const statusPillVariant = (
   status: string,
@@ -364,9 +365,7 @@ export const ProjectsPage = () => {
                 </p>
               )}
 
-              <p className="border-t border-border pt-3 text-xs text-muted-foreground">
-                Candidate generation, timeline editing, and rendering are not yet available.
-              </p>
+              <CandidatesSection project={selectedProject} />
 
               <div className="flex flex-wrap gap-2">
                 <button

@@ -14,6 +14,10 @@ import type {
   AiConfigurationStatusResponse,
   AiSetApiKeyInput,
 } from '@shared/schemas/ai';
+import type {
+  GenerateCandidatesOutput,
+  ListCandidatesOutput,
+} from '@shared/schemas/candidates';
 
 export type DatabaseHealth = {
   ok: boolean;
@@ -108,6 +112,13 @@ export type SceneSiftApi = {
     cancelTest: () => Promise<{ cancelled: true }>;
     clearConfiguration: () => Promise<{ cleared: true }>;
     recordConsent: () => Promise<{ ok: true }>;
+    generateCandidates: (projectId: string) => Promise<GenerateCandidatesOutput>;
+    cancelGeneration: (projectId: string) => Promise<{ cancelled: boolean }>;
+    listCandidates: (projectId: string) => Promise<ListCandidatesOutput>;
+    updateCandidateStatus: (
+      candidateId: string,
+      status: 'approved' | 'rejected',
+    ) => Promise<{ ok: true }>;
   };
 };
 

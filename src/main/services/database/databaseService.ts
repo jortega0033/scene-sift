@@ -4,11 +4,12 @@ import { randomUUID } from 'node:crypto';
 import Database from 'better-sqlite3';
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import { desc, eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import type { AppSettings } from '@shared/schemas/settings';
 import type { ProjectRecord, MediaMetadata } from '@shared/schemas/project';
 import type { CreateProjectInput } from '@shared/schemas/project';
-import { appSettingsTable, projectsTable, renderJobsTable, subtitleDocumentsTable, aiProviderConfigTable } from '@database/schema';
+import { appSettingsTable, projectsTable, renderJobsTable, subtitleDocumentsTable, aiProviderConfigTable, clipCandidatesTable } from '@database/schema';
+import type { CandidateGenerationStatus, CandidateStatus, ClipCandidate } from '@shared/schemas/candidates';
 import { AppError } from '@main/utils/errors';
 import type { QueueStatus } from '@shared/types/common';
 import type { InspectionOutcome } from '@main/services/ffmpeg/ffmpegService';
@@ -615,6 +616,103 @@ export class DatabaseService {
          last_test_at = NULL, consent_recorded_at = NULL, updated_at = ? WHERE id = ?`,
       ).run(now, AI_CONFIG_ID);
     })();
+  }
+
+  public updateCandidateGenerationStatus(
+    projectId: string,
+    update: {
+      candidateGenerationStatus: string;
+      candidateGenerationError: string | null;
+      candidateGeneratedAt: number | null;
+    },
+  ): void {
+    const orm = this.ensureOrm();
+    orm
+      .update(projectsTable)
+      .set({
+        candidateGenerationStatus: update.candidateGenerationStatus,
+        candidateGenerationError: update.candidateGenerationError,
+        candidateGeneratedAt: update.candidateGeneratedAt,
+        updatedAt: Date.now(),
+      })
+      .where(eq(projectsTable.id, projectId))
+      .run();
+  }
+
+  public clearAndInsertCandidates(
+    projectId: string,
+    rows: Array<typeof clipCandidatesTable.$inferInsert>,
+  ): void {
+    const db = this.ensureDb();
+    const orm = this.ensureOrm();
+    db.transaction(() => {
+      orm.delete(clipCandidatesTable).where(eq(clipCandidatesTable.projectId, projectId)).run();
+      if (rows.length > 0) {
+        orm.insert(clipCandidatesTable).values(rows).run();
+      }
+    })();
+  }
+
+  public listCandidatesForProject(projectId: string): {
+    candidates: ClipCandidate[];
+    generationStatus: CandidateGenerationStatus | null;
+    generationError: string | null;
+    generatedAt: number | null;
+  } {
+    const orm = this.ensureOrm();
+    const project = orm
+      .select({
+        candidateGenerationStatus: projectsTable.candidateGenerationStatus,
+        candidateGenerationError: projectsTable.candidateGenerationError,
+        candidateGeneratedAt: projectsTable.candidateGeneratedAt,
+      })
+      .from(projectsTable)
+      .where(eq(projectsTable.id, projectId))
+      .get();
+
+    if (!project) {
+      throw new AppError('PROJECT_NOT_FOUND', 'Project not found.');
+    }
+
+    const dbRows = orm
+      .select()
+      .from(clipCandidatesTable)
+      .where(eq(clipCandidatesTable.projectId, projectId))
+      .orderBy(desc(clipCandidatesTable.scoreRaw), asc(clipCandidatesTable.sortOrder))
+      .all();
+
+    const candidates: ClipCandidate[] = dbRows.map((r) => ({
+      id: r.id,
+      projectId: r.projectId,
+      generationId: r.generationId,
+      candidateStatus: r.candidateStatus as CandidateStatus,
+      startMs: r.startMs,
+      endMs: r.endMs,
+      title: r.title,
+      reason: r.reason,
+      scoreRaw: r.scoreRaw,
+      sortOrder: r.sortOrder,
+      modelId: r.modelId,
+      promptVersion: r.promptVersion,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    }));
+
+    return {
+      candidates,
+      generationStatus: (project.candidateGenerationStatus ?? null) as CandidateGenerationStatus | null,
+      generationError: project.candidateGenerationError ?? null,
+      generatedAt: project.candidateGeneratedAt ?? null,
+    };
+  }
+
+  public updateCandidateStatus(candidateId: string, status: CandidateStatus): void {
+    const orm = this.ensureOrm();
+    orm
+      .update(clipCandidatesTable)
+      .set({ candidateStatus: status, updatedAt: Date.now() })
+      .where(eq(clipCandidatesTable.id, candidateId))
+      .run();
   }
 
   private ensureDb(): Database.Database {

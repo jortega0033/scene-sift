@@ -39,6 +39,9 @@ export const qaFixtureNames = [
   'transcript-ready',
   'transcript-ready-with-warnings',
   'ai-provider-available',
+  'candidates-not-ready',
+  'candidates-generating',
+  'candidates-ready',
 ] as const;
 
 export type QaFixtureName = (typeof qaFixtureNames)[number];
@@ -728,6 +731,55 @@ export const fixtureMap: Record<QaFixtureName, QaFixtureState> = {
   'ai-provider-available': {
     name: 'ai-provider-available',
     projects: [projectA],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'candidates-not-ready': {
+    name: 'candidates-not-ready',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'selected',
+        subtitleCueCount: null,
+        subtitleLastCueEndMs: null,
+        subtitleParseError: null,
+        subtitleParsedAt: null,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'candidates-generating': {
+    name: 'candidates-generating',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready',
+        subtitleCueCount: 842,
+        subtitleLastCueEndMs: 2_844_100,
+        subtitleParsedAt: now - 5_000,
+      },
+    ],
+    queue: [],
+    settings: baseSettings,
+    capabilities: baseCapabilities,
+    subtitleSelection: null,
+  },
+  'candidates-ready': {
+    name: 'candidates-ready',
+    projects: [
+      {
+        ...projectA,
+        subtitleStatus: 'ready',
+        subtitleCueCount: 842,
+        subtitleLastCueEndMs: 2_844_100,
+        subtitleParsedAt: now - 60_000,
+      },
+    ],
     queue: [],
     settings: baseSettings,
     capabilities: baseCapabilities,

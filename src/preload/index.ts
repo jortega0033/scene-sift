@@ -119,6 +119,28 @@ const sceneSiftApi: SceneSiftApi = {
       ipcRenderer.invoke(IPC_CHANNELS.AI_CLEAR_CONFIGURATION),
     recordConsent: () =>
       ipcRenderer.invoke(IPC_CHANNELS.AI_RECORD_CONSENT),
+    generateCandidates: (projectId: string) => {
+      if (!UUID_RE.test(projectId))
+        return Promise.reject(new TypeError('projectId must be a UUID'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_GENERATE_CANDIDATES, { projectId });
+    },
+    cancelGeneration: (projectId: string) => {
+      if (!UUID_RE.test(projectId))
+        return Promise.reject(new TypeError('projectId must be a UUID'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_CANCEL_GENERATION, { projectId });
+    },
+    listCandidates: (projectId: string) => {
+      if (!UUID_RE.test(projectId))
+        return Promise.reject(new TypeError('projectId must be a UUID'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_LIST_CANDIDATES, { projectId });
+    },
+    updateCandidateStatus: (candidateId: string, status: 'approved' | 'rejected') => {
+      if (!UUID_RE.test(candidateId))
+        return Promise.reject(new TypeError('candidateId must be a UUID'));
+      if (status !== 'approved' && status !== 'rejected')
+        return Promise.reject(new TypeError('status must be approved or rejected'));
+      return ipcRenderer.invoke(IPC_CHANNELS.AI_UPDATE_CANDIDATE_STATUS, { candidateId, status });
+    },
   },
 };
 
