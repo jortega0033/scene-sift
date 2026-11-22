@@ -124,11 +124,11 @@ A ticket is done when the owner merges its pull request, not before.
 How a ticket of epic #8 goes from the queue to a ready pull request. Each piece is described in the file linked; this list does not repeat it.
 
 - **Start:** only the owner, with `/next-ticket [issue]` (`.claude/skills/next-ticket/SKILL.md`). One ticket per run; no scheduler. Queue labels: `status:ready`, `status:blocked`, `status:in-progress`, `needs-decision`.
-- **Playbook:** `.claude/skills/governed-task/SKILL.md`: risk, the roles before, during and after coding, the two gates, and the fixed order: local checks, then `architecture-reviewer` and `governance-verifier`, then `gh pr create --draft`, then CI, then `gh pr ready` on green CI.
+- **Playbook:** `.claude/skills/governed-task/SKILL.md`: risk, the roles before, during and after coding, the two gates, and the fixed order: local checks, then the CHANGELOG line and drafted pull request text, then `architecture-reviewer` and `governance-verifier`, then `gh pr create --draft`, then CI, then `gh pr ready` on green CI.
 - **Gate hook:** `.claude/hooks/role-gate.mjs` blocks `gh pr create` and `gh pr ready` until both gate roles ran after the last code edit. The owner can switch it off for one session by starting Claude Code with `ROLE_GATE=off`. The other hooks in `.claude/settings.json` stay as they are.
 - **Permissions:** `.claude/settings.json` allows the documented commands, pushing a ticket branch and a draft pull request; it denies merges, pushes to `main`, force pushes, releases and secret reads, and asks before edits to agent configuration, `.github/**`, `gate.yaml` and the loop files. Rationale: `docs/governance/CLAUDE_CODE_PERMISSION_POLICY.md`.
 - **CI:** the four workflows in `.github/workflows/` must be green before a pull request is marked ready (Git workflow above for the two known exceptions that wait on the owner).
-- **Pull request:** `.github/pull_request_template.md`, with `Closes #<n>`, evidence and the roles run. Every ticket pull request adds a line to `CHANGELOG.md` under `Unreleased`.
+- **Pull request:** the existing `.github/pull_request_template.md` is kept (the `agent-evidence` CI checks it); `Closes #<n>`, evidence and roles run are required by the playbook and the acceptance gate, not by the template itself, with `Closes #<n>`, evidence and the roles run. Every ticket pull request adds a line to `CHANGELOG.md` under `Unreleased`.
 - **UI and copy:** `docs/ui-quality.md` (ten binding rules), the `ui-ux-pro-max` and `unslop` skills in `.claude/skills/`.
 - **Merge and release:** only the owner (`docs/RELEASING.md`). Owner decisions behind all of this: `docs/owner-decisions.md`.
 

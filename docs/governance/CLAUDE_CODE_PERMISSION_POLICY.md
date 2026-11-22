@@ -15,7 +15,7 @@ Allowed patterns cover:
 - All validation scripts (governance:validate, architecture:validate, design:validate, dependencies:validate, claude:validate, claude:doctor, claude:safe, claude:test)
 - Git read operations (status, diff, log, show, branch, stash list, ls-files, rev-parse, remote -v)
 - Local git work for a ticket (add, commit, switch, worktree add, fetch)
-- Delivery of a ticket in an owner-started `/next-ticket` run (GD-007): `git push -u origin <branch>`, `gh pr create --draft`, `gh pr ready`, and read-only `gh issue`, `gh pr` and `gh run` views. Opening or readying a pull request is further gated by `.claude/hooks/role-gate.mjs`.
+- Delivery of a ticket in an owner-started `/next-ticket` run (GD-007): `git push -u origin ticket/*` (the allow matches only ticket branches; denies cover any colon refspec, `main`, `--all`, `--mirror`, `--tags` and `--follow-tags`), `gh pr create --draft`, `gh pr ready`, and read-only `gh issue`, `gh pr` and `gh run` views. Opening or readying a pull request is further gated by `.claude/hooks/role-gate.mjs`.
 - The review gate self-test and the `ui-ux-pro-max` search script
 - Filesystem reads (ls, find .)
 - Package.json reads and version checks

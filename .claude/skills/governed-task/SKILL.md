@@ -2,7 +2,7 @@
 
 Invoke: `/governed-task <task description>`
 
-Standard implementation pipeline for risk 0–2 tasks. It is also the ticket playbook that `/next-ticket` runs for one issue of epic #8 (`.claude/skills/next-ticket/SKILL.md`).
+Standard implementation pipeline for risk 0–2 tasks; risk 3 continues only with the owner's approval in the session, with the risk 3 maker and threat analysis named in `docs/governance/CLAUDE_CODE_AGENT_MATRIX.md` (`governed-implementer` is capped at risk 2). It is also the ticket playbook that `/next-ticket` runs for one issue of epic #8 (`.claude/skills/next-ticket/SKILL.md`).
 
 ## Steps
 
@@ -43,13 +43,14 @@ The preparation roles advise and never count as verifiers (`AGENTS.md`). The mak
 
 ## From local checks to a ready pull request
 
-This order is fixed (`CLAUDE.md`, Delivery workflow). In a `/next-ticket` run the owner's start is the request to push the ticket branch and open the pull request; outside such a run, do steps 1 and 2, commit locally, and hand the owner the branch name and a filled-in pull request description without pushing.
+This order is fixed (`CLAUDE.md`, Delivery workflow). In a `/next-ticket` run the owner's start is the request to push the ticket branch and open the pull request; outside such a run, do steps 1 to 3, commit locally, and hand the owner the branch name and a filled-in pull request description without pushing.
 
 1. Local checks pass: every command in `gate.yaml` `requiredChecksByRisk` for the risk level, plus the extra checks `CLAUDE.md` names under "Before claiming a ticket done", with output and exit code recorded.
-2. The specialists for the changed paths have passed, then `architecture-reviewer` (review gate), then `governance-verifier` (acceptance gate), on the full diff and the recorded evidence. A FAIL goes back to step 4 of the steps above; after any code edit, both gates run again.
-3. Add one line for the ticket to `CHANGELOG.md` under `Unreleased`. Fill in `.github/pull_request_template.md` with `Closes #<n>`, the evidence and the roles run with their verdicts. Then push the ticket branch (`git push -u origin <branch>`) and open a draft: `gh pr create --draft`.
-4. CI runs on the draft. If it fails, fix, re-run the local checks and both gates, and push again.
-5. When CI is green, `gh pr ready` and a comment on the issue with the CI run link.
+2. Add one line for the ticket to `CHANGELOG.md` under `Unreleased` (a `.md` file, so it does not reset the role gate) and draft the pull request text from `.github/pull_request_template.md` with `Closes #<n>` and the evidence, passed through the `unslop` skill. The roles-run list is filled in as the gates report.
+3. The specialists for the changed paths have passed, then `architecture-reviewer` (review gate), then `governance-verifier` (acceptance gate), on the full diff, the recorded evidence, the CHANGELOG line and the drafted text. A FAIL goes back to step 4 of the steps above; after any code edit, redo step 1 and run both gates again. After the gates, only the `governance-verifier` verdict is appended to the drafted text.
+4. Push the ticket branch (`git push -u origin <branch>`) and open a draft: `gh pr create --draft`.
+5. CI runs on the draft. If it fails, fix, re-run the local checks and both gates, and push again.
+6. When CI is green, `gh pr ready` and a comment on the issue with the CI run link.
 
 Never push to `main`, force-push, run `git merge` or `gh pr merge`, or add `Governance Change Approval: yes` to a pull request body. Only the owner merges and releases.
 

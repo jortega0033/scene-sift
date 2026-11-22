@@ -19,7 +19,7 @@ The offline browser mode of epic #8 is verified by issue #6 and is not a package
 
 ## Steps
 
-1. On a branch from `main`: set `version` in `package.json`, move the lines under `Unreleased` in `CHANGELOG.md` to a new `## [<version>] - <date>` heading, and open a pull request. `package.json` is a protected path: add `Governance Change Approval: yes` to the pull request body yourself, then merge.
+1. Owner: on a branch from `main`: set `version` in `package.json`, move the lines under `Unreleased` in `CHANGELOG.md` to a new `## [<version>] - <date>` heading, and open a pull request. `package.json` is a protected path: add `Governance Change Approval: yes` to the pull request body yourself, then merge.
 2. On the merged commit of `main`, build the installers on each target platform: `pnpm package` (runs `pnpm build`, then `electron-builder`; output in `release/`). Do not pass `--publish`.
 3. Install and start each installer once on a clean machine or VM; create a project and run an inspection.
 4. Tag the merged commit: `git tag -a v<version> -m "SceneSift <version>"` and `git push origin v<version>`.
