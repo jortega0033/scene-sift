@@ -816,7 +816,7 @@ Append one JSON line per material run.
     "lead": "claude-fable-5-2 (Claude Code session; integration and all GitHub writes)",
     "inventory": "haiku (read-only Explore subagent)",
     "architecture_trace": "sonnet (read-only subagent)",
-    "independent_review": "opus (read-only subagent, different model from lead): first pass NOT READY with 1 blocker, 3 major and 8 minor findings, all addressed; re-check found 1 major and 5 minor, all addressed"
+    "independent_review": "opus (read-only subagent, different model from lead): first pass NOT READY with 1 blocker, 3 major and 8 minor findings, all addressed; re-check found 1 major and 5 minor, all addressed; final check on commit 53aa249 and the live issues: READY"
   },
   "scope": "Update CLAUDE.md, docs/ARCHITECTURE.md, docs/DEVELOPMENT.md, docs/product status; add three read-only preparation roles from agency-agents at a pinned revision (GD-005, proposed); quote design-system-reviewer description so the role loads; reconcile GitHub issues #1-#6 under one epic. No change to src/, tests/, scripts/, .github/, package.json, gate.yaml, AGENTS.md, LOOP.md, loop-constraints.md, loop-budget.md, .claude/settings.json, .claude/hooks/, .claude/rules/.",
   "loop_engineering": {
@@ -855,7 +855,7 @@ Append one JSON line per material run.
   "checks_observed": {
     "environment": "Windows 11, Node 22.23.4, pnpm 10.15.0, core.autocrlf=true",
     "pnpm install --frozen-lockfile": "exit 0; printed \"Ignored build scripts: better-sqlite3, electron, electron-winstaller, esbuild\" (pnpm 10.15.0 ignores allowBuilds)",
-    "pnpm governance:validate": "exit 1: CI action pinning check misreads CRLF working copy (10 lines reported); in a clone with core.autocrlf=false at 5633c8e: governance:validate exit 0 and governance:scenarios 64 passed",
+    "pnpm governance:validate": "exit 1: CI action pinning check misreads CRLF working copy (10 lines reported); in a clone with core.autocrlf=false at 5633c8e: governance:validate exit 0 and governance:scenarios 64 passed; the same clone at commit 53aa249: governance:validate exit 0, governance:scenarios 64 passed, claude:validate exit 0, claude:test:adversarial exit 0, git diff --check clean",
     "pnpm architecture:validate": "exit 0",
     "pnpm design:validate": "exit 0",
     "pnpm dependencies:validate": "exit 0",
