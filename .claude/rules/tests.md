@@ -16,7 +16,7 @@ Removing these requires explicit human authorization and governance review.
 
 ## Test scope
 
-- Unit tests: `tests/renderer/`, `tests/main/`, `tests/database/`, `tests/ai/`, `tests/media/`.
+- Unit tests: `tests/renderer/`, `tests/main/` (the database, media and subtitle tests live here), `tests/shared/`, `tests/quality/`. `tests/ai/` is created together with the first runtime AI code.
 - E2E: `tests/e2e/` (Playwright).
 - Visual regression: `tests/visual/` (Playwright).
 - Governance/adversarial: `tests/governance/`, `tests/claude/`.

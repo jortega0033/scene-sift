@@ -1,5 +1,5 @@
 ---
-globs: ["src/renderer/components/ui/**", "src/renderer/styles/**", "src/renderer/tokens/**", "docs/design/**"]
+globs: ["src/renderer/components/**", "src/renderer/styles/**", "docs/design/**"]
 ---
 
 # Design System Rule
@@ -8,7 +8,7 @@ Risk: 1 default. Risk 2 for token changes or component API breaks.
 
 ## Token usage
 
-- All color, spacing, typography, and radius values must use design tokens from `src/renderer/tokens/`.
+- All color, spacing, typography, and radius values must use design tokens from `src/renderer/styles/globals.css` (the runtime token source named in `docs/design/DESIGN_SYSTEM.md`).
 - No hardcoded hex/px values in component styles.
 - Token changes require visual regression run before flagging done.
 
@@ -25,5 +25,5 @@ Risk: 1 default. Risk 2 for token changes or component API breaks.
 
 ## Documentation
 
-- New components require usage example in `docs/design/components/`.
+- New components require an entry in `docs/design/COMPONENT_INVENTORY.md`.
 - Run `pnpm test:visual` after any design token or component change.

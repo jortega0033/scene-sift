@@ -29,8 +29,8 @@ Risk: 2 default. Risk 3 for prompt construction, model selection, output handlin
 
 - Scene data sent to external AI APIs must be stripped of PII per privacy policy.
 - User consent state must be checked before any network AI call.
-- See `docs/governance/DATA_PRIVACY.md` for current consent requirements.
+- See `docs/governance/DATA_GOVERNANCE.md` for current consent requirements.
 
 ## Tests
 
-`tests/ai/` covers prompt construction and output validation. Run after any change.
+No runtime AI code exists yet, so `tests/ai/` does not exist yet. Once it does, `tests/ai/` covers prompt construction and output validation; run it after any change.

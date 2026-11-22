@@ -4,9 +4,10 @@ Checked against `package.json` and the workflows in `.github/workflows/` on 2026
 
 ## Setup
 
-- Node.js 22 and pnpm 10, the versions CI uses.
+- Node.js 22 and pnpm 10.26.0 or newer in the 10 line (not enforced with an `engines` field: pnpm 10 refuses to run any command when it is older, including the ones that would tell you what is wrong). CI uses `version: 10`, which resolves to a current 10 release.
 - `pnpm install --frozen-lockfile`. The install builds `better-sqlite3` and downloads Electron, so the first run takes several minutes.
-- Use a current pnpm 10 release. `pnpm-workspace.yaml` allows the native builds with `allowBuilds`. pnpm 10.15.0 ignored that setting and printed "Ignored build scripts: better-sqlite3, electron, ..."; the Electron binary and the SQLite binding were then missing and `tests/main/database-service.test.ts` and `tests/main/navigation-security.test.ts` failed. With pnpm 10.34.9, `pnpm rebuild better-sqlite3 electron` built both (observed 2026-11-22). CI uses `version: 10`, which resolves to a current release. The minimum version that honors `allowBuilds` has not been determined.
+- Minimum pnpm version: 10.26.0. `pnpm-workspace.yaml` allows the native builds with `allowBuilds`, a setting that pnpm 10.26.0 introduced (its release notes: "Added support for `allowBuilds`"). pnpm 10.15.0 ignored the setting and printed "Ignored build scripts: better-sqlite3, electron, ..."; the Electron binary and the SQLite binding were then missing and `tests/main/database-service.test.ts` and `tests/main/navigation-security.test.ts` failed (observed 2026-11-22). With pnpm 10.34.9, `pnpm rebuild better-sqlite3 electron` built both (observed 2026-11-22). How the minimum was confirmed: from the pnpm release notes, not by a fresh install with 10.26.0, so treat 10.26.0 as the documented floor until a fresh install with it is recorded here.
+- If the install printed "Ignored build scripts", the native builds were skipped: upgrade pnpm, then run `pnpm rebuild better-sqlite3 electron`.
 - FFmpeg and FFprobe are optional for starting the app. Inspect media needs FFprobe on the path or set in Settings.
 
 ## Scripts
@@ -29,11 +30,12 @@ There is no `test:renderer`, `test:media` or `test:database` script. Use `pnpm t
 
 ## Windows checkouts
 
-Two checks behave differently on Windows than in CI (all observed 2026-11-22; tracked in issue #9):
+Both checks that used to behave differently on Windows now give the same answer as CI (issue #9):
 
-`pnpm governance:validate` reads the workflow files line by line. With `core.autocrlf=true` the working copy has CRLF line endings, and the action-pinning check then reports every `uses:` line as a violation (observed 2026-11-22). The committed files are LF and the check passes in CI. To run it locally on Windows, use a clone or worktree with `core.autocrlf=false`. `pnpm governance:scenarios`, and therefore `pnpm test`, fails the same way.
+- `pnpm governance:validate` splits workflow files on CRLF or LF, so `core.autocrlf=true` no longer makes the action-pinning check report SHA-pinned `uses:` lines. A floating tag is still reported in both line-ending styles (regression tests in `tests/governance/adversarial-scenarios.test.ts`).
+- The hooks in `.claude/hooks/` read standard input from file descriptor 0, which works on Windows and POSIX. `protect-file-write.mjs` turns absolute and backslash paths into repository-relative paths before matching, and the two `protect-*` hooks block when their input cannot be read (`pnpm claude:test:hooks`).
 
-The hooks in `.claude/hooks/` read their input from `/dev/stdin`. That path does not exist on Windows, so each hook exits 0 without checking anything, and `pnpm claude:test:hooks` fails its blocking cases. On Windows the write and command protections therefore come only from the deny rules in `.claude/settings.json` and from following the rules; do not rely on the hooks to stop a write to `gate.yaml`, `AGENTS.md`, `LOOP.md`, `loop-constraints.md` or `.github/workflows/`.
+`pnpm claude:validate:agents` parses each role's frontmatter as YAML and fails on a role that does not parse or lacks `name` or `description` (`pnpm claude:test:agents`). `pnpm claude:test:rules` checks that every path and script named in `.claude/rules/*.md` exists.
 
 ## Visual baselines
 
