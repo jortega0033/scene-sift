@@ -26,13 +26,16 @@ jobs:
       - run: pnpm dependencies:validate
       - name: Enforce governance-change approval marker for protected paths
         if: github.event_name == 'pull_request'
+        env:
+          # pass the description as data; interpolating it into the script let its text run as shell
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           BASE_REF="origin/${{ github.base_ref }}"
           git fetch origin "${{ github.base_ref }}" --depth=1
           CHANGED="$(git diff --name-only "$BASE_REF"...HEAD || true)"
           PROTECTED_PATTERN='^(gate.yaml|loop-constraints.md|loop-budget.md|\.github/copilot-instructions\.md|\.github/instructions/|\.github/agents/|\.github/workflows/|scripts/governance/|scripts/quality/|package\.json|pnpm-lock\.yaml)'
           if echo "$CHANGED" | grep -E "$PROTECTED_PATTERN" >/dev/null 2>&1; then
-            BODY='${{ github.event.pull_request.body }}'
+            BODY="$PR_BODY"
             if ! echo "$BODY" | grep -q "Governance Change Approval: yes"; then
               echo "Protected governance/quality paths changed without explicit PR approval marker."
               echo "Add 'Governance Change Approval: yes' to PR body after human review."
