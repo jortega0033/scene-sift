@@ -142,7 +142,7 @@ defaultMode: L2
 
 ## Active priorities
 
-1. Governance milestone READY as of 2026-07-19. The feature readiness gate (ADR-012) has not been re-run since M1 and M2 were merged, and two blocking conditions are open: high dependency advisories (issue #5) and unreliable local checks on Windows (issue #9). Next planned work is epic #8: issues #5 and #9 first, then the gate re-run that opens issue #1. Product code for #1 does not start before that unless the owner records a waiver in the epic.
+1. Governance milestone READY as of 2026-07-19. The feature readiness gate (ADR-012) has not been re-run since M1 and M2 were merged, and two blocking conditions are open: high dependency advisories (issue #5) and unreliable local checks on Windows (issue #9). Next planned work is epic #8. Its first ticket is issue #5. Issue #9 is a standalone repository-tooling issue outside the epic and its estimate (owner decision, 2026-11-22); it runs alongside #5 and is still a prerequisite of the gate. After #5 and #9 comes the gate re-run that opens issue #1. Product code for #1 does not start before that unless the owner records a waiver in the epic.
 2. Branch protection requires one-time GitHub Pro upgrade (manual action).
 3. Keep governance validation green on all feature branches.
 4. Maintain Electron and IPC security boundaries while expanding product features.

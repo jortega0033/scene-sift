@@ -892,3 +892,32 @@ Append one JSON line per material run.
   "next_step": "HUMAN REVIEW. Push, pull request and merge are human actions. GD-005 and GD-006 are proposed until a human approves them. Backlog: epic #8 with children #5, #9, #1, #2, #3, #4, #6."
 }
 ```
+
+```json
+{
+  "run_id": "2026-11-22T-prep-issue-9-outside-epic",
+  "task": "align-prep-docs-with-owner-decision-on-issue-9",
+  "parent_run_id": "2026-11-22T-prep-agents-loop-epic",
+  "loop_level": "L1 report-only plus one documentation correction proposed for human review",
+  "risk_level": 3,
+  "status": "pending-human-review",
+  "branch": "claude/prep-agents-loop-epic-938fe0",
+  "change": "Owner decision relayed by the orchestrating session on 2026-11-22: issue #9 is a standalone repository-tooling issue, not a child of epic #8. On GitHub (done by the orchestrator, verified read-only here): #9 removed as a sub-issue of #8; epic #8 has six children #5, #1, #2, #3, #4, #6; epic total 68-116 h (was 74-125 h with #9); longest chain inside the epic 53-90 h; #9 (6-9 h) stays open and stays a prerequisite of the readiness gate in #1 unless waived.",
+  "supersedes": "The child list \"#5, #9, #1, #2, #3, #4, #6\" in entry 2026-11-22T-prep-agents-loop-epic describes the state before this decision, when the epic total was 74-125 h. That entry is kept as written.",
+  "files_changed": [
+    "STATE.md (Active priorities item 1 reworded; ordering unchanged)",
+    "loop-run-log.md (this entry)"
+  ],
+  "checked_no_change_needed": [
+    "CLAUDE.md",
+    "docs/DEVELOPMENT.md",
+    "docs/product/CURRENT_PRODUCT_STATE.md",
+    "docs/product/ROADMAP.md"
+  ],
+  "models": {
+    "lead": "claude-fable-5-2"
+  },
+  "outcome": "pass",
+  "next_step": "HUMAN REVIEW. Push, pull request and merge are human actions."
+}
+```
