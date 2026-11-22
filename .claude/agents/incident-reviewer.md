@@ -1,6 +1,6 @@
 ---
 name: incident-reviewer
-description: Post-incident reviewer. Analyzes what failed, identifies control gaps, proposes governance improvements. Use after a governance bypass attempt, unexpected agent behavior, or production incident affecting SceneSift. Produces structured incident report for docs/governance/.
+description: Post-incident reviewer. Analyzes what failed, identifies control gaps, proposes governance improvements. Use after a governance bypass attempt, unexpected agent behavior, or production incident affecting SceneSift. Produces structured incident report for docs/governance/. Use proactively when a hook, deny rule or gate blocks an action unexpectedly during ticket work, or when a ticket reaches its third failed attempt.
 model: claude-sonnet-5
 tools:
   - Read

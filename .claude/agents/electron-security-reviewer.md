@@ -1,6 +1,6 @@
 ---
 name: electron-security-reviewer
-description: Specialist reviewer for Electron main process, preload, and IPC changes. Verifies BrowserWindow security flags, contextBridge API surface, IPC validation, and process execution safety. Required verifier for any risk-3 Electron change. Never implements.
+description: Specialist reviewer for Electron main process, preload, and IPC changes. Verifies BrowserWindow security flags, contextBridge API surface, IPC validation, and process execution safety. Required verifier for any risk-3 Electron change. Never implements. Use proactively during ticket work on every diff that touches src/main, src/preload or src/shared/ipc, after coding and before the review gate.
 model: claude-sonnet-5
 tools:
   - Read

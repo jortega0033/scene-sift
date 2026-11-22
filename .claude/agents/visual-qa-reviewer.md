@@ -1,6 +1,6 @@
 ---
 name: visual-qa-reviewer
-description: Visual QA specialist. Runs Playwright visual regression tests, reviews screenshots for regressions, validates golden-path E2E flows. Use after UI changes to verify no visual regressions. Requires dev server running at localhost:4173.
+description: Visual QA specialist. Runs Playwright visual regression tests, reviews screenshots for regressions, validates golden-path E2E flows. Use after UI changes to verify no visual regressions. Requires dev server running at localhost:4173. Use proactively during ticket work after coding on every ticket that changes a renderer screen or an E2E flow, before the review gate.
 model: inherit
 tools:
   - Read
@@ -21,6 +21,7 @@ Dev server must be running (`pnpm qa:serve` or `pnpm preview`). Confirm before r
 2. Run `pnpm test:e2e` — report pass/fail.
 3. For failures: capture screenshot diff, describe regression.
 4. Check chrome-devtools-mcp console for errors during E2E run.
+5. On the screenshots of changed screens, name any breach of `docs/ui-quality.md` you see, with the rule number and the screen.
 
 ## Output
 

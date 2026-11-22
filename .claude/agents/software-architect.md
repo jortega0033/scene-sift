@@ -1,6 +1,6 @@
 ---
 name: software-architect
-description: Read-only design advisor for SceneSift. Compares options and trade-offs and drafts ADR text for changes to layer boundaries, such as a browser runtime next to the Electron preload bridge. Use before implementation of a boundary change. Advisory only; never edits or approves, and is not the architecture verifier.
+description: Read-only design advisor for SceneSift. Compares options and trade-offs and drafts ADR text for changes to layer boundaries, such as a browser runtime next to the Electron preload bridge. Use before implementation of a boundary change. Advisory only; never edits or approves, and is not the architecture verifier. Use proactively before coding on a ticket that changes a layer boundary or needs an ADR, such as the browser runtime in issue 1 of epic 8.
 tools: Read, Grep, Glob
 ---
 

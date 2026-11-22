@@ -4,9 +4,12 @@ This repository uses a Loop-Engineering-style governance spine adapted for Scene
 
 ## Current rollout level
 
-- **L2 default**: implemented changes happen in isolation, independently verified, then approved by a human.
-- **L1 allowed**: report-only tasks (docs, analysis, triage).
-- **L3+ disabled by default** until explicit approval and successful governance audits.
+- **L1**: loop runs are report-only (health check, triage, docs analysis) and unscheduled (owner decision, 2026-11-22, `docs/owner-decisions.md`).
+- **L2 and above disabled** until the owner approves a change, after stable L1 runs and successful governance audits.
+
+## Ticket work is not a loop run
+
+Implementing a ticket is not a loop run. The owner starts it with `/next-ticket` (`.claude/skills/next-ticket/SKILL.md`), one ticket per run, and it is governed by `CLAUDE.md` (Delivery workflow), the `governed-task` playbook, the review gate hook `.claude/hooks/role-gate.mjs`, CI and branch protection. Implemented changes keep the isolation, independent verification and human approval this file describes below; the run ends at a ready pull request and only the owner merges.
 
 ## Required sequence per non-trivial task
 
@@ -33,6 +36,7 @@ This repository uses a Loop-Engineering-style governance spine adapted for Scene
 - `gate.yaml` defines risk classes, forbidden autonomous actions, and mandatory checks.
 - `.github/workflows/governance.yml` runs governance validation in CI.
 - `.github/pull_request_template.md` requires explicit evidence and AI disclosure.
+- `.claude/hooks/role-gate.mjs` blocks opening or readying a pull request until `architecture-reviewer` and `governance-verifier` ran after the last code edit.
 
 ## Kill switches
 

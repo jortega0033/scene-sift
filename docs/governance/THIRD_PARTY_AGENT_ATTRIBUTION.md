@@ -83,6 +83,10 @@ The same upstream roles may be installed at user level (`~/.claude/agents/`) und
 
 Observed 2026-11-22 with Claude Code 2.1.323, headless (`claude -p`) from the repository root: all twelve project roles are offered, and the three roles above list exactly `Read, Grep, Glob`. A launched `software-architect` reported the same three tools. During this check `design-system-reviewer` was found not to load because its `description` contained an unquoted colon, which is invalid YAML; the value is now quoted. `pnpm claude:validate:agents` does not parse YAML and did not catch it.
 
+### Local change: SDLC kit (2026-11-22)
+
+GD-007 appended one sentence beginning "Use proactively" to the `description` of every project role, including the three above, so Claude Code delegates to them during ticket work. In `accessibility-auditor` the SceneSift scope section also names `docs/ui-quality.md` and adds one checklist line for it. The upstream role text below the scope sections is still unmodified.
+
 ### Updating
 
 Fetch the file at a new revision with `gh api "repos/msitarzewski/agency-agents/contents/<path>?ref=<sha>"`, re-apply the frontmatter and scope section, update the pin and blob SHA in this table, and re-run the load check. This is a governance change (risk 3).

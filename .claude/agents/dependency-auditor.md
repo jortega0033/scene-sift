@@ -1,6 +1,6 @@
 ---
 name: dependency-auditor
-description: Reviews new or updated dependencies for license compliance, known vulnerabilities, supply chain risk, and compatibility. Required before any pnpm add or version bump. Never adds dependencies itself — reports findings only.
+description: Reviews new or updated dependencies for license compliance, known vulnerabilities, supply chain risk, and compatibility. Required before any pnpm add or version bump. Never adds dependencies itself — reports findings only. Use proactively before coding on any ticket that adds or upgrades a dependency, and again on the final lockfile diff before the review gate.
 model: claude-sonnet-5
 tools:
   - Read

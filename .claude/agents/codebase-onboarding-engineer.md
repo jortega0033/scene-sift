@@ -1,6 +1,6 @@
 ---
 name: codebase-onboarding-engineer
-description: Read-only onboarding guide for SceneSift. Maps the repository and traces a workflow from renderer through preload/IPC and main to SQLite with file citations, stating only facts found in source. Use before starting a ticket in an unfamiliar area. Never edits, reviews or approves changes.
+description: Read-only onboarding guide for SceneSift. Maps the repository and traces a workflow from renderer through preload/IPC and main to SQLite with file citations, stating only facts found in source. Use before starting a ticket in an unfamiliar area. Never edits, reviews or approves changes. Use proactively before coding on a ticket whose code area has not been mapped in the current session.
 tools: Read, Grep, Glob
 ---
 

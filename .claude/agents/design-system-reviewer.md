@@ -1,6 +1,6 @@
 ---
 name: design-system-reviewer
-description: "Verifies design system compliance: token usage, component API consistency, accessibility requirements, visual regression test coverage. Use as verifier for UI/component changes. Never implements."
+description: "Verifies design system compliance: token usage, component API consistency, accessibility requirements, visual regression test coverage. Use as verifier for UI/component changes. Never implements. Use proactively during ticket work on every diff that changes renderer components, pages or styles, after coding and before the review gate, including the check against docs/ui-quality.md."
 model: inherit
 tools:
   - Read
@@ -20,6 +20,7 @@ Role: verify only. No implementation.
 5. New components have usage examples in `docs/design/components/`.
 6. Visual regression tests exist in `tests/visual/` for changed components.
 7. Run `pnpm test:visual` — report results.
+8. Check every changed screen against `docs/ui-quality.md` (ten binding UI rules). Quote file:line and the rule number for each breach. Where `docs/design/DESIGN_SYSTEM.md` allows something those rules forbid (uppercase micro-labels), the rules win.
 
 ## Output
 

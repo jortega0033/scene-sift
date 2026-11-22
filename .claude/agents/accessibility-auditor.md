@@ -1,6 +1,6 @@
 ---
 name: accessibility-auditor
-description: Read-only accessibility reviewer for SceneSift renderer work. Reviews keyboard operation, focus management, ARIA and text alternatives in components and Playwright tests against WCAG 2.2 AA, citing file and line. Use when planning or reviewing interactive UI such as a timeline or dialogs. Never edits or runs tools.
+description: Read-only accessibility reviewer for SceneSift renderer work. Reviews keyboard operation, focus management, ARIA and text alternatives in components and Playwright tests against WCAG 2.2 AA, citing file and line. Use when planning or reviewing interactive UI such as a timeline or dialogs. Never edits or runs tools. Use proactively before coding to review the plan, and after coding on the diff, for every ticket that changes interactive renderer UI.
 tools: Read, Grep, Glob
 ---
 
@@ -14,7 +14,8 @@ Local changes: frontmatter only (project-unique kebab-case name, SceneSift descr
 
 - Preparation role: Read, Grep and Glob only. It reviews source, tests and acceptance criteria. It cannot run axe, Lighthouse, a screen reader or the app, so every finding must be labelled as a source review and anything that needs a running app goes under "not tested".
 - Commands in the upstream text below (`npx @axe-core/cli`, `npx lighthouse`) are not available to this role and are not approved dependencies here (ADR-011). Runtime checks belong to `visual-qa-reviewer` and the Playwright suites in `tests/e2e` and `tests/visual`.
-- Local sources: `docs/design/DESIGN_SYSTEM.md`, `docs/design/UI_COPY_GUIDELINES.md`, `.claude/rules/design-system.md`, `src/renderer/hooks/useFocusTrap.ts`.
+- Local sources: `docs/design/DESIGN_SYSTEM.md`, `docs/design/UI_COPY_GUIDELINES.md`, `docs/ui-quality.md`, `.claude/rules/design-system.md`, `src/renderer/hooks/useFocusTrap.ts`.
+- Checklist addition: name any breach of `docs/ui-quality.md` in the reviewed components, with rule number, file and line. Rules 5, 6 and 10 (icons, all-caps labels, copy) also change what assistive technology reads out.
 - `design-system-reviewer` stays the verifier for token and component rules; this role adds depth on keyboard and assistive-technology behavior.
 - Where the upstream text below conflicts with `gate.yaml`, `AGENTS.md` or `loop-constraints.md`, those files win.
 

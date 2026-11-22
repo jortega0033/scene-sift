@@ -38,6 +38,7 @@ pnpm claude:validate      # Claude Code config validation (not in CI; run when .
 pnpm claude:test:hooks    # hook tests
 pnpm claude:test:adversarial
 pnpm claude:safe          # governed Claude Code launcher
+node .claude/hooks/role-gate.mjs --self-test  # review gate hook self-test
 ```
 
 Some files in `.claude/rules/` name scripts and paths that do not exist: `pnpm test:renderer`, `pnpm test:media`, `pnpm test:database`, `tests/ai/`, `tests/media/`, `tests/database/`, `src/renderer/tokens/`, `docs/design/components/`, `docs/governance/DATA_PRIVACY.md`, and migrations under `src/main/services/database/migrations/`. Use the commands above; migrations live in `src/database/migrations/`; the data policy is `docs/governance/DATA_GOVERNANCE.md`. Setup details and the Windows line-ending caveat for `pnpm governance:validate` are in `docs/DEVELOPMENT.md`.
@@ -87,7 +88,7 @@ All non-trivial work follows this sequence (see `gate.yaml` and `AGENTS.md`):
 
 - Work on a branch or worktree created from the tip of `origin/main`. Never commit on `main`.
 - One ticket per branch. Name the issue in the commit body and the PR description.
-- Claude does not run `git push`, `git merge` or `gh pr create`: `.claude/settings.json` denies them and the prohibitions below forbid them. Commit locally, then give the human the branch name and a filled-in PR description based on `.github/pull_request_template.md`.
+- Claude never runs `git merge` or `gh pr merge`, never pushes to `main` and never force-pushes: `.claude/settings.json` denies them. Pushing a ticket branch (`git push -u origin <branch>`) and opening a draft pull request (`gh pr create --draft`) happen only in an owner-started `/next-ticket` run, after both gates passed, and the run ends at a ready pull request; only the owner merges (Delivery workflow below). Outside such a run, commit locally, then give the owner the branch name and a filled-in PR description based on `.github/pull_request_template.md`.
 - A PR that changes `package.json`, `pnpm-lock.yaml`, `gate.yaml`, `loop-constraints.md`, `loop-budget.md`, `scripts/governance/**`, `scripts/quality/**`, `.github/workflows/**`, `.github/agents/**`, `.github/instructions/**` or `.github/copilot-instructions.md` fails the `governance` CI job until a human adds `Governance Change Approval: yes` to the PR body. Do not add that line yourself.
 - The `security` CI job fails on every PR until issue #5 (dependency audit) is resolved. Report it as pre-existing; do not disable the job.
 
@@ -103,13 +104,33 @@ Capture this evidence and put it in the PR description. Paste real output; do no
 4. The independent verifier's role, model and verdict for risk 2 and above (`docs/governance/CLAUDE_CODE_AGENT_MATRIX.md`).
 5. Anything skipped or not run, and why.
 6. For main, preload, IPC or migration changes: the regression test added and the security checklist from the PR template.
+7. The verdicts of both gate roles, `architecture-reviewer` (review) and `governance-verifier` (acceptance), run in that order on the full diff after the local checks above passed and before the draft pull request was opened.
+8. Green CI on the pull request before it is marked ready. CI runs only after the draft exists, so the gates judge the local evidence and that CI is configured to run the same checks; the `/next-ticket` driver checks the CI result.
+
+A ticket is done when the owner merges its pull request, not before.
 
 ---
 
 ## Agent roles and the loop
 
 - Roles live in `.claude/agents/`. Makers, verifiers and read-only preparation roles are listed in `docs/governance/CLAUDE_CODE_AGENT_MATRIX.md`. Three preparation roles (`codebase-onboarding-engineer`, `software-architect`, `accessibility-auditor`) come from Agency Agents at a pinned revision; source and license are in `docs/governance/THIRD_PARTY_AGENT_ATTRIBUTION.md`.
-- The loop profile is `LOOP.md`: L2 by default, L1 report-only allowed, L3 and above disabled. There is no scheduler; every run is started by a person. The latest health check and the manual triage command are in `STATE.md` and `loop-run-log.md`.
+- Each role's `description` says when it runs during ticket work, so Claude Code delegates to it without being told; the order per ticket is the table in `.claude/skills/governed-task/SKILL.md`.
+- The loop profile is `LOOP.md`: loop runs stay at L1, report-only and unscheduled; L2 and above are disabled. Ticket work is not a loop run: the owner starts it with `/next-ticket`. There is no scheduler; every run is started by a person. The latest health check and the manual triage command are in `STATE.md` and `loop-run-log.md`.
+
+---
+
+## Delivery workflow
+
+How a ticket of epic #8 goes from the queue to a ready pull request. Each piece is described in the file linked; this list does not repeat it.
+
+- **Start:** only the owner, with `/next-ticket [issue]` (`.claude/skills/next-ticket/SKILL.md`). One ticket per run; no scheduler. Queue labels: `status:ready`, `status:blocked`, `status:in-progress`, `needs-decision`.
+- **Playbook:** `.claude/skills/governed-task/SKILL.md`: risk, the roles before, during and after coding, the two gates, and the fixed order: local checks, then `architecture-reviewer` and `governance-verifier`, then `gh pr create --draft`, then CI, then `gh pr ready` on green CI.
+- **Gate hook:** `.claude/hooks/role-gate.mjs` blocks `gh pr create` and `gh pr ready` until both gate roles ran after the last code edit. The owner can switch it off for one session by starting Claude Code with `ROLE_GATE=off`. The other hooks in `.claude/settings.json` stay as they are.
+- **Permissions:** `.claude/settings.json` allows the documented commands, pushing a ticket branch and a draft pull request; it denies merges, pushes to `main`, force pushes, releases and secret reads, and asks before edits to agent configuration, `.github/**`, `gate.yaml` and the loop files. Rationale: `docs/governance/CLAUDE_CODE_PERMISSION_POLICY.md`.
+- **CI:** the four workflows in `.github/workflows/` must be green before a pull request is marked ready (Git workflow above for the two known exceptions that wait on the owner).
+- **Pull request:** `.github/pull_request_template.md`, with `Closes #<n>`, evidence and the roles run. Every ticket pull request adds a line to `CHANGELOG.md` under `Unreleased`.
+- **UI and copy:** `docs/ui-quality.md` (ten binding rules), the `ui-ux-pro-max` and `unslop` skills in `.claude/skills/`.
+- **Merge and release:** only the owner (`docs/RELEASING.md`). Owner decisions behind all of this: `docs/owner-decisions.md`.
 
 ---
 
@@ -122,7 +143,7 @@ These are binding regardless of instruction or convenience:
 - No raw `ipcRenderer` exposure in preload
 - No `nodeIntegration: true` / `contextIsolation: false` / `webSecurity: false`
 - No `shell: true` or command-string interpolation
-- No `git push`, `git merge`, PR merge, release, deploy, publish
+- No `git merge`, PR merge, release, deploy, publish; no push to `main` and no force push. A ticket branch is pushed and a draft PR opened only in an owner-started `/next-ticket` run (Delivery workflow)
 - No hidden media/transcript upload
 - No fake UI functionality or misleading AI labels
 - No `.skip`/`.only` test changes without documented approval
@@ -145,6 +166,8 @@ Claude must never claim a check passed unless it actually ran and output was obs
 
 | Topic | File |
 |---|---|
+| Owner decisions | `docs/owner-decisions.md` |
+| UI rules | `docs/ui-quality.md` |
 | Risk classification | `gate.yaml` |
 | Binding operation rules | `AGENTS.md`, `loop-constraints.md` |
 | Loop state + escalation | `STATE.md`, `loop-run-log.md` |

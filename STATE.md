@@ -2,7 +2,7 @@
 
 lastUpdated: 2026-11-22
 loopPaused: false
-defaultMode: L2
+defaultMode: L1
 
 ## Active run
 
@@ -17,7 +17,8 @@ defaultMode: L2
 - loop_health: `npx --yes @cobusgreyling/loop@0.2.0 doctor .` -> HEALTHY, exit 0, Ready 100/100 L1; `... status .` -> exit 0, "Pattern: (none detected)". Full output in loop-run-log.md. This was a one-off read-only run, requested in the owner's preparation task, through npx. The package is not installed, is not in the lockfile, and has not been reviewed under ADR-011; it is not an approved project tool, and the triage command below does not use it.
 - schedulers: none. Workflows run on pull_request, push to main and workflow_dispatch only. No auto-fix and no auto-merge is configured.
 - next_manual_triage (L1, report-only, started by a person): `claude --permission-mode plan "L1 report-only triage per LOOP.md. Read STATE.md, gate.yaml, loop-budget.md and the open issues (gh issue list --state open --json number,title,labels). Report which ticket of epic #8 is unblocked next, missing prerequisites, and stale statements in the docs. Do not edit files, comment, push or change issues."`
-- next_step: HUMAN REVIEW of the prep branch. Push and pull request are human actions (CLAUDE.md prohibitions, .claude/settings.json deny rules).
+- next_step: HUMAN REVIEW of the prep branch. Pushing this prep branch and opening its pull request are done by the owner or the orchestrator, not by a loop run. From the merge of this branch on, agents push a ticket branch and open a draft pull request only in an owner-started `/next-ticket` run; only the owner merges.
+- sdlc_kit_2026-11-22: delivery workflow added on this branch (CLAUDE.md "Delivery workflow", `/next-ticket`, `.claude/hooks/role-gate.mjs`, permission changes, `docs/owner-decisions.md`, `docs/ui-quality.md`). Loop level set to L1 to match the owner decision; ticket work is not a loop run (LOOP.md).
 
 ## Previous active run (complete — merged via owner override)
 

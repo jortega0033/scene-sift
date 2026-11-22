@@ -33,6 +33,10 @@ These roles help before implementation. They cannot edit files or run commands, 
 
 Source, pinned revision and license: `docs/governance/THIRD_PARTY_AGENT_ATTRIBUTION.md` section 3.
 
+## Gate roles on every ticket
+
+On every ticket that changes code, `architecture-reviewer` is the review gate and `governance-verifier` the acceptance gate, in that order, after the local checks and before the draft pull request (GD-007). `.claude/hooks/role-gate.mjs` enforces that both ran after the last code edit. Which other roles run before, during and after coding is listed in `.claude/skills/governed-task/SKILL.md`.
+
 ## Maker/verifier separation
 
 A session or agent that proposes a change CANNOT be its own verifier. Verification must be performed by a different agent, ideally in a separate session.
