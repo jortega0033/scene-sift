@@ -8,4 +8,5 @@ Every ticket pull request adds one line under `Unreleased`. The owner moves thos
 
 ### Added
 
+- Hardening pass 2: the review gate judges the proposed branch and keeps its ledger in the common git dir, `/next-ticket` picks only leaf tickets and waits for CI without polling, and issue #9 (hooks and local checks on Windows, agent-role YAML validation, pnpm floor, rule paths).
 - Delivery workflow for tickets: `/next-ticket` driver, review gate hook, permission rules for ticket branches and draft pull requests, UI quality rules and the `ui-ux-pro-max` and `unslop` skills, collaboration and release files, and the owner decisions record.

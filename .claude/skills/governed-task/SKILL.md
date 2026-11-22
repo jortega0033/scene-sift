@@ -45,12 +45,14 @@ The preparation roles advise and never count as verifiers (`AGENTS.md`). The mak
 
 This order is fixed (`CLAUDE.md`, Delivery workflow). In a `/next-ticket` run the owner's start is the request to push the ticket branch and open the pull request; outside such a run, do steps 1 to 3, commit locally, and hand the owner the branch name and a filled-in pull request description without pushing.
 
-1. Local checks pass: every command in `gate.yaml` `requiredChecksByRisk` for the risk level, plus the extra checks `CLAUDE.md` names under "Before claiming a ticket done", with output and exit code recorded.
+1. Local checks pass: every command in `gate.yaml` `requiredChecksByRisk` for the risk level, plus the extra checks `CLAUDE.md` names under "Before claiming a ticket done", with output and exit code recorded. Write the diff (`git diff --stat origin/main...HEAD` and `git diff origin/main...HEAD`) and each check output to `.claude/state/review/` (git-ignored) and name those files when calling the gate roles. An acceptance criterion that needs a person (a manual check in a normal browser, a recorded manual step) is done as far as an agent can, with a scripted or headless run and its evidence, and the rest is listed under "Owner checks" in the pull request text; `governance-verifier` accepts that only when the ticket marks the step as manual.
 2. Add one line for the ticket to `CHANGELOG.md` under `Unreleased` (a `.md` file, so it does not reset the role gate) and draft the pull request text from `.github/pull_request_template.md` with `Closes #<n>` and the evidence, passed through the `unslop` skill. The roles-run list is filled in as the gates report.
 3. The specialists for the changed paths have passed, then `architecture-reviewer` (review gate), then `governance-verifier` (acceptance gate), on the full diff, the recorded evidence, the CHANGELOG line and the drafted text. A FAIL goes back to step 4 of the steps above; after any code edit, redo step 1 and run both gates again. After the gates, only the `governance-verifier` verdict is appended to the drafted text.
 4. Push the ticket branch (`git push -u origin <branch>`) and open a draft: `gh pr create --draft`.
-5. CI runs on the draft. If it fails, fix, re-run the local checks and both gates, and push again.
+5. CI runs on the draft. Do not poll: end the turn with the line "Draft pull request #N is waiting for CI" and read `gh pr checks <n>` once when the session is woken (a CI event, or the owner says "continue"). If it fails, fix, re-run the local checks and both gates, and push again.
 6. When CI is green, `gh pr ready` and a comment on the issue with the CI run link.
+
+A ticket that is the last open sub-issue of a parent says `Closes #<sub-issue>` and `Closes #<parent>` in the pull request text. Ticket work never edits agent configuration (`.claude/agents/**`, `.claude/skills/**`, `.claude/hooks/**`, `.claude/settings.json`) unless the ticket is about it and the owner approved it; the `ask` rules in `.claude/settings.json` cover edits made with the edit tools, not edits made through a shell command.
 
 Never push to `main`, force-push, run `git merge` or `gh pr merge`, or add `Governance Change Approval: yes` to a pull request body. Only the owner merges and releases.
 

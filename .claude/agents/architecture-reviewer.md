@@ -29,7 +29,7 @@ Return structured verdict: PASS / FAIL / CONDITIONALLY PASS. List each check. Qu
 
 In a `/next-ticket` run this role is the review gate. `.claude/hooks/role-gate.mjs` blocks `gh pr create` and `gh pr ready` until this role and `governance-verifier` have both run after the last code edit. On top of the checklist above:
 
-1. Read the full diff against `origin/main` (committed and uncommitted), not the maker's summary.
+1. Read the full diff against `origin/main` (committed and uncommitted), not the maker's summary. In a ticket run the driver has written it, with the check outputs, to the ticket worktree's `.claude/state/review/`; read those files and confirm they match `git diff origin/main...HEAD`.
 2. Check each acceptance criterion of the issue against a test, command output or screenshot in the recorded local evidence. List any criterion without evidence.
 3. Look for correctness problems the checks would not catch: edge cases, error paths, time units (cue times are integer milliseconds), and removed or weakened tests.
 4. For a changed screen, confirm `design-system-reviewer` reported against `docs/ui-quality.md`. An unreported breach is a FAIL.

@@ -56,7 +56,7 @@ Repository-local configuration for Claude Code. Adapts existing SceneSift govern
     stop-validation.mjs         # Stop: session-end audit
     record-agent-event.mjs      # SubagentStop: logs agent completions
     role-gate.mjs               # PreToolUse + SubagentStop: review gate before gh pr create/ready
-  state/                 # Local review gate ledger (git-ignored)
+  state/                 # Git-ignored: review/ holds the diff and evidence a ticket run writes for the gate roles (the gate ledger itself is in the common git dir)
   schemas/               # JSON schemas for structured artifacts
     task-manifest.schema.json
     evidence.schema.json
