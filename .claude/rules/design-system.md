@@ -25,5 +25,5 @@ Risk: 1 default. Risk 2 for token changes or component API breaks.
 
 ## Documentation
 
-- New components require an entry in `docs/design/COMPONENT_INVENTORY.md`.
+- New components require a usage example, recorded with their entry in `docs/design/COMPONENT_INVENTORY.md`.
 - Run `pnpm test:visual` after any design token or component change.
