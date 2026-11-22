@@ -33,6 +33,9 @@ Repository-local configuration for Claude Code. Adapts existing SceneSift govern
     dependency-auditor.md       # Package audit
     governance-verifier.md      # Governance control verifier
     incident-reviewer.md        # Post-incident analysis
+    codebase-onboarding-engineer.md  # Read-only: repo map and workflow traces
+    software-architect.md       # Read-only: options and draft ADR text
+    accessibility-auditor.md    # Read-only: keyboard and ARIA source review
   skills/                # Callable procedures (/skill-name)
     governed-task/       # Standard risk 0–2 implementation
     verify-change/       # Independent verification pipeline

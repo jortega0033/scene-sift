@@ -802,3 +802,93 @@ Append one JSON line per material run.
   "next_step": "HUMAN MERGE REVIEW required before merge to main. No autonomous merge permitted."
 }
 ```
+
+```json
+{
+  "run_id": "2026-11-22T-prep-agents-loop-epic",
+  "task": "preparation-for-offline-browser-clip-review-epic",
+  "loop_level": "L1 report-only for health check and triage; documentation and agent-role changes proposed for human review",
+  "risk_level": 3,
+  "status": "pending-human-review",
+  "branch": "claude/prep-agents-loop-epic-938fe0",
+  "base": "origin/main 5633c8e",
+  "models": {
+    "lead": "claude-fable-5-2 (Claude Code session; integration and all GitHub writes)",
+    "inventory": "haiku (read-only Explore subagent)",
+    "architecture_trace": "sonnet (read-only subagent)",
+    "independent_review": "opus (read-only subagent, different model from lead): first pass NOT READY with 1 blocker, 3 major and 8 minor findings, all addressed; re-check found 1 major and 5 minor, all addressed"
+  },
+  "scope": "Update CLAUDE.md, docs/ARCHITECTURE.md, docs/DEVELOPMENT.md, docs/product status; add three read-only preparation roles from agency-agents at a pinned revision (GD-005, proposed); quote design-system-reviewer description so the role loads; reconcile GitHub issues #1-#6 under one epic. No change to src/, tests/, scripts/, .github/, package.json, gate.yaml, AGENTS.md, LOOP.md, loop-constraints.md, loop-budget.md, .claude/settings.json, .claude/hooks/, .claude/rules/.",
+  "loop_engineering": {
+    "cli": "@cobusgreyling/loop@0.2.0 (npx, not installed); loop init was NOT run; existing files kept",
+    "doctor": {
+      "command": "npx --yes @cobusgreyling/loop@0.2.0 doctor .",
+      "exit_code": 0,
+      "output": [
+        "Ready:   100/100 L1",
+        "Strong structure but no proven loop runs yet — run one L1 cycle and commit state before L3.",
+        "Sync:    n/a",
+        "Files:   state=STATE.md  LOOP.md=yes  budget=yes  run-log=yes  gate=yes",
+        "Status:  HEALTHY (exit 0)",
+        "Top next actions: 1. Install loop-triage from starters/minimal-loop, minimal-loop-claude, or minimal-loop-codex  2. Copy or create docs/safety.md (denylists, auto-merge policy, MCP scopes)  3. Add loop-constraints skill via loop-init or templates/SKILL.md.loop-constraints",
+        "Notes: Could not parse loop-sync JSON output"
+      ],
+      "suggested_actions_taken": "none; they would add generated files, which is outside this run"
+    },
+    "status": {
+      "command": "npx --yes @cobusgreyling/loop@0.2.0 status .",
+      "exit_code": 0,
+      "output": [
+        "Pattern:  (none detected — check LOOP.md)",
+        "Ready:    100/100  L1",
+        "State:    STATE.md",
+        "Budget:   loop-budget.md  · gate=yes  · constraints=yes",
+        "Recent runs: · ? · ? · ?"
+      ]
+    },
+    "maturity_preserved": "LOOP.md unchanged: L2 default, L1 allowed, L3+ disabled. killSwitch.enabled false, loopPaused false.",
+    "schedulers": "none: .github/workflows/*.yml trigger on pull_request, push to main/master, workflow_dispatch only",
+    "auto_fix": "none configured",
+    "auto_merge": "none configured; merge-pr is in gate.yaml forbiddenAutonomousActions",
+    "next_manual_triage": "claude --permission-mode plan \"L1 report-only triage per LOOP.md. Read STATE.md, gate.yaml, loop-budget.md and the open issues (gh issue list --state open --json number,title,labels). Report which ticket of the epic is unblocked next, missing prerequisites, and stale statements in the docs. Do not edit files, comment, push or change issues.\""
+  },
+  "checks_observed": {
+    "environment": "Windows 11, Node 22.23.4, pnpm 10.15.0, core.autocrlf=true",
+    "pnpm install --frozen-lockfile": "exit 0; printed \"Ignored build scripts: better-sqlite3, electron, electron-winstaller, esbuild\" (pnpm 10.15.0 ignores allowBuilds)",
+    "pnpm governance:validate": "exit 1: CI action pinning check misreads CRLF working copy (10 lines reported); in a clone with core.autocrlf=false at 5633c8e: governance:validate exit 0 and governance:scenarios 64 passed",
+    "pnpm architecture:validate": "exit 0",
+    "pnpm design:validate": "exit 0",
+    "pnpm dependencies:validate": "exit 0",
+    "pnpm typecheck": "exit 0",
+    "pnpm lint": "exit 0",
+    "pnpm test (before native builds)": "exit 1: 19 failed | 138 passed (157); 3 files failed: database-service (binding missing), navigation-security (Electron binary missing), adversarial-scenarios (CRLF)",
+    "npx pnpm@10.34.9 rebuild better-sqlite3 electron": "exit 0; both built",
+    "pnpm test (after native builds)": "exit 1: Test Files 1 failed | 19 passed (20); Tests 159 passed (159); only failing file is tests/governance/adversarial-scenarios.test.ts (CRLF)",
+    "pnpm build": "exit 0",
+    "pnpm claude:validate": "exit 0 (includes the three new roles)",
+    "pnpm claude:test:adversarial": "exit 0",
+    "pnpm claude:test:hooks": "exit 1: hooks read /dev/stdin, which does not exist on Windows, so blocking cases return exit 0",
+    "pnpm governance:scenarios": "exit 1 (CRLF, same cause)",
+    "pnpm security:scan": "exit 1: drizzle-orm <0.45.2 GHSA-gpj5-g38j-94v9 (high), zod <4.6.6 GHSA-mrhx-c7xc-m3w5 (high)",
+    "claude -p role listing (Claude Code 2.1.323)": "all 12 project roles offered after the frontmatter fix; new roles list Read, Grep, Glob",
+    "not_run": [
+      "pnpm test:e2e",
+      "pnpm test:visual",
+      "pnpm test:electron",
+      "pnpm package:dir",
+      "pnpm validate:full"
+    ]
+  },
+  "findings": [
+    "design-system-reviewer did not load: unquoted colon in YAML description; fixed by quoting",
+    "hooks fail open on Windows (/dev/stdin)",
+    "governance pin check not CRLF-safe",
+    "pnpm 10.15.0 ignores allowBuilds; no packageManager field",
+    "rule files reference non-existent scripts and paths",
+    "no runnable prototype of the offline browser workflow; qa:serve is fixture-only",
+    "requirement documents disagree; browser track not in any product document"
+  ],
+  "outcome": "pass-with-findings",
+  "next_step": "HUMAN REVIEW. Push, pull request and merge are human actions. GD-005 and GD-006 are proposed until a human approves them. Backlog: epic #8 with children #5, #9, #1, #2, #3, #4, #6."
+}
+```

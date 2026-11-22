@@ -1,6 +1,6 @@
 ---
 name: design-system-reviewer
-description: Verifies design system compliance: token usage, component API consistency, accessibility requirements, visual regression test coverage. Use as verifier for UI/component changes. Never implements.
+description: "Verifies design system compliance: token usage, component API consistency, accessibility requirements, visual regression test coverage. Use as verifier for UI/component changes. Never implements."
 model: inherit
 tools:
   - Read

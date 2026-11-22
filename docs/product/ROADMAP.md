@@ -5,8 +5,8 @@ Source: GPT AI as PO/PM, provided by user 2026-07-19 for future reference.
 **Rule**: One milestone at a time. Every milestone follows:
 Plan/spec → implement on feature branch → targeted specialist review → full validation → acceptance audit → human merge.
 
-**Current status**: M1 CLOSED (merged to main 2026-07-19 via owner override). M2 PLANNING (spec complete 2026-07-19, awaiting governed implementation).
-**Next**: M2 independent planning review → implementation authorized → feature branch → implement per M2_IMPLEMENTATION_PLAN.md.
+**Current status (checked 2026-11-22 at `5633c8e`)**: M1 CLOSED and M2 CLOSED, both merged to main via owner override (merge commits `bf52bfa` and `2443a73`). M3 to M11 exist only on unmerged branches `origin/feature/m3-…` to `origin/feature/m11-…`; none is on main.
+**Next**: the offline browser clip-review track in epic #8 (issues #1 to #6). That track is not one of the milestones below; see "Requirement documents and where they disagree" in `CURRENT_PRODUCT_STATE.md`.
 
 ---
 
@@ -24,7 +24,7 @@ Load a video source file into a project and verify it is a valid video using FFp
 
 **Goal**: Parse SRT/WebVTT subtitle files and attach them to projects.
 
-**Status: PLANNING** — implementation-ready spec complete 2026-07-19. See `docs/product/M2_HANDOFF.md`.
+**Status: CLOSED** — merged to main (`2443a73`). Spec: `docs/product/M2_HANDOFF.md`. Audit: `docs/product/M2_ACCEPTANCE_AUDIT.md`.
 
 **Scope (M2 only)**:
 - In-process SRT + WebVTT parser (ASS deferred)
