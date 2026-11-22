@@ -50,6 +50,15 @@ On session end: checks `loop-run-log.md` for open RUNNING/IN_PROGRESS entries. E
 
 Appends to `loop-run-log.md`: timestamp, agent name, stop reason.
 
+### role-gate.mjs (PreToolUse: Bash|PowerShell, and SubagentStop)
+
+Added 2026-11-22 (GD-007). Copied from the owner's SDLC kit; the only local changes are the gate role names and the playbook path in its message.
+- `record` (SubagentStop): appends the finished role and a timestamp to `.claude/state/role-runs.jsonl` (git-ignored).
+- `check` (PreToolUse): blocks `gh pr create` and `gh pr ready` with exit code 2 unless `architecture-reviewer` and `governance-verifier` both ran after the newest change to a code file on the branch. Changes to documentation, `.claude/` and `.github/` only pass without a review.
+- Reads its input from file descriptor 0, so it works on Windows and POSIX.
+- The owner can switch it off for one session by starting Claude Code with `ROLE_GATE=off`.
+- Test: `node .claude/hooks/role-gate.mjs --self-test` (builds a throwaway repository in the temp directory). It is not part of `pnpm claude:test:hooks`.
+
 ## Modifying hooks
 
 Risk 3. Requires:

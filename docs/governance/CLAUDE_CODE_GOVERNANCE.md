@@ -43,7 +43,8 @@ All governance file changes: human approval required.
 
 ## Claude Code does NOT
 
-- Commit, push, merge, release, or deploy.
+- Merge, release, or deploy; push to `main` or force-push.
+- Push a ticket branch or open a pull request, except in an owner-started `/next-ticket` run, where it pushes the ticket branch and opens a draft pull request after both gate roles passed and marks it ready on green CI (GD-007, `CLAUDE.md` Delivery workflow). Only the owner merges.
 - Modify real credentials, `.env*` files, or signing assets.
 - Install global packages.
 - Configure `--dangerously-skip-permissions` or `permissionMode: bypassPermissions`.

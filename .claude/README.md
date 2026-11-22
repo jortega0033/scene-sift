@@ -46,12 +46,17 @@ Repository-local configuration for Claude Code. Adapts existing SceneSift govern
     baseline-update/     # Update test baselines (intentional changes only)
     memory-audit/        # Audit stale/invalid memory entries
     incident-response/   # Post-incident analysis and reporting
+    next-ticket/         # Owner-started driver: one ticket of epic #8 to a ready PR (never merges)
+    ui-ux-pro-max/       # Third-party UI design search (MIT), see its PROVENANCE.md
+    unslop/              # Third-party prose clean-up (MIT), see its PROVENANCE.md
   hooks/                 # Node.js enforcement hooks
     protect-file-write.mjs      # PreToolUse: blocks protected path writes
     protect-bash-command.mjs    # PreToolUse: blocks forbidden commands
     validate-config-change.mjs  # PostToolUse: validates config changes
     stop-validation.mjs         # Stop: session-end audit
     record-agent-event.mjs      # SubagentStop: logs agent completions
+    role-gate.mjs               # PreToolUse + SubagentStop: review gate before gh pr create/ready
+  state/                 # Local review gate ledger (git-ignored)
   schemas/               # JSON schemas for structured artifacts
     task-manifest.schema.json
     evidence.schema.json
