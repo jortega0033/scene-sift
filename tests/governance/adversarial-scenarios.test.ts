@@ -600,19 +600,20 @@ describe('governance adversarial scenarios', () => {
         '    steps:',
         '      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4',
         '',
-      ].join('
-'),
+      ].join('\r\n'),
     });
     expect(validateCIPinning(root)).toHaveLength(0);
   });
 
   it('CI pinning validator still reports a floating tag in a CRLF file', () => {
     const root = createCIPinningFixture({
-      'test.yml': 'jobs:
-  build:
-    steps:
-      - uses: actions/checkout@v4 # pinned later
-',
+      'test.yml': [
+        'jobs:',
+        '  build:',
+        '    steps:',
+        '      - uses: actions/checkout@v4 # pinned later',
+        '',
+      ].join('\r\n'),
     });
     const violations = validateCIPinning(root);
     expect(violations).toHaveLength(1);

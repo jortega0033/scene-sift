@@ -159,7 +159,8 @@ function walkFiles(dir: string): string[] {
 
 function assertInstructionFrontmatter(repoRoot: string, relPath: string): string[] {
   const filePath = path.join(repoRoot, relPath);
-  const raw = fs.readFileSync(filePath, 'utf8');
+  // Compare with LF so a CRLF working copy (core.autocrlf=true) gives the same answer as CI.
+  const raw = fs.readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n');
   const errors: string[] = [];
   const hasFrontmatter = raw.startsWith('---\n');
   if (!hasFrontmatter) {
