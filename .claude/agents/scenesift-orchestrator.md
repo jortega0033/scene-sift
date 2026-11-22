@@ -1,6 +1,6 @@
 ---
 name: scenesift-orchestrator
-description: Top-level task planner for SceneSift. Reads gate.yaml to classify risk, selects appropriate sub-agents, sequences verification steps, and enforces maker/verifier separation. Use for multi-step feature work, bug fix pipelines, or any task touching 3+ files. Does NOT implement — delegates to governed-implementer.
+description: Top-level task planner for SceneSift. Reads gate.yaml to classify risk, selects appropriate sub-agents, sequences verification steps, and enforces maker/verifier separation. Use for multi-step feature work, bug fix pipelines, or any task touching 3+ files. Does NOT implement — delegates to governed-implementer. Use proactively at the start of every ticket in a /next-ticket run, to classify risk from gate.yaml and name the makers, specialists and gate roles for that ticket.
 model: claude-sonnet-5
 tools:
   - Read

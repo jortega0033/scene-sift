@@ -32,3 +32,8 @@ CLAUDE.local.md
 *.njsproj
 *.sln
 *.sw?
+
+# Review gate ledger (.claude/hooks/role-gate.mjs), local only
+.claude/state/
+# Ticket worktrees created by /next-ticket
+.claude/worktrees/

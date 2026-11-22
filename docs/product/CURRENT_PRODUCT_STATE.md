@@ -1,9 +1,70 @@
 # SceneSift — Current Product State
 
-Date: 2026-07-19
-Status: Governance milestone complete. Feature development not yet started.
+Date: 2026-07-19 (original audit), status section added 2026-11-22
+Status: M1 (media inspection) and M2 (subtitle parsing) are merged on `main`. The sections after "Original audit" describe the repository before those merges and are kept as a record.
 
 ---
+
+## Status on `main` as of 2026-11-22 (commit `5633c8e`)
+
+Verified by reading source. The traced workflows and file references are in `docs/ARCHITECTURE.md`.
+
+### Implemented
+
+| Capability | Evidence |
+|---|---|
+| Project create, list, view, delete | `src/main/services/database/databaseService.ts`, `src/renderer/features/projects/` |
+| Media inspection with FFprobe on request (M1) | `src/main/services/ffmpeg/ffmpegService.ts` `inspectMediaFile`, migration `0001_media_inspection.sql`, channel `project:inspect` |
+| SRT and WebVTT parsing with limits and warnings (M2) | `src/main/services/subtitle/`, migration `0002_subtitle_parsing.sql`, channels `subtitle:*` |
+| Settings, capability checks, queue page | unchanged from the original audit |
+| Browser QA fixture mode for tests | `src/renderer/qa/`, `pnpm qa:serve` |
+
+### Not implemented on `main`
+
+- A cue list: no IPC method returns cues, the panel shows counts only
+- Video playback, timeline, range selection, clips
+- Subtitle export, rebasing or editing
+- FFmpeg clip generation; the queue runs no job
+- ASS parsing (`.ass` can be selected and is then reported as unsupported)
+- Any AI feature
+- Any browser product runtime; the browser QA mode serves fixtures only
+
+### Planned next
+
+The owner opened issues #1 to #6 on 2026-11-21 for an offline browser clip-review track. They are organized under epic #8, which holds the ordered tickets, dependencies and estimates. Nothing in that epic is implemented.
+
+### Feature readiness gate
+
+`docs/governance/FEATURE_READINESS_GATE.md` shows READY as of 2026-07-19. ADR-012 asks for a re-run after each feature milestone; M1 and M2 were merged after that date and the gate was not re-run. Two of its blocking conditions are open on 2026-11-22: `pnpm validate` is unreliable on a default Windows checkout (issue #9), and `pnpm security:scan` reports two high advisories in production dependencies (issue #5). The condition "browser QA mock can leak into production" was checked: a production build contained no fixture strings. The re-run is the first step of issue #1.
+
+### Needs verification
+
+- Whether `AppError.code` reaches the renderer as a property after Electron serializes an IPC error
+- `pnpm test:electron` and `pnpm package:dir` were not run in the 2026-11-22 check
+- The two high advisories reported by `pnpm security:scan` (issue #5)
+
+## Requirement documents and where they disagree
+
+There is no single PRD. Requirements are spread over these files, which were written at different times:
+
+| Document | What it defines | State |
+|---|---|---|
+| `docs/product/MVP_SCOPE.md`, `MVP_ROADMAP.md` | MVP as M1 to M4: inspect, parse, select clips by subtitle entry, generate with FFmpeg | M1 and M2 done. M3 and M4 not started. Still says feature development has not started. |
+| `docs/product/ROADMAP.md` | A longer plan, M1 to M20, with different numbering (M3 sync check, M4 video preview, M6 AI provider, M12 rendering) | Header updated on 2026-11-22. M3 to M11 exist only on unmerged branches. |
+| `docs/ROADMAP.md` | Phases 2 to 5 | Undated. Lists inspection and parsing as future work. |
+| `README.md` (rewritten in open PR #7) and issues #1 to #6 | The offline browser clip-review track | Newest statement of intent. Not reflected in the three documents above. |
+
+Material drift, most important first:
+
+1. **The browser track is not in any product document.** `MVP_SCOPE.md` lists video preview, timeline editing and custom clip bounds as excluded from the MVP. Issues #1 to #4 require all three, in a browser runtime that no document describes. The first ticket of epic #8 records the decision in an ADR and in the roadmap before code is written.
+2. **Three milestone numberings.** "M3" means clip selection in `MVP_ROADMAP.md`, sync check in `docs/product/ROADMAP.md`, and nothing in `docs/ROADMAP.md`. Name the document when citing a milestone.
+3. **Unmerged work.** Branches `origin/feature/m3-subtitle-synchronization` through `origin/feature/m11-composition-settings` form one linear stack (up to 51 commits ahead of `main`, about 30,000 added lines) with sync check, an Electron video preview, AI provider, clip candidates, review, timing editor, subtitle editing and composition settings. None of it is on `main`. Whether it will be merged, mined or dropped is an open owner decision; the browser epic does not depend on it.
+4. **Subtitle storage differs from the plan.** `MVP_ROADMAP.md` planned a `subtitle_entries` table and a `project:parseSubtitles` channel. The code stores one JSON document per project in `subtitle_documents` and uses `subtitle:parseForProject`.
+5. **Rule files point at paths and scripts that do not exist**: `src/main/services/database/migrations/` (real: `src/database/migrations/`), `src/renderer/tokens/`, `docs/design/components/`, `docs/governance/DATA_PRIVACY.md` (real: `DATA_GOVERNANCE.md`), `tests/ai/`, `tests/media/`, `tests/database/`, and scripts `pnpm test:renderer`, `pnpm test:media`, `pnpm test:database`. The correct commands are in `CLAUDE.md`.
+
+---
+
+## Original audit (2026-07-19, before M1 and M2)
 
 ## Summary
 

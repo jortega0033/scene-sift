@@ -36,7 +36,7 @@ Claude Code rules adapt Copilot governance; they do not duplicate or contradict 
 
 ## Tool-specific prohibitions
 
-Both tools: no autonomous commit/push/merge/release/deploy.
+Both tools: no merge, release, deploy, push to main or force push. Claude Code pushes a ticket branch and opens a draft pull request only in an owner-started /next-ticket run (GD-007); Copilot does not push.
 Both tools: no .env or credential modification.
 Both tools: same gate.yaml forbidden actions apply.
 

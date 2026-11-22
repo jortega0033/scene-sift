@@ -1,11 +1,28 @@
 # SceneSift Loop State
 
-lastUpdated: 2026-07-19
+lastUpdated: 2026-11-22
 loopPaused: false
-defaultMode: L2
+defaultMode: L1
 
 ## Active run
 
+- run_id: 2026-11-22T-prep-agents-loop-epic
+- milestone: Preparation for the offline browser clip-review epic (no product code)
+- branch: claude/prep-agents-loop-epic-938fe0 (from origin/main 5633c8e)
+- loop_level: L1 report-only for the health check and triage; documentation and agent-role changes proposed for human review
+- risk_level: 3 (touches CLAUDE.md, .claude/agents/, docs/governance/; classified by .claude/rules/governance.md)
+- status: pending_human_review
+- scope: update repo instructions and as-built architecture notes; record requirement-document drift; add three read-only preparation roles (GD-005, proposed); fix design-system-reviewer frontmatter so the role loads; reconcile GitHub issues #1 to #6 under epic #8
+- not_changed: AGENTS.md, LOOP.md, loop-constraints.md, loop-budget.md, gate.yaml, .claude/settings.json, .claude/hooks/, .claude/rules/, .github/, package.json, pnpm-lock.yaml, all of src/ and tests/
+- loop_health: `npx --yes @cobusgreyling/loop@0.2.0 doctor .` -> HEALTHY, exit 0, Ready 100/100 L1; `... status .` -> exit 0, "Pattern: (none detected)". Full output in loop-run-log.md. This was a one-off read-only run, requested in the owner's preparation task, through npx. The package is not installed, is not in the lockfile, and has not been reviewed under ADR-011; it is not an approved project tool, and the triage command below does not use it.
+- schedulers: none. Workflows run on pull_request, push to main and workflow_dispatch only. No auto-fix and no auto-merge is configured.
+- next_manual_triage (L1, report-only, started by a person): `claude --permission-mode plan "L1 report-only triage per LOOP.md. Read STATE.md, gate.yaml, loop-budget.md and the open issues (gh issue list --state open --json number,title,labels). Report which ticket of epic #8 is unblocked next, missing prerequisites, and stale statements in the docs. Do not edit files, comment, push or change issues."`
+- next_step: HUMAN REVIEW of the prep branch. Pushing this prep branch and opening its pull request are done by the owner or the orchestrator, not by a loop run. From the merge of this branch on, agents push a ticket branch and open a draft pull request only in an owner-started `/next-ticket` run; only the owner merges.
+- sdlc_kit_2026-11-22: delivery workflow added on this branch (CLAUDE.md "Delivery workflow", `/next-ticket`, `.claude/hooks/role-gate.mjs`, permission changes, `docs/owner-decisions.md`, `docs/ui-quality.md`). Loop level set to L1 to match the owner decision; ticket work is not a loop run (LOOP.md).
+
+## Previous active run (complete — merged via owner override)
+
+- note_2026-11-22: this run's branch is merged. `main` contains merge commit 2443a73 "merge(M2): Subtitle Parsing and Validation — owner override". The status and next_step lines below are kept as written on 2026-07-19.
 - run_id: 2026-07-19T-m2-acceptance-audit
 - milestone: M2 Subtitle Parsing and Validation — Acceptance Audit
 - branch: feature/m2-subtitle-parsing-validation
@@ -27,7 +44,7 @@ defaultMode: L2
 - owner_override: manual phase gates skipped per owner authorization; manual runtime testing skipped; independent specialist verification completed
 - next_step: HUMAN MERGE REVIEW required before merge to main
 
-## Previous active run (complete — audit complete, pending merge)
+## Earlier run (complete — audit complete, merged with the run above)
 
 - run_id: 2026-07-19T-m2-implementation
 - milestone: M2 Subtitle Parsing and Validation — Stage B Governed Implementation
@@ -126,7 +143,7 @@ defaultMode: L2
 
 ## Active priorities
 
-1. Feature development may begin — governance milestone READY.
+1. Governance milestone READY as of 2026-07-19. The feature readiness gate (ADR-012) has not been re-run since M1 and M2 were merged, and two blocking conditions are open: high dependency advisories (issue #5) and unreliable local checks on Windows (issue #9). Next planned work is epic #8. Its first ticket is issue #5. Issue #9 is a standalone repository-tooling issue outside the epic and its estimate (owner decision, 2026-11-22); it runs alongside #5 and is still a prerequisite of the gate. After #5 and #9 comes the gate re-run that opens issue #1. Product code for #1 does not start before that unless the owner records a waiver in the epic.
 2. Branch protection requires one-time GitHub Pro upgrade (manual action).
 3. Keep governance validation green on all feature branches.
 4. Maintain Electron and IPC security boundaries while expanding product features.

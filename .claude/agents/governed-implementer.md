@@ -1,6 +1,6 @@
 ---
 name: governed-implementer
-description: Risk 0–2 implementation agent. Writes code, runs tests, follows architecture rules. Inherits model from session. Use for renderer components, unit tests, documentation, low-risk refactors. Not for main process, IPC, governance, or security files.
+description: Risk 0–2 implementation agent. Writes code, runs tests, follows architecture rules. Inherits model from session. Use for renderer components, unit tests, documentation, low-risk refactors. Not for main process, IPC, governance, or security files. Use proactively for the coding step of every risk 0-2 ticket in a /next-ticket run, after the orchestrator has classified the risk.
 tools:
   - Read
   - Write
