@@ -24,8 +24,21 @@ function runHook(hookFile, inputObj) {
     input,
     cwd: ROOT,
     encoding: 'utf-8',
+    env: { ...process.env, CLAUDE_PROJECT_DIR: ROOT },
   });
 }
+
+function runHookRaw(hookFile, rawInput) {
+  return spawnSync('node', [join(HOOKS, hookFile)], {
+    input: rawInput,
+    cwd: ROOT,
+    encoding: 'utf-8',
+    env: { ...process.env, CLAUDE_PROJECT_DIR: ROOT },
+  });
+}
+
+const abs = (rel) => join(ROOT, rel);
+const backslashed = (p) => p.replace(/\//g, '\\');
 
 function assert(name, result, expectExit, expectStderr = null) {
   const exitOk = result.status === expectExit;
@@ -77,6 +90,67 @@ assert(
   'Warns on .claude/settings.json but allows',
   runHook('protect-file-write.mjs', { tool_input: { file_path: '.claude/settings.json' } }),
   0, 'GOVERNANCE WARNING'
+);
+
+assert(
+  'Blocks absolute path to gate.yaml',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: abs('gate.yaml') } }),
+  1, 'BLOCKED'
+);
+assert(
+  'Blocks absolute path to AGENTS.md',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: abs('AGENTS.md') } }),
+  1, 'BLOCKED'
+);
+assert(
+  'Blocks absolute path to .env',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: abs('.env') } }),
+  1, 'BLOCKED'
+);
+assert(
+  'Blocks backslash absolute path to gate.yaml',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: backslashed(abs('gate.yaml')) } }),
+  1, 'BLOCKED'
+);
+assert(
+  'Blocks backslash absolute path to AGENTS.md',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: backslashed(abs('AGENTS.md')) } }),
+  1, 'BLOCKED'
+);
+assert(
+  'Blocks backslash absolute path to .env',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: backslashed(abs('.env')) } }),
+  1, 'BLOCKED'
+);
+assert(
+  'Blocks backslash relative path to a workflow file',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: '.github\\workflows\\ci.yml' } }),
+  1, 'BLOCKED'
+);
+assert(
+  'Blocks ./gate.yaml',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: './gate.yaml' } }),
+  1, 'BLOCKED'
+);
+assert(
+  'Allows absolute path to a src/renderer file',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: abs('src/renderer/App.tsx') } }),
+  0
+);
+assert(
+  'Warns on absolute backslash path to .claude/settings.json but allows',
+  runHook('protect-file-write.mjs', { tool_input: { file_path: backslashed(abs('.claude/settings.json')) } }),
+  0, 'GOVERNANCE WARNING'
+);
+assert(
+  'Blocks when the input is empty (cannot be read)',
+  runHookRaw('protect-file-write.mjs', ''),
+  1, 'could not be read'
+);
+assert(
+  'Blocks when the input is not JSON',
+  runHookRaw('protect-file-write.mjs', 'not json'),
+  1, 'could not be read'
 );
 
 console.log('\n=== protect-bash-command.mjs ===');
@@ -139,6 +213,17 @@ assert(
   'Allows git diff',
   runHook('protect-bash-command.mjs', { tool_input: { command: 'git diff HEAD' } }),
   0
+);
+
+assert(
+  'Blocks when the input is empty (cannot be read)',
+  runHookRaw('protect-bash-command.mjs', ''),
+  1, 'could not be read'
+);
+assert(
+  'Blocks when the input is not JSON',
+  runHookRaw('protect-bash-command.mjs', 'not json'),
+  1, 'could not be read'
 );
 
 console.log('\n=== record-agent-event.mjs ===');
