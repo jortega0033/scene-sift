@@ -42,9 +42,13 @@ const BLOCKED_PATTERNS = [
 
 let input;
 try {
-  input = JSON.parse(readFileSync('/dev/stdin', 'utf-8'));
+  input = JSON.parse(readFileSync(0, 'utf-8'));
 } catch {
-  process.exit(0);
+  // Fail closed: input that cannot be read or parsed is blocked, not waved through.
+  process.stderr.write(
+    '[protect-bash-command] BLOCKED: hook input could not be read or parsed, so the command cannot be checked.\n'
+  );
+  process.exit(1);
 }
 
 const command = input?.tool_input?.command ?? '';

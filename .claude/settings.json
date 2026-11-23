@@ -144,7 +144,17 @@
       "Edit(/LOOP.md)",
       "Edit(/loop-constraints.md)",
       "Edit(/loop-budget.md)",
-      "Edit(/gate.yaml)"
+      "Edit(/gate.yaml)",
+      "Edit(**/.claude/agents/**)",
+      "Edit(**/.claude/skills/**)",
+      "Edit(**/.claude/hooks/**)",
+      "Edit(**/.claude/settings.json)",
+      "Edit(**/.claude/agency-agents/**)",
+      "Write(**/.claude/agents/**)",
+      "Write(**/.claude/skills/**)",
+      "Write(**/.claude/hooks/**)",
+      "Write(**/.claude/settings.json)",
+      "Write(**/.claude/agency-agents/**)"
     ]
   },
   "hooks": {

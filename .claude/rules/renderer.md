@@ -24,4 +24,4 @@ Risk: 1 default. Risk 2 for state management and routing changes. Risk 3 for QA 
 
 - Unit tests in `tests/renderer/` using Vitest.
 - Visual regression in `tests/visual/` using Playwright.
-- Run `pnpm test:renderer` before flagging renderer change as done.
+- Run `pnpm exec vitest run tests/renderer` before flagging renderer change as done.

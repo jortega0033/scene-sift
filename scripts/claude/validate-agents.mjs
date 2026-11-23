@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 /**
- * Validates .claude/agents/*.md frontmatter (name, description, model).
+ * Validates .claude/agents/*.md frontmatter: it must be valid YAML and carry a
+ * non-empty `name` and `description`. A role whose frontmatter does not parse is
+ * silently not loaded by Claude Code, so a string search for `name:` is not enough.
+ *
+ * Usage: node scripts/claude/validate-agents.mjs [agents-directory]
  */
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse } from 'yaml';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const AGENTS_DIR = join(ROOT, '.claude', 'agents');
+const AGENTS_DIR = process.argv[2] ? resolve(process.argv[2]) : join(ROOT, '.claude', 'agents');
+const CHECK_REQUIRED = !process.argv[2];
 let errors = 0;
 
 function fail(msg) { console.error(`  FAIL: ${msg}`); errors++; }
@@ -26,34 +32,50 @@ const REQUIRED_AGENTS = [
   'incident-reviewer.md',
 ];
 
-console.log('\nValidating .claude/agents/ ...');
+const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
+
+console.log(`\nValidating ${AGENTS_DIR} ...`);
 
 if (!existsSync(AGENTS_DIR)) {
-  fail('.claude/agents/ directory not found');
+  fail(`${AGENTS_DIR} not found`);
   process.exit(1);
 }
 
 const files = readdirSync(AGENTS_DIR).filter(f => f.endsWith('.md'));
 
-for (const required of REQUIRED_AGENTS) {
-  if (!files.includes(required)) {
-    fail(`Missing required agent: ${required}`);
+if (CHECK_REQUIRED) {
+  for (const required of REQUIRED_AGENTS) {
+    if (!files.includes(required)) {
+      fail(`Missing required agent: ${required}`);
+    }
   }
 }
 
 for (const file of files) {
-  const content = readFileSync(join(AGENTS_DIR, file), 'utf-8');
-  const hasFrontmatter = content.startsWith('---');
-  if (!hasFrontmatter) {
-    fail(`${file}: missing YAML frontmatter`);
+  const content = readFileSync(join(AGENTS_DIR, file), 'utf-8').replace(/^\uFEFF/, '');
+  const match = FRONTMATTER.exec(content);
+  if (!match) {
+    fail(`${file}: missing YAML frontmatter (a block between two --- lines at the top)`);
     continue;
   }
-  const fmEnd = content.indexOf('---', 3);
-  const fm = content.slice(3, fmEnd);
-  if (!fm.includes('name:')) fail(`${file}: frontmatter missing 'name'`);
-  else pass(`${file}: has name`);
-  if (!fm.includes('description:')) fail(`${file}: frontmatter missing 'description'`);
-  else pass(`${file}: has description`);
+  let data;
+  try {
+    data = parse(match[1]);
+  } catch (err) {
+    fail(`${file}: frontmatter is not valid YAML (${String(err.message).split('\n')[0]})`);
+    continue;
+  }
+  if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+    fail(`${file}: frontmatter is not a YAML mapping`);
+    continue;
+  }
+  for (const field of ['name', 'description']) {
+    if (typeof data[field] !== 'string' || data[field].trim() === '') {
+      fail(`${file}: frontmatter missing non-empty '${field}'`);
+    } else {
+      pass(`${file}: has ${field}`);
+    }
+  }
 }
 
 console.log(`\n${errors === 0 ? 'PASS' : 'FAIL'}: ${errors} error(s)\n`);

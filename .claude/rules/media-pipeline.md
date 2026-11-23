@@ -1,5 +1,5 @@
 ---
-globs: ["src/main/services/media/**", "src/main/workers/**"]
+globs: ["src/main/services/ffmpeg/**", "src/main/services/subtitle/**", "src/main/services/process/**", "src/main/services/media/**", "src/main/workers/**"]
 ---
 
 # Media Pipeline Rule
@@ -28,4 +28,4 @@ Risk: 2 default. Risk 3 for changes affecting file access paths, external proces
 
 ## Tests
 
-Run `pnpm test:media` after any change to processing or path logic.
+Run `pnpm exec vitest run tests/main` after any change to processing or path logic (the media tests are `tests/main/ffmpeg*.test.ts`, `tests/main/runCommand.test.ts` and `tests/main/subtitle/`), and `pnpm test` before flagging done.

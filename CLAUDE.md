@@ -14,7 +14,7 @@ SceneSift is a local-first Electron desktop app for clip workflow management: lo
 ## Commands
 
 ```
-pnpm install --frozen-lockfile  # install deps (Node 22, current pnpm 10; see docs/DEVELOPMENT.md if native builds are skipped)
+pnpm install --frozen-lockfile  # install deps (Node 22, pnpm 10.26.0 or newer; see docs/DEVELOPMENT.md if native builds are skipped)
 pnpm dev                  # run in dev mode (Electron + Vite HMR)
 pnpm typecheck            # type-check renderer + main
 pnpm lint                 # ESLint, max-warnings=0
@@ -36,12 +36,14 @@ pnpm package:dir          # electron-builder --dir (no sign/publish)
 pnpm baseline:generate    # regenerate docs/baseline/baseline.json
 pnpm claude:validate      # Claude Code config validation (not in CI; run when .claude/ changes)
 pnpm claude:test:hooks    # hook tests
+pnpm claude:test:agents   # agent frontmatter validator tests
+pnpm claude:test:rules    # every path and script named in .claude/rules exists
 pnpm claude:test:adversarial
 pnpm claude:safe          # governed Claude Code launcher
 node .claude/hooks/role-gate.mjs --self-test  # review gate hook self-test
 ```
 
-Some files in `.claude/rules/` name scripts and paths that do not exist: `pnpm test:renderer`, `pnpm test:media`, `pnpm test:database`, `tests/ai/`, `tests/media/`, `tests/database/`, `src/renderer/tokens/`, `docs/design/components/`, `docs/governance/DATA_PRIVACY.md`, and migrations under `src/main/services/database/migrations/`. Use the commands above; migrations live in `src/database/migrations/`; the data policy is `docs/governance/DATA_GOVERNANCE.md`. Setup details and the Windows line-ending caveat for `pnpm governance:validate` are in `docs/DEVELOPMENT.md`.
+The paths and scripts named in `.claude/rules/*.md` are checked by `pnpm claude:test:rules`. Migrations live in `src/database/migrations/`; the data policy is `docs/governance/DATA_GOVERNANCE.md`. Setup details (minimum pnpm version, skipped native builds, Windows checkouts) are in `docs/DEVELOPMENT.md`.
 
 ---
 
@@ -107,6 +109,8 @@ Capture this evidence and put it in the PR description. Paste real output; do no
 7. The verdicts of both gate roles, `architecture-reviewer` (review) and `governance-verifier` (acceptance), run in that order on the full diff after the local checks above passed and before the draft pull request was opened.
 8. Green CI on the pull request before it is marked ready. CI runs only after the draft exists, so the gates judge the local evidence and that CI is configured to run the same checks; the `/next-ticket` driver checks the CI result.
 
+A criterion that needs a person (a manual check in a normal browser, a recorded manual step) is done as far as an agent can with a scripted or headless run and its evidence, and the rest is listed under "Owner checks" in the pull request; `governance-verifier` accepts that only when the ticket marks the step as manual.
+
 A ticket is done when the owner merges its pull request, not before.
 
 ---
@@ -123,12 +127,12 @@ A ticket is done when the owner merges its pull request, not before.
 
 How a ticket of epic #8 goes from the queue to a ready pull request. Each piece is described in the file linked; this list does not repeat it.
 
-- **Start:** only the owner, with `/next-ticket [issue]` (`.claude/skills/next-ticket/SKILL.md`). One ticket per run; no scheduler. Queue labels: `status:ready`, `status:blocked`, `status:in-progress`, `needs-decision`.
-- **Playbook:** `.claude/skills/governed-task/SKILL.md`: risk, the roles before, during and after coding, the two gates, and the fixed order: local checks, then the CHANGELOG line and drafted pull request text, then `architecture-reviewer` and `governance-verifier`, then `gh pr create --draft`, then CI, then `gh pr ready` on green CI.
+- **Start:** only the owner, with `/next-ticket [issue]` (`.claude/skills/next-ticket/SKILL.md`). One ticket per run; no scheduler. Queue labels: `status:ready`, `status:blocked`, `status:in-progress`, `needs-decision`. Only leaf tickets are picked: never a `tracking` or `epic` ticket or one with open sub-issues, and the pull request of the last open sub-issue of a parent (a ticket with at least one sub-issue) also closes the parent; a ticket with no sub-issues is never closed by the driver.
+- **Playbook:** `.claude/skills/governed-task/SKILL.md`: risk, the roles before, during and after coding, the two gates, and the fixed order: local checks, then the CHANGELOG line and drafted pull request text, then `architecture-reviewer` and `governance-verifier`, then `gh pr create --draft`, then CI (no polling: the run ends with "Draft pull request #N is waiting for CI" and reads `gh pr checks` once when woken), then `gh pr ready` on green CI. The diff and check outputs for the gate roles are written to `.claude/state/review/` first.
 - **Gate hook:** `.claude/hooks/role-gate.mjs` blocks `gh pr create` and `gh pr ready` until both gate roles ran after the last code edit. The owner can switch it off for one session by starting Claude Code with `ROLE_GATE=off`. The other hooks in `.claude/settings.json` stay as they are.
-- **Permissions:** `.claude/settings.json` allows the documented commands, pushing a ticket branch and a draft pull request; it denies merges, pushes to `main`, force pushes, releases and secret reads, and asks before edits to agent configuration, `.github/**`, `gate.yaml` and the loop files. Rationale: `docs/governance/CLAUDE_CODE_PERMISSION_POLICY.md`.
+- **Permissions:** `.claude/settings.json` allows the documented commands, pushing a ticket branch and a draft pull request; it denies merges, pushes to `main`, force pushes, releases and secret reads, and asks before edits to agent configuration (at any depth, so a ticket worktree asks too), `.github/**`, `gate.yaml` and the loop files. Ticket work does not change agent configuration; the `ask` rules do not cover edits made through a shell command. Rationale: `docs/governance/CLAUDE_CODE_PERMISSION_POLICY.md`.
 - **CI:** the four workflows in `.github/workflows/` must be green before a pull request is marked ready (Git workflow above for the two known exceptions that wait on the owner).
-- **Pull request:** the existing `.github/pull_request_template.md` is kept (the `agent-evidence` CI checks it); `Closes #<n>`, evidence and roles run are required by the playbook and the acceptance gate, not by the template itself, with `Closes #<n>`, evidence and the roles run. Every ticket pull request adds a line to `CHANGELOG.md` under `Unreleased`.
+- **Pull request:** the existing `.github/pull_request_template.md` is kept (the `agent-evidence` CI checks it); `Closes #<n>`, evidence and roles run are required by the playbook and the acceptance gate, not by the template itself. Every ticket pull request adds a line to `CHANGELOG.md` under `Unreleased`.
 - **UI and copy:** `docs/ui-quality.md` (ten binding rules), the `ui-ux-pro-max` and `unslop` skills in `.claude/skills/`.
 - **Merge and release:** only the owner (`docs/RELEASING.md`). Owner decisions behind all of this: `docs/owner-decisions.md`.
 

@@ -6,7 +6,7 @@ import { readFileSync, appendFileSync } from 'node:fs';
 
 let input;
 try {
-  input = JSON.parse(readFileSync('/dev/stdin', 'utf-8'));
+  input = JSON.parse(readFileSync(0, 'utf-8'));
 } catch {
   process.exit(0);
 }

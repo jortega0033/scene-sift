@@ -17,6 +17,8 @@ Blocks writes to:
 - `AGENTS.md`, `LOOP.md`
 - `signing/`, `certs/`, `credentials/`, `secrets/` directories
 
+Absolute and backslash paths are turned into repository-relative paths with forward slashes before matching, so `C:\repo\gate.yaml` and `./gate.yaml` match the same as `gate.yaml`. Input that cannot be read or parsed is blocked (issue #9).
+
 Warns (but allows) writes to `.claude/settings.json` and `.claude/hooks/` — these require human authorization via governance-change skill.
 
 ### protect-bash-command.mjs (PreToolUse: Bash)
@@ -52,9 +54,10 @@ Appends to `loop-run-log.md`: timestamp, agent name, stop reason.
 
 ### role-gate.mjs (PreToolUse: Bash|PowerShell, and SubagentStop)
 
-Added 2026-11-22 (GD-007). Copied from the owner's SDLC kit; the only local changes are the gate role names and the playbook path in its message.
-- `record` (SubagentStop): appends the finished role and a timestamp to `.claude/state/role-runs.jsonl` (git-ignored).
+Added 2026-11-22 (GD-007); second hardening pass 2026-11-22. Copied from the owner's SDLC kit; the only local changes are the gate role names and the playbook path in its message.
+- `record` (SubagentStop): appends the finished role and a timestamp to `claude-role-runs.jsonl` in the repository's common git dir (`git rev-parse --git-common-dir`), shared by the main checkout and every worktree. The older `.claude/state/role-runs.jsonl` of the judged checkout and of the main checkout is still read.
 - `check` (PreToolUse): blocks `gh pr create` and `gh pr ready` with exit code 2 unless `architecture-reviewer` and `governance-verifier` both ran after the newest change to a code file on the branch. Changes to documentation, `.claude/` and `.github/` only pass without a review. A ticket that changes only hooks, settings or workflows (risk 3 here) therefore passes this hook without either gate; the guards left are `governance-verifier`'s own rules and the `next-ticket` "Never" list.
+- Judges the branch being proposed, not only the session's directory: a `cd`, `Set-Location` or `pushd` before `gh pr` moves the judged directory; `--head <branch>` or `-H <branch>` selects the worktree that has that branch checked out, or the branch's commits since the merge base when none does; `gh pr ready <n>` run from a clean main checkout looks up the pull request's head branch with `gh pr view`.
 - Reads its input from file descriptor 0, so it works on Windows and POSIX.
 - The owner can switch it off for one session by starting Claude Code with `ROLE_GATE=off`.
 - Test: `node .claude/hooks/role-gate.mjs --self-test` (builds a throwaway repository in the temp directory). It is not part of `pnpm claude:test:hooks`.

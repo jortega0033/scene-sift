@@ -14,7 +14,7 @@ Risk: 2 default. Risk 3 for schema changes, migrations, or changes to query cons
 
 ## Schema changes
 
-- Schema changes require a migration file in `src/main/services/database/migrations/`.
+- Schema changes require a migration file in `src/database/migrations/` (generated with `pnpm db:generate`).
 - Migrations must be reversible where possible; document why if not.
 - Test migrations against existing data fixtures before merge.
 
@@ -26,4 +26,4 @@ Risk: 2 default. Risk 3 for schema changes, migrations, or changes to query cons
 
 ## Tests
 
-Run `pnpm test:database` after schema or query changes. Include migration rollback test.
+Run `pnpm exec vitest run tests/main/database-service.test.ts` after schema or query changes, and `pnpm test` before flagging done. Include migration rollback test.

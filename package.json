@@ -56,8 +56,10 @@
     "claude:validate:skills": "node scripts/claude/validate-skills.mjs",
     "claude:validate:memory": "node scripts/claude/validate-memory-policy.mjs",
     "claude:test:hooks": "node tests/claude/hooks.test.mjs",
+    "claude:test:agents": "node tests/claude/validate-agents.test.mjs",
+    "claude:test:rules": "node tests/claude/rule-references.test.mjs",
     "claude:test:adversarial": "node tests/claude/adversarial-governance.test.mjs",
-    "claude:doctor": "pnpm claude:validate && pnpm claude:test:adversarial",
+    "claude:doctor": "pnpm claude:validate && pnpm claude:test:agents && pnpm claude:test:rules && pnpm claude:test:adversarial",
     "claude:safe": "pnpm governance:validate && pnpm claude:validate && pnpm claude:test:adversarial"
   },
   "dependencies": {
