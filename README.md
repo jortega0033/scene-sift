@@ -2,6 +2,25 @@
 
 SceneSift is a local-first desktop tool for transforming long-form video episodes into reviewable short-form clip candidates.
 
+## Program goal
+
+Build a local-first video review and clipping studio: read the media files itself, understand long episodes by speech, shot and structure on the local machine, let an editor refine every clip, and render subtitled results that are frame-exact and repeatable.
+
+The program is planned ([#59](https://github.com/jortega0033/scene-sift/issues/59)). Stage 1 is the current epic [#8](https://github.com/jortega0033/scene-sift/issues/8) and the only stage with tickets.
+
+**Score.** Share of a fixed, licence-clean episode set where cuts, cue times and clip boundaries are within one frame of hand-made labels, with the clip ranking quality next to it.
+
+| Stage | Content | Hours (rough) | Issue |
+|---|---|---|---|
+| 1 | The current epic and its tickets | 80 to 130 | [#8](https://github.com/jortega0033/scene-sift/issues/8) |
+| 2 | Media engine | 130 to 220 | [#60](https://github.com/jortega0033/scene-sift/issues/60) |
+| 3 | Subtitles | 110 to 190 | [#61](https://github.com/jortega0033/scene-sift/issues/61) |
+| 4 | Understanding | 150 to 250 | [#62](https://github.com/jortega0033/scene-sift/issues/62) |
+| 5 | Editing and rendering | 140 to 240 | [#63](https://github.com/jortega0033/scene-sift/issues/63) |
+| 6 | Library and trust | 120 to 200 | [#64](https://github.com/jortega0033/scene-sift/issues/64) |
+
+About 730 to 1230 engineer hours in total: rough estimates, not measurements. The numbers in the score and the finish lines are targets until a run shows them. Only stage 1 has tickets to work; the sub-issues of a later stage are written when it starts. No single session is expected to reach the end.
+
 ## Milestone scope (implemented now)
 
 This repository currently implements a **production-grade Electron boilerplate**:

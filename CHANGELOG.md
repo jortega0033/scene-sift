@@ -8,4 +8,5 @@ Every ticket pull request adds one line under `Unreleased`. The owner moves thos
 
 ### Added
 
+- Program goal, score and stages 1 to 6 (#59).
 - Delivery workflow for tickets: `/next-ticket` driver, review gate hook, permission rules for ticket branches and draft pull requests, UI quality rules and the `ui-ux-pro-max` and `unslop` skills, collaboration and release files, and the owner decisions record.

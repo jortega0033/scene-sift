@@ -30,3 +30,14 @@ The open owner decisions are listed in epic #8 under "Decisions for the owner".
 | #8, affects #1 | Product scope: browser track alongside, or instead of, MVP M3 and M4 | Alongside. #1 records it in an ADR and the roadmap; M3 and M4 stay in the plan. | Stated in the epic |
 | #8, affects #1 and #2 | Unmerged stack `feature/m3-…` to `feature/m11-…` | Not merged and not depended on. #1 uses ADR-015. #2 does not port code from `feature/m4-video-preview` or `feature/m9-clip-timing-editor`. | Stated in the epic and in #2 |
 | #8 | Open PR #7 rewrites `README.md` | Tickets do not edit `README.md` until PR #7 is merged. | Stated in the epic |
+
+## Program decisions (owner, 2026-11-24)
+
+The owner accepted the goal and each suggestion below. They apply from the stage they name; the rules of `CLAUDE.md` hold for stage 1 as written.
+
+| Decision | Implemented in |
+|---|---|
+| The repository has a program goal above stage 1: a local-first video review and clipping studio, in six stages. | Program issue #59 |
+| The main epic here is #8, with #1 as its first ticket. Suggested: #8 becomes stage 1. | Program issue #59 |
+| Local speech and picture models need weights. Suggested: never commit them, choose the licence when the stage starts, upload nothing. | Program issue #59 |
+| The repository has its own feature gate and governance records. Suggested: the goal is documentation only, and each later stage passes that gate before it starts. | Program issue #59 |
