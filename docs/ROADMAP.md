@@ -1,5 +1,7 @@
 # Roadmap
 
+> This document is older than the program in [#59](https://github.com/jortega0033/scene-sift/issues/59), whose stages 1 to 6 are not the phases below. Stage 1 is epic [#8](https://github.com/jortega0033/scene-sift/issues/8).
+
 ## Phase 2
 
 - FFprobe media inspection
